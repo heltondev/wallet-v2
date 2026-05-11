@@ -47,6 +47,13 @@ export const listBudgets = (month?: string) =>
 export const createBudget = (data: Record<string, unknown>) =>
   apiFetch<Record<string, unknown>>('/budgets', { method: 'POST', body: JSON.stringify(data) });
 
+// Settings
+export const getSettings = () =>
+  apiFetch<Record<string, unknown>>('/settings');
+
+export const updateSettings = (data: Record<string, unknown>) =>
+  apiFetch<Record<string, unknown>>('/settings', { method: 'PUT', body: JSON.stringify(data) });
+
 // AI
 export const aiCategorize = (desc: string, amount: number) =>
   apiFetch<{ category: string; confidence: number }>('/ai/categorize', { method: 'POST', body: JSON.stringify({ desc, amount }) });

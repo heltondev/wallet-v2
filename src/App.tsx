@@ -14,7 +14,7 @@ import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL } from './utils/formatters';
 import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
-import { listTransactions, createTransaction, listAccounts } from './lib/api';
+import { listTransactions, createTransaction, listAccounts, getSettings } from './lib/api';
 import type { Transaction, Account, TabId, FabKind, ToastData, CurrencyCode } from './types';
 
 
@@ -42,10 +42,10 @@ export function App() {
   const [authed, setAuthed] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
-  const [theme] = useState<'dark' | 'light'>(DEFAULT_SETTINGS.theme);
+  const [theme, setTheme] = useState<'dark' | 'light'>(DEFAULT_SETTINGS.theme);
   const [accent] = useState(DEFAULT_SETTINGS.accent);
   const [fab] = useState<FabKind>(DEFAULT_SETTINGS.fab);
-  const [currency] = useState<'BRL' | 'USD'>(DEFAULT_SETTINGS.currency);
+  const [currency, setCurrency] = useState<'BRL' | 'USD'>(DEFAULT_SETTINGS.currency);
 
   const [tab, setTab] = useState<TabId>('home');
   const [sheet, setSheet] = useState(false);
@@ -81,9 +81,11 @@ export function App() {
 
   const loadData = async () => {
     try {
-      const [txData, accData] = await Promise.all([listTransactions(), listAccounts()]);
+      const [txData, accData, settingsData] = await Promise.all([listTransactions(), listAccounts(), getSettings()]);
       setTx(txData as unknown as Transaction[]);
       setAccounts(accData as unknown as Account[]);
+      if (settingsData.theme) setTheme(settingsData.theme as 'dark' | 'light');
+      if (settingsData.currency) setCurrency(settingsData.currency as 'BRL' | 'USD');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao carregar dados';
       showToast(msg, 0);
@@ -189,7 +191,15 @@ export function App() {
           <CategoriasScreen fabKind={fab} />
         )}
         {tab === 'settings' && !subScreen && (
-          <AjustesScreen fabKind={fab} onNavigate={(s) => setSubScreen(s)} onSignOut={handleSignOut} />
+          <AjustesScreen
+            fabKind={fab}
+            onNavigate={(s) => setSubScreen(s)}
+            onSignOut={handleSignOut}
+            onSettingsChange={(s) => {
+              if (s.theme) setTheme(s.theme);
+              if (s.currency) setCurrency(s.currency as 'BRL' | 'USD');
+            }}
+          />
         )}
         {subScreen === 'ai-chat' && (
           <div style={{ height: '100%', position: 'relative' }}>

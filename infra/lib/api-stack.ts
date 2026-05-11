@@ -111,6 +111,12 @@ export class ApiStack extends Stack {
     const budgetByMonth = budgets.addResource('{month}');
     budgetByMonth.addMethod('PUT', new LambdaIntegration(budgetsFn), authOptions);
 
+    // Settings
+    const settingsFn = buildHandler('SettingsFn', 'settings', 'functions/api/settings.ts');
+    const settings = api.root.addResource('settings');
+    settings.addMethod('GET', new LambdaIntegration(settingsFn), authOptions);
+    settings.addMethod('PUT', new LambdaIntegration(settingsFn), authOptions);
+
     // AI
     const aiFn = buildHandler('AiFn', 'ai', 'functions/ai/handler.ts');
     const ai = api.root.addResource('ai');
