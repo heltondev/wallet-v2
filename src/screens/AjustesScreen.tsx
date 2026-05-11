@@ -60,22 +60,42 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
     listCategories().then(c => setCategoryCount(Object.keys(CATS).length + c.length)).catch(() => setCategoryCount(Object.keys(CATS).length));
   }, []);
 
+  const download = (content: string, filename: string, mime: string) => {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const exportCSV = () => {
     if (tx.length === 0) return;
     const header = 'Data,Descrição,Categoria,Valor,Moeda,Conta';
     const rows = tx.map(item => {
       const cat = CATS[item.cat]?.label ?? item.cat;
-      return `${item.date ?? item.day},${item.desc},${cat},${item.amount},${item.currency},${item.account}`;
+      return `${item.date ?? item.day},"${item.desc}",${cat},${item.amount},${item.currency},"${item.account}"`;
     });
-    const csv = [header, ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `wallet-export-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    download([header, ...rows].join('\n'), `wallet-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv;charset=utf-8;');
   };
+
+  const exportJSON = () => {
+    if (tx.length === 0) return;
+    const data = tx.map(item => ({
+      date: item.date ?? item.day,
+      desc: item.desc,
+      category: CATS[item.cat]?.label ?? item.cat,
+      categorySlug: item.cat,
+      amount: item.amount,
+      currency: item.currency,
+      fxRate: item.fxRate,
+      account: item.account,
+    }));
+    download(JSON.stringify(data, null, 2), `wallet-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+  };
+
+  const [exportOpen, setExportOpen] = useState(false);
 
   const toggleTheme = async () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -192,7 +212,21 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
         </Section>
 
         <Section title="DADOS">
-          <Row label="Exportar CSV" detail={`${tx.length} transações`} icon="download" onClick={exportCSV} />
+          <Row label="Exportar dados" detail={`${tx.length} transações`} icon="download" onClick={() => setExportOpen(!exportOpen)} />
+          {exportOpen && (
+            <div style={{ display: 'flex', gap: 8, padding: '8px 16px 14px' }}>
+              <button onClick={exportCSV} style={{
+                flex: 1, padding: '12px 0', borderRadius: 8, border: '1px solid var(--border-2)',
+                background: 'var(--bg-2)', color: 'var(--text-1)', fontFamily: 'var(--font-mono)',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}>CSV</button>
+              <button onClick={exportJSON} style={{
+                flex: 1, padding: '12px 0', borderRadius: 8, border: '1px solid var(--border-2)',
+                background: 'var(--bg-2)', color: 'var(--text-1)', fontFamily: 'var(--font-mono)',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}>JSON</button>
+            </div>
+          )}
           <Row label="Backup na nuvem" detail="Ativo" icon="cloud" last />
         </Section>
 
