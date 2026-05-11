@@ -711,4 +711,17 @@
 		display: flex;
 		gap: $s-2-raw;
 	}
+
+	&__new-chip {
+		font-size: 10px;
+		font-weight: 700;
+		font-family: $font-mono;
+		color: #0A0A0A;
+		background: $pos;
+		padding: 1px 6px;
+		border-radius: 4px;
+		letter-spacing: 0.5px;
+		cursor: pointer;
+		flex-shrink: 0;
+	}
 }

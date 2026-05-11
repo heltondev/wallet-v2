@@ -114,6 +114,7 @@ export interface RecurringTransaction {
   createdAt: string;
   updatedAt: string;
   workspaceId?: string;
+  seen?: boolean;
 }
 
 export interface AiExtractResult {

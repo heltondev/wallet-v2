@@ -233,7 +233,13 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
     setShowForm(true);
   };
 
+  const markSeen = async (id: string) => {
+    setItems(prev => prev.map(r => r.id === id ? { ...r, seen: true } : r));
+    updateRecurring(id, { seen: true }).catch(() => {});
+  };
+
   const openEdit = (r: RecurringTransaction) => {
+    if (!r.seen) markSeen(r.id);
     setEditingId(r.id);
     setForm({
       desc: r.desc,
@@ -762,6 +768,12 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
                 <div className="manage-recurring__item-row1">
                   <CatIcon slug={r.cat} />
                   <div className="manage-recurring__item-desc">{r.desc}</div>
+                  {!r.seen && (
+                    <span
+                      className="manage-recurring__new-chip"
+                      onClick={(e) => { e.stopPropagation(); markSeen(r.id); }}
+                    >NEW</span>
+                  )}
                   <span
                     className={`manage-recurring__item-amount ${r.amount >= 0 ? 'manage-recurring__item-amount--income' : ''}`}
                   >
