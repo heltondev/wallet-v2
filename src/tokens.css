@@ -1,0 +1,109 @@
+/* Wallet — design tokens */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* radii */
+  --r-card: 16px;
+  --r-card-sm: 12px;
+  --r-input: 8px;
+  --r-pill: 999px;
+
+  /* spacing scale */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+
+  /* categories — dessaturadas */
+  --cat-mercado: oklch(0.68 0.13 140);
+  --cat-restaurante: oklch(0.68 0.14 30);
+  --cat-transporte: oklch(0.65 0.13 250);
+  --cat-casa: oklch(0.65 0.13 300);
+  --cat-saude: oklch(0.68 0.13 350);
+  --cat-lazer: oklch(0.72 0.14 65);
+  --cat-trabalho: oklch(0.65 0.05 250);
+  --cat-educacao: oklch(0.68 0.12 210);
+  --cat-assinaturas: oklch(0.7 0.13 100);
+  --cat-outros: oklch(0.65 0.03 270);
+}
+
+/* ── DARK ───────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg-0: #0A0A0A;
+  --bg-1: #141414;
+  --bg-2: #1F1F1F;
+  --bg-3: #2A2A2A;
+  --bg-4: #353535;
+
+  --text-1: #FAFAFA;
+  --text-2: #A1A1AA;
+  --text-3: #71717A;
+  --text-4: #52525B;
+
+  --border-1: #2A2A2A;
+  --border-2: #3F3F46;
+
+  --pos: #10B981;
+  --pos-bg: oklch(0.7 0.16 158 / 0.14);
+  --neg: #EF4444;
+  --neg-bg: oklch(0.65 0.22 27 / 0.14);
+  --warn: #F59E0B;
+
+  --shadow: none;
+}
+
+/* ── LIGHT ──────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-0: #FFFFFF;
+  --bg-1: #FAFAFA;
+  --bg-2: #F4F4F5;
+  --bg-3: #E4E4E7;
+  --bg-4: #D4D4D8;
+
+  --text-1: #0A0A0A;
+  --text-2: #52525B;
+  --text-3: #71717A;
+  --text-4: #A1A1AA;
+
+  --border-1: #E4E4E7;
+  --border-2: #D4D4D8;
+
+  --pos: #059669;
+  --pos-bg: oklch(0.7 0.16 158 / 0.12);
+  --neg: #DC2626;
+  --neg-bg: oklch(0.65 0.22 27 / 0.1);
+  --warn: #D97706;
+
+  --shadow: none;
+}
+
+/* numerals everywhere — TABULAR é obrigatório */
+.tabular,
+.money,
+[data-tabular] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'ss01' 1;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* phone surface */
+.phone-surface {
+  background: var(--bg-0);
+  color: var(--text-1);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+/* utility scrollbar hide */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
