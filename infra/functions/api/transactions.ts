@@ -9,27 +9,30 @@ function generateId(): string {
 
 async function createTransaction(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
   const body = JSON.parse(event.body ?? '{}');
-  const { day, desc, cat, amount, currency, account, fxRate } = body;
+  const { date, day, wd, desc, cat, amount, currency, account, fxRate } = body;
 
-  if (!day || !desc || !cat || amount == null || !currency || !account) {
-    return badRequest(event, 'Missing required fields: day, desc, cat, amount, currency, account');
+  if (!desc || !cat || amount == null || !currency || !account) {
+    return badRequest(event, 'Missing required fields: desc, cat, amount, currency, account');
   }
 
-  const month = day.slice(0, 7);
+  const now = new Date();
+  const isoDate = date || now.toISOString().slice(0, 10);
+  const month = isoDate.slice(0, 7);
   const id = generateId();
-  const now = new Date().toISOString();
 
   const item: Record<string, unknown> = {
     PK: `USER#${userId}`,
     SK: `TX#${month}#${id}`,
     id,
-    day,
+    date: isoDate,
+    day: day || String(now.getDate()),
+    wd: wd || '',
     desc,
     cat,
     amount,
     currency,
     account,
-    createdAt: now,
+    createdAt: now.toISOString(),
   };
   if (fxRate != null) item.fxRate = fxRate;
 
@@ -39,9 +42,8 @@ async function createTransaction(event: APIGatewayProxyEvent, userId: string): P
 
 async function listTransactions(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
   const month = event.queryStringParameters?.month;
-  if (!month) return badRequest(event, 'Query parameter "month" is required (YYYY-MM)');
-
-  const items = await queryItems(`USER#${userId}`, `TX#${month}`);
+  const prefix = month ? `TX#${month}` : 'TX#';
+  const items = await queryItems(`USER#${userId}`, prefix);
   return ok(event, items);
 }
 
