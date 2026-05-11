@@ -48,7 +48,7 @@ export function ManageCategories({ onBack }: ManageCategoriesProps) {
       .then(data => {
         const cats = (data as unknown as (CategoryMeta & { slug: string })[])
           .filter(c => !CATS[c.slug])
-          .map(c => ({ ...c, custom: true }));
+          .map(c => ({ ...c, labelEn: c.labelEn ?? c.label, custom: true }));
         setCustomCats(cats);
       })
       .catch(() => {})
@@ -64,6 +64,7 @@ export function ManageCategories({ onBack }: ManageCategoriesProps) {
     const newCat: CustomCategory = {
       slug,
       label: label.trim(),
+      labelEn: label.trim(),
       color: selectedColor,
       icon: selectedIcon,
       custom: true,

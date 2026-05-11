@@ -25,6 +25,7 @@ export interface Account {
 
 export interface CategoryMeta {
   label: string;
+  labelEn: string;
   color: string;
   icon: string;
 }

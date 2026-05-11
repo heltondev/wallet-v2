@@ -30,6 +30,18 @@
   --cat-educacao: oklch(0.68 0.12 210);
   --cat-assinaturas: oklch(0.7 0.13 100);
   --cat-outros: oklch(0.65 0.03 270);
+  --cat-pets: oklch(0.7 0.14 50);
+  --cat-compras: oklch(0.65 0.14 320);
+  --cat-viagem: oklch(0.7 0.15 200);
+  --cat-impostos: oklch(0.6 0.08 20);
+  --cat-seguros: oklch(0.63 0.1 280);
+  --cat-investimentos: oklch(0.7 0.16 158);
+  --cat-doacoes: oklch(0.72 0.12 340);
+  --cat-presentes: oklch(0.75 0.15 15);
+  --cat-servicos: oklch(0.65 0.1 230);
+  --cat-utilities: oklch(0.67 0.11 75);
+  --cat-alimentacao: oklch(0.7 0.14 40);
+  --cat-transferencia: oklch(0.6 0.06 260);
 }
 
 /* ── DARK ───────────────────────────────────────────────────── */
