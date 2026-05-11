@@ -160,6 +160,32 @@
 		outline: none;
 	}
 
+	&__budget-save {
+		width: 32px;
+		height: 32px;
+		border-radius: 8px;
+		border: none;
+		background: var(--pos);
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	&__budget-cancel {
+		width: 32px;
+		height: 32px;
+		border-radius: 8px;
+		border: none;
+		background: var(--bg-2);
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
 	// Export
 	&__export-row {
 		display: flex;

@@ -171,10 +171,15 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
                 value={budgetInput}
                 onChange={e => setBudgetInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') saveBudget(); }}
-                onBlur={saveBudget}
                 className="settings-screen__budget-input"
-                placeholder="9500"
+                placeholder="3000"
               />
+              <button onClick={saveBudget} className="settings-screen__budget-save">
+                <Icons.check size={16} color="#0A0A0A" stroke={2.4} />
+              </button>
+              <button onClick={() => setEditingBudget(false)} className="settings-screen__budget-cancel">
+                <Icons.x size={16} color="var(--text-4)" />
+              </button>
             </div>
           ) : (
             <Row
