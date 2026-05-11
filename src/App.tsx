@@ -48,6 +48,7 @@ export function App() {
   const [accent] = useState(DEFAULT_SETTINGS.accent);
   const [fab] = useState<FabKind>(DEFAULT_SETTINGS.fab);
   const [currency, setCurrency] = useState<'BRL' | 'USD'>(DEFAULT_SETTINGS.currency);
+  const [monthlyBudget, setMonthlyBudget] = useState(DEFAULT_SETTINGS.monthlyBudget);
 
   const [tab, setTab] = useState<TabId>('home');
   const [sheet, setSheet] = useState(false);
@@ -88,6 +89,7 @@ export function App() {
       setAccounts(accData as unknown as Account[]);
       if (settingsData.theme) setTheme(settingsData.theme as 'dark' | 'light');
       if (settingsData.currency) setCurrency(settingsData.currency as 'BRL' | 'USD');
+      if (settingsData.monthlyBudget) setMonthlyBudget(settingsData.monthlyBudget as number);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao carregar dados';
       showToast(msg, 0);
@@ -181,7 +183,7 @@ export function App() {
         />
 
         {tab === 'home' && (
-          <LiveHome tx={tx} currency={currency} onTabChange={(id) => setTab(id as TabId)} />
+          <LiveHome tx={tx} currency={currency} monthlyBudget={monthlyBudget} onTabChange={(id) => setTab(id as TabId)} />
         )}
         {tab === 'list' && (
           <LiveTxList tx={tx} displayCurrency={currency} />
@@ -200,6 +202,7 @@ export function App() {
             onSettingsChange={(s) => {
               if (s.theme) setTheme(s.theme);
               if (s.currency) setCurrency(s.currency as 'BRL' | 'USD');
+              if (s.monthlyBudget) setMonthlyBudget(s.monthlyBudget);
             }}
           />
         )}

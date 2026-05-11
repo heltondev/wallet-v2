@@ -11,10 +11,11 @@ import type { Transaction, TabId, CurrencyCode } from '../types';
 interface LiveHomeProps {
   tx: Transaction[];
   currency: CurrencyCode;
+  monthlyBudget: number;
   onTabChange: (tab: TabId) => void;
 }
 
-export function LiveHome({ tx, currency, onTabChange }: LiveHomeProps) {
+export function LiveHome({ tx, currency, monthlyBudget, onTabChange }: LiveHomeProps) {
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
   const m = useMemo(() => {
     let ins = 0;
@@ -38,12 +39,12 @@ export function LiveHome({ tx, currency, onTabChange }: LiveHomeProps) {
           </div>
         </div>
         <div style={{ padding: '0 16px 14px' }}>
-          <BudgetBar spent={m.outs} budget={9500} label="Orçamento mensal" />
+          <BudgetBar spent={m.outs} budget={monthlyBudget} label="Orçamento mensal" />
         </div>
         <div style={{ padding: '0 16px 18px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <StatCard label="Entradas" value={fmtAmount(m.ins, currency, { decimals: 0 })} sub="+R$ 0 vs abr" accent="pos" icon="arrowDown" />
           <StatCard label="Saídas" value={fmtAmount(m.outs, currency, { decimals: 0 })} sub="−R$ 412 vs abr" accent="neg" icon="arrowUp" />
-          <StatCard label="Previsto restante" value={fmtAmount(9500 - m.outs, currency, { decimals: 0 })} sub="14 dias restantes" accent="neutral" />
+          <StatCard label="Previsto restante" value={fmtAmount(monthlyBudget - m.outs, currency, { decimals: 0 })} sub="14 dias restantes" accent="neutral" />
           <StatCard label="Sobra projetada" value={fmtAmount(m.balance - 200, currency, { decimals: 0 })} sub="+5.1% vs média" accent="pos" />
         </div>
         <div style={{ padding: '0 16px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
