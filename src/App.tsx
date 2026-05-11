@@ -216,6 +216,7 @@ export function App() {
         {tab === 'home' && (
           <LiveHome
             tx={filteredTx}
+            recurring={recurringItems}
             currency={activeCurrency}
             monthlyBudget={activeBudget}
             onTabChange={(id) => setTab(id as TabId)}
