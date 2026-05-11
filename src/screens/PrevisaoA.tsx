@@ -23,7 +23,7 @@ export function PrevisaoA({ fabKind: _fabKind = 'circle' }: PrevisaoAProps) {
   return (
     <div className="phone-surface" style={{height:'100%',position:'relative'}} data-screen-label="Forecast A">
       <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
-      <div style={{position:'absolute',top:0,left:0,right:0,bottom:80,overflow:'auto',paddingTop:54,paddingBottom:20}} className="no-scrollbar">
+      <div style={{position:'absolute',top:0,left:0,right:0,bottom:100,overflow:'auto',paddingTop:54,paddingBottom:20}} className="no-scrollbar">
         <div style={{padding:'8px 16px 16px'}}>
           <div style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',letterSpacing:1.2,textTransform:'uppercase',marginBottom:4}}>PREVISÃO PARA</div>
           <h1 style={{fontSize:28,fontWeight:600,letterSpacing:-0.8,margin:0,color:'var(--text-1)'}}>Junho · 2026</h1>
