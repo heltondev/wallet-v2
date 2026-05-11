@@ -173,6 +173,14 @@
 		background: $bg-3;
 	}
 
+	&__item-total {
+		font-size: $fs-caption;
+		font-family: $font-mono;
+		color: $text-3;
+		width: 100%;
+		margin-top: 4px;
+	}
+
 	&__item-row3 {
 		display: flex;
 		align-items: center;

@@ -731,6 +731,21 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
                       <span className="manage-recurring__item-workspace">{ws.icon} {ws.name}</span>
                     ) : null;
                   })()}
+                  {r.endDate && (() => {
+                    const now = new Date();
+                    const end = new Date(r.endDate + 'T00:00:00');
+                    const start = new Date(r.startDate + 'T00:00:00');
+                    const totalMonths = Math.round((end.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000));
+                    const remainingMonths = Math.max(0, Math.round((end.getTime() - now.getTime()) / (30.44 * 24 * 60 * 60 * 1000)));
+                    const totalAmount = Math.abs(r.amount) * totalMonths;
+                    const remainingAmount = Math.abs(r.amount) * remainingMonths;
+                    const sym = r.currency === 'BRL' ? 'R$ ' : r.currency === 'USD' ? '$ ' : '€ ';
+                    return (
+                      <span className="manage-recurring__item-total">
+                        {remainingMonths}/{totalMonths}x · {sym}{remainingAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} restante de {sym}{totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 {/* Row 3: actions */}
