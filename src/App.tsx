@@ -13,9 +13,6 @@ import { LoginScreen } from './screens/LoginScreen';
 import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL } from './utils/formatters';
-import { TweaksPanel } from './tweaks/TweaksPanel';
-import { TweakSection, TweakRadio, TweakColor, TweakButton } from './tweaks/TweakControls';
-import { ACCENT_OPTIONS } from './data/constants';
 import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
 import { listTransactions, createTransaction, listAccounts } from './lib/api';
 import type { Transaction, Account, TabId, FabKind, ToastData, CurrencyCode } from './types';
@@ -64,18 +61,16 @@ export function App() {
   const [authed, setAuthed] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [theme, setTheme] = useState<'dark' | 'light'>(settings.theme);
-  const [accent, setAccent] = useState(settings.accent);
-  const [fab, setFab] = useState<FabKind>(settings.fab);
-  const [currency, setCurrency] = useState<'BRL' | 'USD'>(settings.currency);
+  const [theme] = useState<'dark' | 'light'>(DEFAULT_SETTINGS.theme);
+  const [accent] = useState(DEFAULT_SETTINGS.accent);
+  const [fab] = useState<FabKind>(DEFAULT_SETTINGS.fab);
+  const [currency] = useState<'BRL' | 'USD'>(DEFAULT_SETTINGS.currency);
 
   const [tab, setTab] = useState<TabId>('home');
   const [sheet, setSheet] = useState(false);
   const [tx, setTx] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [toast, setToast] = useState<ToastData | null>(null);
-  const [tweaksOpen, setTweaksOpen] = useState(false);
   const [subScreen, setSubScreen] = useState<string | null>(null);
 
   // Check auth on mount — handle OAuth callback if present
@@ -118,12 +113,6 @@ export function App() {
     setToast({ desc, amount });
     setTimeout(() => setToast(null), 2200);
   };
-
-  // Persist settings in memory (no localStorage)
-  useEffect(() => {
-    const s = { theme, accent, fab, currency, monthlyBudget: settings.monthlyBudget };
-    setSettings(s);
-  }, [theme, accent, fab, currency, settings.monthlyBudget]);
 
   // Apply theme attribute
   useEffect(() => {
@@ -323,80 +312,6 @@ export function App() {
         )}
       </div>
 
-      {/* Gear toggle */}
-      <button
-        onClick={() => setTweaksOpen((v) => !v)}
-        style={{
-          position: 'fixed',
-          left: 16,
-          bottom: 16,
-          zIndex: 2147483645,
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          border: 'none',
-          background: 'rgba(255,255,255,0.1)',
-          color: 'rgba(255,255,255,0.6)',
-          fontSize: 18,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backdropFilter: 'blur(8px)',
-        }}
-        aria-label="Toggle tweaks"
-      >
-        ⚙
-      </button>
-
-      <TweaksPanel open={tweaksOpen} onClose={() => setTweaksOpen(false)} title="Tweaks">
-        <TweakSection label="Theme">
-          <TweakRadio
-            value={theme}
-            onChange={(v) => setTheme(v as 'dark' | 'light')}
-            options={[
-              { value: 'dark', label: 'Dark' },
-              { value: 'light', label: 'Light' },
-            ]}
-          />
-        </TweakSection>
-        <TweakSection label="Accent color">
-          <TweakColor
-            value={accent}
-            onChange={(v) => setAccent(v as string)}
-            options={ACCENT_OPTIONS}
-          />
-        </TweakSection>
-        <TweakSection label="FAB style">
-          <TweakRadio
-            value={fab}
-            onChange={(v) => setFab(v as FabKind)}
-            options={[
-              { value: 'circle', label: 'Circle' },
-              { value: 'pill', label: 'Pill' },
-              { value: 'tab', label: 'Tab' },
-            ]}
-          />
-        </TweakSection>
-        <TweakSection label="Currency">
-          <TweakRadio
-            value={currency}
-            onChange={(v) => setCurrency(v as 'BRL' | 'USD')}
-            options={[
-              { value: 'BRL', label: 'BRL' },
-              { value: 'USD', label: 'USD' },
-            ]}
-          />
-        </TweakSection>
-        <TweakButton
-          onClick={() => {
-            setTx([]);
-            showToast('Reset', 0);
-          }}
-        >
-          Reset transactions
-        </TweakButton>
-      </TweaksPanel>
     </div>
   );
 }
