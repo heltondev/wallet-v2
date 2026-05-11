@@ -113,9 +113,9 @@ export function App() {
     root.style.setProperty('--pos-bg', `color-mix(in oklch, ${accent} 18%, transparent)`);
   }, [accent]);
 
-  const onSave = async (data: { desc: string; cat: string; amount: number; currency: CurrencyCode; fxRate: number; account: string }) => {
+  const onSave = async (data: { desc: string; cat: string; amount: number; currency: CurrencyCode; fxRate: number; account: string; date?: string; day?: string; wd?: string }) => {
     try {
-      const fields = { ...txDateFields(), ...data };
+      const fields = data.date ? data : { ...txDateFields(), ...data };
       await createTransaction(fields);
       showToast(data.desc, data.amount);
       // Re-fetch to get server-assigned id
