@@ -144,15 +144,40 @@ export class ApiStack extends Stack {
     settings.addMethod('PUT', new LambdaIntegration(settingsFn), authOptions);
 
     // AI
-    const aiFn = buildHandler('AiFn', 'ai', 'functions/ai/handler.ts');
+    const aiFn = new NodejsFunction(this, 'AiFn', {
+      functionName: name(env_name, 'fn', 'ai'),
+      runtime: Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, '..', 'functions', 'ai', 'handler.ts'),
+      handler: 'handler',
+      timeout: Duration.minutes(5),
+      memorySize: 1024,
+      environment: {
+        TABLE_NAME: table.tableName,
+        ALLOWED_ORIGINS: allowedOrigins.join(','),
+      },
+      bundling: {
+        format: undefined,
+        target: 'node22',
+        externalModules: ['@aws-sdk/*'],
+      },
+    });
+    table.grantReadWriteData(aiFn);
+    aiFn.addToRolePolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: ['ssm:GetParameter'],
+        resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/wallet/*`],
+      }),
+    );
     const ai = api.root.addResource('ai');
     ai.addResource('categorize').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
-    ai.addResource('extract-receipt').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
-    ai.addResource('insights').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
-    ai.addResource('forecast').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
-    ai.addResource('chat').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
-    ai.addResource('learn-category').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
-    ai.addResource('extract-recurring').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
+    const aiIntegration = new LambdaIntegration(aiFn, { timeout: Duration.seconds(29) });
+    ai.addResource('extract-receipt').addMethod('POST', aiIntegration, authOptions);
+    ai.addResource('insights').addMethod('POST', aiIntegration, authOptions);
+    ai.addResource('forecast').addMethod('POST', aiIntegration, authOptions);
+    ai.addResource('chat').addMethod('POST', aiIntegration, authOptions);
+    ai.addResource('learn-category').addMethod('POST', aiIntegration, authOptions);
+    ai.addResource('extract-recurring').addMethod('POST', aiIntegration, authOptions);
 
     // Recurring
     const recurringFn = buildHandler('RecurringFn', 'recurring', 'functions/api/recurring.ts');

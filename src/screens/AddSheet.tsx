@@ -360,7 +360,7 @@ export function AddSheet({ open, onClose, onSave, accounts, activeWorkspace = nu
                 ) : (
                   <>
                     <Icons.alert size={16} />
-                    Preencher formulário
+                    Extrair com AI
                   </>
                 )}
               </button>

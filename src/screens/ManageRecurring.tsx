@@ -478,7 +478,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
                   ) : (
                     <>
                       <Icons.alert size={16} />
-                      Preencher formulário
+                      Identificar recorrentes
                     </>
                   )}
                 </button>

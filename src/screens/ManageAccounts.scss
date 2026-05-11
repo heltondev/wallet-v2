@@ -119,7 +119,7 @@
 
 	// Form
 	&__form {
-		margin: 18px 16px 0;
+		margin: $s-4-raw;
 		background: var(--bg-1);
 		border: 1px solid var(--border-1);
 		border-radius: var(--r-card-sm);
@@ -219,7 +219,7 @@
 
 	// Add button
 	&__add-wrap {
-		margin: 18px 16px 0;
+		margin: $s-4-raw;
 	}
 
 	&__add-btn {

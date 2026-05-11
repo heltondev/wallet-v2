@@ -1,4 +1,5 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { extractAuth } from '../shared/auth';
 import { getItem, putItem, queryItems, updateItem } from '../shared/dynamo';
 import { ok, badRequest, serverError, tooManyRequests } from '../shared/response';
@@ -9,7 +10,18 @@ async function loadPrompt(feature: string): Promise<string> {
   return item.content as string;
 }
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
+let cachedApiKey: string | null = null;
+async function getOpenAiKey(): Promise<string> {
+  if (cachedApiKey) return cachedApiKey;
+  const ssm = new SSMClient({});
+  const param = await ssm.send(new GetParameterCommand({
+    Name: '/wallet/openai-api-key',
+    WithDecryption: true,
+  }));
+  cachedApiKey = param.Parameter?.Value ?? '';
+  return cachedApiKey;
+}
+
 const MONTHLY_BUDGET_USD = parseFloat(process.env.AI_MONTHLY_BUDGET ?? '5');
 
 interface ContentPart {
@@ -71,7 +83,7 @@ async function callOpenAi(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      Authorization: `Bearer ${await getOpenAiKey()}`,
     },
     body: JSON.stringify(body),
   });
