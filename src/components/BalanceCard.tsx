@@ -1,5 +1,6 @@
 import { Icons } from './icons/Icons';
 import { fmtAmount, convertAmount } from '../utils/formatters';
+import { currentMonthKey, monthLabel } from '../utils/dates';
 import type { CurrencyCode } from '../types';
 
 interface BalanceCardProps {
@@ -10,7 +11,7 @@ interface BalanceCardProps {
   kind?: 'a' | 'b';
 }
 
-export function BalanceCard({ value, delta, currency = 'BRL', month = 'Maio · 2026', kind = 'a' }: BalanceCardProps) {
+export function BalanceCard({ value, delta, currency = 'BRL', month = monthLabel(currentMonthKey()), kind = 'a' }: BalanceCardProps) {
   const positive = value >= 0;
   const secondaryCurrency: CurrencyCode = currency === 'BRL' ? 'USD' : 'BRL';
   const secondaryValue = convertAmount(value, currency, secondaryCurrency);
@@ -23,14 +24,16 @@ export function BalanceCard({ value, delta, currency = 'BRL', month = 'Maio · 2
       }}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
           <span style={{fontSize:13,color:'var(--text-3)',letterSpacing:0.2,textTransform:'uppercase',fontFamily:'var(--font-mono)'}}>Saldo do mês</span>
-          <span style={{
-            fontSize:11,color: delta>=0?'var(--pos)':'var(--neg)',
-            background: delta>=0?'var(--pos-bg)':'var(--neg-bg)',
-            padding:'3px 7px',borderRadius:'var(--r-pill)',
-            fontFamily:'var(--font-mono)',fontWeight:500,
-          }} className="tabular">
-            {delta>=0?'+':'−'}{Math.abs(delta).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}% vs abr
-          </span>
+          {delta !== 0 && (
+            <span style={{
+              fontSize:11,color: delta>=0?'var(--pos)':'var(--neg)',
+              background: delta>=0?'var(--pos-bg)':'var(--neg-bg)',
+              padding:'3px 7px',borderRadius:'var(--r-pill)',
+              fontFamily:'var(--font-mono)',fontWeight:500,
+            }} className="tabular">
+              {delta>=0?'+':'−'}{Math.abs(delta).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%
+            </span>
+          )}
         </div>
         <div className="money" style={{fontSize:38,fontWeight:600,letterSpacing:-1.4,lineHeight:1.05,marginTop:4}}>
           {fmtAmount(value, currency)}
@@ -50,14 +53,16 @@ export function BalanceCard({ value, delta, currency = 'BRL', month = 'Maio · 2
         <div>
           <div style={{fontSize:11,color:'var(--text-3)',letterSpacing:1.2,textTransform:'uppercase',fontFamily:'var(--font-mono)'}}>SALDO · {month.toUpperCase()}</div>
         </div>
-        <div style={{
-          fontSize:11,color: delta>=0?'var(--pos)':'var(--neg)',
-          fontFamily:'var(--font-mono)',fontWeight:500,
-          display:'flex',alignItems:'center',gap:3,
-        }} className="tabular">
-          {delta>=0? <Icons.arrowUp size={11} stroke={2.4}/> : <Icons.arrowDown size={11} stroke={2.4}/>}
-          {Math.abs(delta).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%
-        </div>
+        {delta !== 0 && (
+          <div style={{
+            fontSize:11,color: delta>=0?'var(--pos)':'var(--neg)',
+            fontFamily:'var(--font-mono)',fontWeight:500,
+            display:'flex',alignItems:'center',gap:3,
+          }} className="tabular">
+            {delta>=0? <Icons.arrowUp size={11} stroke={2.4}/> : <Icons.arrowDown size={11} stroke={2.4}/>}
+            {Math.abs(delta).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%
+          </div>
+        )}
       </div>
       <div className="money" style={{
         fontSize:54,fontWeight:600,letterSpacing:-2.4,lineHeight:0.98,marginTop:10,

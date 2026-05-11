@@ -1,54 +1,61 @@
+import { useMemo } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { CATS } from '../data/categories';
-import { fmtBRL } from '../utils/formatters';
+import { fmtAmount, convertAmount } from '../utils/formatters';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { CategoryIcon } from '../components/CategoryIcon';
-import type { FabKind } from '../types';
+import { currentMonthKey, monthLabelUpper } from '../utils/dates';
+import type { Transaction, CurrencyCode } from '../types';
 
 interface CategoriasScreenProps {
-  fabKind?: FabKind;
+  tx: Transaction[];
+  currency: CurrencyCode;
 }
 
-export function CategoriasScreen({ fabKind: _fabKind = 'circle' }: CategoriasScreenProps) {
-  const data = [
-    {cat:'mercado', spent:920, budget:1200},
-    {cat:'restaurante', spent:480, budget:600},
-    {cat:'transporte', spent:540, budget:500},
-    {cat:'casa', spent:2400, budget:2400},
-    {cat:'saude', spent:89, budget:300},
-    {cat:'lazer', spent:280, budget:400},
-    {cat:'assinaturas', spent:172, budget:200},
-    {cat:'trabalho', spent:120, budget:400},
-  ];
+export function CategoriasScreen({ tx, currency }: CategoriasScreenProps) {
+  const data = useMemo(() => {
+    const byCat: Record<string, number> = {};
+    for (const item of tx) {
+      const converted = convertAmount(item.amount, item.currency, currency);
+      if (converted < 0) {
+        const cat = item.cat || 'outros';
+        byCat[cat] = (byCat[cat] || 0) + Math.abs(converted);
+      }
+    }
+    return Object.entries(byCat)
+      .map(([cat, spent]) => ({ cat, spent }))
+      .sort((a, b) => b.spent - a.spent);
+  }, [tx, currency]);
+
+  const label = monthLabelUpper(currentMonthKey());
+
   return (
     <div className="phone-surface" style={{height:'100%',position:'relative'}} data-screen-label="Categories">
       <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
       <div style={{position:'absolute',top:0,left:0,right:0,bottom:100,overflow:'auto',paddingTop:54,paddingBottom:20}} className="no-scrollbar">
         <div style={{padding:'8px 16px 6px',display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
           <h1 style={{fontSize:24,fontWeight:600,letterSpacing:-0.6,margin:0,color:'var(--text-1)'}}>Categorias</h1>
-          <span style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',letterSpacing:0.5,textTransform:'uppercase'}}>MAI · 2026</span>
+          <span style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',letterSpacing:0.5,textTransform:'uppercase'}}>{label}</span>
         </div>
         <div style={{padding:'12px 16px 8px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-          {data.map(d=>{
-            const pct = (d.spent/d.budget)*100;
-            const over = pct > 100;
+          {data.map(d => {
+            const catMeta = CATS[d.cat];
             return (
               <div key={d.cat} style={{background:'var(--bg-1)',border:'1px solid var(--border-1)',borderRadius:'var(--r-card-sm)',padding:14}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
                   <CategoryIcon cat={d.cat} size={32} radius={8}/>
-                  <span className="money" style={{fontSize:10,fontFamily:'var(--font-mono)',color: over?'var(--neg)':'var(--text-3)',letterSpacing:0.5}}>
-                    {pct.toFixed(0)}%
-                  </span>
                 </div>
-                <div style={{fontSize:13.5,fontWeight:500,color:'var(--text-1)',marginBottom:6}}>{CATS[d.cat].label}</div>
-                <div className="money" style={{fontSize:17,fontWeight:600,letterSpacing:-0.4,color:'var(--text-1)'}}>{fmtBRL(d.spent,{decimals:0})}</div>
-                <div className="money" style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',marginTop:1}}>de {fmtBRL(d.budget,{decimals:0})}</div>
-                <div style={{marginTop:10,height:4,background:'var(--bg-2)',borderRadius:2,overflow:'hidden'}}>
-                  <div style={{width:`${Math.min(100,pct)}%`,height:'100%',background: over?'var(--neg)':`var(--cat-${d.cat})`}}/>
-                </div>
+                <div style={{fontSize:13.5,fontWeight:500,color:'var(--text-1)',marginBottom:6}}>{catMeta?.label ?? d.cat}</div>
+                <div className="money" style={{fontSize:17,fontWeight:600,letterSpacing:-0.4,color:'var(--text-1)'}}>{fmtAmount(d.spent, currency, {decimals:0})}</div>
+                <div className="money" style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',marginTop:1}}>sem orçamento</div>
               </div>
             );
           })}
+          {data.length === 0 && (
+            <div style={{gridColumn:'1 / -1',padding:'30px 0',textAlign:'center',color:'var(--text-3)',fontSize:13,fontFamily:'var(--font-mono)'}}>
+              Sem gastos registrados
+            </div>
+          )}
           {/* + new category */}
           <button style={{
             background:'transparent',border:'1.5px dashed var(--border-2)',borderRadius:'var(--r-card-sm)',

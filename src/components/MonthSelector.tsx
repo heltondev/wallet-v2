@@ -1,13 +1,14 @@
 import React from 'react';
 import { Icons } from './icons/Icons';
+import { currentMonth, currentYear, surroundingMonthsShort } from '../utils/dates';
 
 interface MonthSelectorProps {
   month?: string;
   year?: number;
 }
 
-export const MonthSelector: React.FC<MonthSelectorProps> = ({ month = 'Maio', year = 2026 }) => {
-  const months = ['Mar','Abr','Mai','Jun','Jul'];
+export const MonthSelector: React.FC<MonthSelectorProps> = ({ month = currentMonth(), year = currentYear() }) => {
+  const months = surroundingMonthsShort();
   const activeIdx = 2;
   return (
     <div style={{padding:'8px 16px 12px'}}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { aiInsights } from '../lib/api';
+import { currentMonthKey, monthLabelShort } from '../utils/dates';
 import type { FabKind } from '../types';
 
 interface InsightsData {
@@ -73,10 +74,13 @@ function BulletList({ items, color }: { items: string[]; color?: string }) {
 
 export function AiInsights({ fabKind: _fabKind, onBack }: { fabKind: FabKind; onBack?: () => void }) {
   const [data, setData] = useState<InsightsData | null>(null);
+  const monthKey = currentMonthKey();
 
   useEffect(() => {
-    aiInsights('2026-05').then(setData);
-  }, []);
+    aiInsights(monthKey).then(setData);
+  }, [monthKey]);
+
+  const headerLabel = `Insights \u00b7 ${monthLabelShort(monthKey)}`;
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-0)' }}>
@@ -96,7 +100,7 @@ export function AiInsights({ fabKind: _fabKind, onBack }: { fabKind: FabKind; on
         )}
         <Icons.alert size={20} color="var(--pos)" />
         <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 17, color: 'var(--text-1)' }}>
-          Insights · Mai 2026
+          {headerLabel}
         </span>
       </div>
 

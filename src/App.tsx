@@ -189,10 +189,10 @@ export function App() {
           <LiveTxList tx={tx} displayCurrency={currency} />
         )}
         {tab === 'forecast' && (
-          <PrevisaoA fabKind={fab} />
+          <PrevisaoA tx={tx} currency={currency} />
         )}
         {tab === 'cats' && (
-          <CategoriasScreen fabKind={fab} />
+          <CategoriasScreen tx={tx} currency={currency} />
         )}
         {tab === 'settings' && !subScreen && (
           <AjustesScreen

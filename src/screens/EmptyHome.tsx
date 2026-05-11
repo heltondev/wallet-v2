@@ -1,15 +1,21 @@
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { BottomTabBar } from '../components/BottomTabBar';
+import { currentMonth, currentYear } from '../utils/dates';
 
-export function EmptyHome() {
+interface EmptyHomeProps {
+  userName?: string;
+}
+
+export function EmptyHome({ userName }: EmptyHomeProps) {
+  const greeting = userName ? `Olá, ${userName}` : 'Olá';
   return (
     <div className="phone-surface" style={{height:'100%',position:'relative'}} data-screen-label="Empty Home">
       <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
       <div style={{height:'100%',padding:'80px 24px 90px',display:'flex',flexDirection:'column'}}>
         <div>
-          <div style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',letterSpacing:1.2,textTransform:'uppercase'}}>Maio · 2026</div>
-          <h1 style={{fontSize:30,fontWeight:600,letterSpacing:-0.8,margin:'2px 0 0',color:'var(--text-1)'}}>Olá, Rafael</h1>
+          <div style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',letterSpacing:1.2,textTransform:'uppercase'}}>{currentMonth()} · {currentYear()}</div>
+          <h1 style={{fontSize:30,fontWeight:600,letterSpacing:-0.8,margin:'2px 0 0',color:'var(--text-1)'}}>{greeting}</h1>
         </div>
         <div style={{flex:1,display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'flex-start',gap:24}}>
           <div style={{

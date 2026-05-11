@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { BarChart } from '../components/BarChart';
+import { currentMonthKey, monthLabelUpper } from '../utils/dates';
 import type { FabKind } from '../types';
 
 interface ServiceCost {
@@ -96,7 +97,7 @@ export function AdminCosts({ fabKind: _fabKind, onBack }: { fabKind: FabKind; on
               borderRadius: 'var(--r-card, 16px)', padding: 18,
             }}>
               <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 4 }}>
-                CUSTO MENSAL · MAI 2026
+                CUSTO MENSAL · {monthLabelUpper(currentMonthKey())}
               </div>
               <div className="money" style={{ fontSize: 42, fontWeight: 600, letterSpacing: -1.8, lineHeight: 1, color: 'var(--text-1)' }}>
                 ${data.totalMonthly.toFixed(2)}
@@ -107,7 +108,7 @@ export function AdminCosts({ fabKind: _fabKind, onBack }: { fabKind: FabKind; on
                   fontFamily: 'var(--font-mono)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 2,
                 }}>
                   {data.trend <= 0 ? <Icons.arrowDown size={11} stroke={2.4} /> : <Icons.arrowUp size={11} stroke={2.4} />}
-                  {Math.abs(data.trend).toFixed(1)}% vs abr
+                  {Math.abs(data.trend).toFixed(1)}% vs mês anterior
                 </span>
                 <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--text-4)' }} />
                 <span className="money" style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
