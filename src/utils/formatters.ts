@@ -1,4 +1,5 @@
 import { FX } from '../data/constants';
+import { getFxRate } from './fxRates';
 import type { CurrencyCode } from '../types';
 
 export const fmtBRL = (v: number, { sign = false, decimals = 2 }: { sign?: boolean; decimals?: number } = {}): string => {
@@ -33,8 +34,12 @@ export const fmtAmount = (
   return `${prefix}${cfg.symbol} ${s}`;
 };
 
-export const convertAmount = (amount: number, fromCurrency: CurrencyCode, toCurrency: CurrencyCode): number => {
+export const convertAmount = (amount: number, fromCurrency: CurrencyCode, toCurrency: CurrencyCode, rates?: Record<string, number>): number => {
   if (fromCurrency === toCurrency) return amount;
+  if (rates) {
+    return amount * getFxRate(fromCurrency, toCurrency, rates);
+  }
+  // Fallback to hardcoded rates
   const toBRL: Record<CurrencyCode, number> = { BRL: 1, USD: FX, EUR: FX * 1.08 };
   const inBRL = amount * toBRL[fromCurrency];
   return inBRL / toBRL[toCurrency];

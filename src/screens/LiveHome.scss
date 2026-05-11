@@ -43,89 +43,53 @@
 		gap: 10px;
 	}
 
-	&__section-header {
-		padding: 0 16px 8px;
+	&__quick-cards {
 		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
+		gap: 10px;
+		padding: 0 16px 16px;
 	}
 
-	&__section-title {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-2);
-		margin: 0;
-		letter-spacing: 0.5px;
-		text-transform: uppercase;
-		font-family: var(--font-mono);
-	}
-
-	&__see-all {
-		background: none;
-		border: none;
-		color: var(--text-3);
-		font-size: 12px;
-		font-family: var(--font-mono);
-		cursor: pointer;
-	}
-
-	// Recurring section
-	&__recurring-count {
-		font-size: 11px;
-		color: var(--text-3);
-		font-family: var(--font-mono);
-	}
-
-	&__recurring-list {
-		margin: 4px 16px 14px;
+	&__quick-card {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 14px;
 		background: var(--bg-1);
 		border: 1px solid var(--border-1);
 		border-radius: var(--r-card-sm);
+		border: none;
+		cursor: pointer;
+		text-align: left;
 	}
 
-	&__recurring-item {
+	&__quick-card-icon {
+		width: 36px;
+		height: 36px;
+		border-radius: 10px;
+		background: var(--bg-2);
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		padding: 10px 14px;
-
-		&:not(:last-child) {
-			border-bottom: 1px solid var(--border-1);
-		}
+		justify-content: center;
+		flex-shrink: 0;
 	}
 
-	&__recurring-desc {
+	&__quick-card-info {
 		flex: 1;
-		font-size: 13.5px;
-		color: var(--text-1);
-		font-weight: 500;
 	}
 
-	&__recurring-amount {
-		font-size: 13px;
+	&__quick-card-count {
+		font-size: 20px;
 		font-weight: 600;
 		color: var(--text-1);
-		white-space: nowrap;
-
-		&--pos {
-			color: var(--pos);
-		}
+		letter-spacing: -0.5px;
 	}
 
-	// Transactions section
-	&__tx-list {
-		padding: 0 16px;
-	}
-
-	&__tx-item {
-		border-bottom: 1px solid var(--border-1);
-	}
-
-	&__tx-empty {
-		padding: 20px 0;
-		text-align: center;
-		color: var(--text-4);
-		font-size: 13px;
+	&__quick-card-label {
+		font-size: 11px;
+		color: var(--text-3);
 		font-family: var(--font-mono);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 }

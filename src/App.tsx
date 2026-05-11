@@ -17,7 +17,8 @@ import { ManageRecurring } from './screens/ManageRecurring';
 import { ManageWorkspaces } from './screens/ManageWorkspaces';
 import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
-import { fmtBRL } from './utils/formatters';
+import { fmtBRL, convertAmount } from './utils/formatters';
+import { fetchFxRates } from './utils/fxRates';
 import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
 import { listTransactions, createTransaction, listAccounts, getSettings, generateRecurring, listWorkspaces, listRecurring } from './lib/api';
 import type { Transaction, Account, Workspace, RecurringTransaction, TabId, FabKind, ToastData, CurrencyCode } from './types';
@@ -61,6 +62,7 @@ export function App() {
   const [subScreen, setSubScreen] = useState<string | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
+  const [fxRates, setFxRates] = useState<Record<string, number>>({ USD: 1, BRL: 5.19, EUR: 0.92 });
 
   // Check auth on mount — handle OAuth callback if present
   useEffect(() => {
@@ -80,6 +82,12 @@ export function App() {
       });
     }
   }, []);
+
+  // Fetch live FX rates after auth
+  useEffect(() => {
+    if (!authed) return;
+    fetchFxRates().then(setFxRates);
+  }, [authed]);
 
   // Load data from API after auth, then generate pending recurring transactions
   useEffect(() => {
@@ -125,7 +133,7 @@ export function App() {
 
   const activeBudget = activeWorkspace
     ? workspaces.find(w => w.id === activeWorkspace)?.monthlyBudget ?? 0
-    : workspaces.reduce((sum, w) => sum + w.monthlyBudget, 0);
+    : workspaces.reduce((sum, w) => sum + convertAmount(w.monthlyBudget, w.currency, currency, fxRates), 0);
 
   const activeCurrency = activeWorkspace
     ? workspaces.find(w => w.id === activeWorkspace)?.currency ?? currency
@@ -218,6 +226,8 @@ export function App() {
             workspaces={workspaces}
             activeWorkspace={activeWorkspace}
             onWorkspaceChange={setActiveWorkspace}
+            onNavigateRecurring={() => { setTab('settings'); setSubScreen('recurring'); }}
+            fxRates={fxRates}
           />
         )}
         {tab === 'list' && (
