@@ -5,7 +5,7 @@ import { IOSStatusBar } from '../components/IOSStatusBar';
 import { signOut, getSession } from '../lib/auth';
 import { getSettings, updateSettings, listAccounts, listCategories } from '../lib/api';
 import { CATS } from '../data/categories';
-import type { FabKind, CurrencyCode } from '../types';
+import type { Transaction, FabKind, CurrencyCode } from '../types';
 
 interface RowProps {
   label: string;
@@ -23,12 +23,13 @@ interface SectionProps {
 
 interface AjustesScreenProps {
   fabKind?: FabKind;
+  tx?: Transaction[];
   onNavigate?: (screen: string) => void;
   onSignOut?: () => void;
   onSettingsChange?: (settings: { theme?: 'dark' | 'light'; currency?: CurrencyCode; monthlyBudget?: number }) => void;
 }
 
-export function AjustesScreen({ fabKind: _fabKind = 'circle', onNavigate, onSignOut, onSettingsChange }: AjustesScreenProps) {
+export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigate, onSignOut, onSettingsChange }: AjustesScreenProps) {
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -58,6 +59,23 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', onNavigate, onSign
     listAccounts().then(a => setAccountCount(a.length)).catch(() => {});
     listCategories().then(c => setCategoryCount(Object.keys(CATS).length + c.length)).catch(() => setCategoryCount(Object.keys(CATS).length));
   }, []);
+
+  const exportCSV = () => {
+    if (tx.length === 0) return;
+    const header = 'Data,Descrição,Categoria,Valor,Moeda,Conta';
+    const rows = tx.map(item => {
+      const cat = CATS[item.cat]?.label ?? item.cat;
+      return `${item.date ?? item.day},${item.desc},${cat},${item.amount},${item.currency},${item.account}`;
+    });
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `wallet-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const toggleTheme = async () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -174,8 +192,8 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', onNavigate, onSign
         </Section>
 
         <Section title="DADOS">
-          <Row label="Exportar (CSV / OFX)" icon="download" />
-          <Row label="Backup automático" detail="Ativo" icon="cloud" last />
+          <Row label="Exportar CSV" detail={`${tx.length} transações`} icon="download" onClick={exportCSV} />
+          <Row label="Backup na nuvem" detail="Ativo" icon="cloud" last />
         </Section>
 
         <Section title="INTELIGÊNCIA ARTIFICIAL">

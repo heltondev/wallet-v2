@@ -197,6 +197,7 @@ export function App() {
         {tab === 'settings' && !subScreen && (
           <AjustesScreen
             fabKind={fab}
+            tx={tx}
             onNavigate={(s) => setSubScreen(s)}
             onSignOut={handleSignOut}
             onSettingsChange={(s) => {
