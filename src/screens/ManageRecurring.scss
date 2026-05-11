@@ -181,6 +181,61 @@
 		margin-top: 4px;
 	}
 
+	// Form total breakdown
+	&__form-total {
+		margin-top: 10px;
+		padding: 12px;
+		background: $bg-2;
+		border-radius: 8px;
+	}
+
+	&__form-total-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		font-size: $fs-caption;
+		font-family: $font-mono;
+		color: $text-3;
+		padding: 3px 0;
+	}
+
+	&__form-total-value {
+		color: $text-2;
+
+		&--highlight {
+			color: $text-1;
+			font-weight: $fw-semibold;
+		}
+	}
+
+	&__form-total-bar {
+		height: 4px;
+		background: $bg-3;
+		border-radius: 2px;
+		margin-top: 8px;
+		overflow: hidden;
+	}
+
+	&__form-total-bar-fill {
+		height: 100%;
+		background: $pos;
+		border-radius: 2px;
+		transition: width 0.3s;
+	}
+
+	// Search
+	&__search {
+		margin: 0 $s-4-raw 10px;
+	}
+
+	&__search-input {
+		@include input;
+		padding-left: 36px;
+		background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2' stroke-linecap='round'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>");
+		background-repeat: no-repeat;
+		background-position: 10px center;
+	}
+
 	&__item-row3 {
 		display: flex;
 		align-items: center;

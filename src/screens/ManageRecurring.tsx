@@ -80,6 +80,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
   const [form, setForm] = useState<FormData>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const catSlugs = Object.keys(CATS);
 
@@ -655,6 +656,41 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
               </div>
             </div>
 
+            {form.endDate && form.amount && (() => {
+              const monthly = parseFloat(form.amount.replace(',', '.'));
+              if (isNaN(monthly) || monthly <= 0) return null;
+              const now = new Date();
+              const start = new Date(form.startDate + 'T00:00:00');
+              const end = new Date(form.endDate + 'T00:00:00');
+              const totalMonths = Math.max(1, Math.round((end.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000)));
+              const elapsed = Math.max(0, Math.min(totalMonths, Math.round((now.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000))));
+              const remaining = totalMonths - elapsed;
+              const totalAmount = monthly * totalMonths;
+              const paidAmount = monthly * elapsed;
+              const remainingAmount = monthly * remaining;
+              const pct = totalMonths > 0 ? Math.round((elapsed / totalMonths) * 100) : 0;
+              const sym = form.currency === 'BRL' ? 'R$ ' : form.currency === 'USD' ? '$ ' : '€ ';
+              return (
+                <div className="manage-recurring__form-total">
+                  <div className="manage-recurring__form-total-row">
+                    <span>Total</span>
+                    <span className="manage-recurring__form-total-value">{sym}{totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="manage-recurring__form-total-row">
+                    <span>Pago ({elapsed}x)</span>
+                    <span className="manage-recurring__form-total-value manage-recurring__form-total-value--highlight">{sym}{paidAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="manage-recurring__form-total-row">
+                    <span>Restante ({remaining}x)</span>
+                    <span className="manage-recurring__form-total-value">{sym}{remainingAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="manage-recurring__form-total-bar">
+                    <div className="manage-recurring__form-total-bar-fill" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })()}
+
             <textarea
               placeholder="Notas (opcional)"
               value={form.notes}
@@ -700,8 +736,24 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
             <div className="manage-recurring__empty-text">Nenhuma recorrente cadastrada</div>
           </div>
         ) : !showForm && (
+          <>
+          {items.length > 3 && (
+            <div className="manage-recurring__search">
+              <input
+                type="text"
+                placeholder="Buscar recorrente..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="manage-recurring__search-input"
+              />
+            </div>
+          )}
           <div className="manage-recurring__list">
-            {items.map(r => (
+            {items.filter(r => {
+              if (!searchQuery.trim()) return true;
+              const q = searchQuery.toLowerCase();
+              return r.desc.toLowerCase().includes(q) || r.cat.toLowerCase().includes(q);
+            }).map(r => (
               <div
                 key={r.id}
                 className={`manage-recurring__item ${!r.active ? 'manage-recurring__item--inactive' : ''}`}
@@ -768,6 +820,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
               </div>
             ))}
           </div>
+          </>
         )}
         </>
         )}
