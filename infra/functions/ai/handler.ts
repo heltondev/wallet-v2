@@ -1,6 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { extractAuth } from '../shared/auth';
 import { getItem, putItem, queryItems, updateItem } from '../shared/dynamo';
 import { ok, badRequest, notFound, serverError, tooManyRequests } from '../shared/response';
@@ -24,6 +25,40 @@ async function getOpenAiKey(): Promise<string> {
 }
 
 const MONTHLY_BUDGET_USD = parseFloat(process.env.AI_MONTHLY_BUDGET ?? '5');
+const RECEIPTS_BUCKET = process.env.RECEIPTS_BUCKET ?? '';
+
+const s3 = new S3Client({});
+
+async function storeJobFiles(jobId: string, files: { base64: string; mimeType: string }[]): Promise<string[]> {
+  const keys: string[] = [];
+  for (let i = 0; i < files.length; i++) {
+    const key = `ai-jobs/${jobId}/file-${i}`;
+    await s3.send(new PutObjectCommand({
+      Bucket: RECEIPTS_BUCKET,
+      Key: key,
+      Body: Buffer.from(files[i].base64, 'base64'),
+      ContentType: files[i].mimeType,
+      Metadata: { mimetype: files[i].mimeType },
+    }));
+    keys.push(key);
+  }
+  return keys;
+}
+
+async function loadJobFiles(jobId: string, fileKeys: string[]): Promise<{ base64: string; mimeType: string }[]> {
+  const files: { base64: string; mimeType: string }[] = [];
+  for (const key of fileKeys) {
+    const resp = await s3.send(new GetObjectCommand({ Bucket: RECEIPTS_BUCKET, Key: key }));
+    const body = await resp.Body?.transformToByteArray();
+    if (body) {
+      files.push({
+        base64: Buffer.from(body).toString('base64'),
+        mimeType: resp.Metadata?.mimetype ?? resp.ContentType ?? 'application/octet-stream',
+      });
+    }
+  }
+  return files;
+}
 
 interface ContentPart {
   type: string;
@@ -316,15 +351,17 @@ function buildExtractPrompt(
 
 async function extractReceipt(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
   const body = JSON.parse(event.body ?? '{}');
-  const { files, text, jobId: existingJobId } = body as {
+  const { files, text, jobId: existingJobId, fileKeys: existingFileKeys } = body as {
     files?: { base64: string; mimeType: string }[];
     text?: string;
     jobId?: string;
+    fileKeys?: string[];
   };
 
-  // Async worker invocation — do the actual work
-  if (existingJobId) {
-    return processExtractReceipt(event, userId, existingJobId, files, text);
+  // Async worker — load files from S3 and process
+  if (existingJobId && existingFileKeys) {
+    const loadedFiles = await loadJobFiles(existingJobId, existingFileKeys);
+    return processExtractReceipt(event, userId, existingJobId, loadedFiles, text);
   }
 
   if ((!files || files.length === 0) && !text?.trim()) {
@@ -332,6 +369,11 @@ async function extractReceipt(event: APIGatewayProxyEvent, userId: string): Prom
   }
 
   const jobId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  let fileKeys: string[] = [];
+  if (files && files.length > 0) {
+    fileKeys = await storeJobFiles(jobId, files);
+  }
 
   await putItem({
     PK: 'GLOBAL',
@@ -344,13 +386,17 @@ async function extractReceipt(event: APIGatewayProxyEvent, userId: string): Prom
   });
 
   const lambda = new LambdaClient({});
+  const workerPayload = {
+    resource: event.resource,
+    httpMethod: event.httpMethod,
+    headers: event.headers,
+    requestContext: event.requestContext,
+    body: JSON.stringify({ jobId, fileKeys, text }),
+  };
   await lambda.send(new InvokeCommand({
     FunctionName: process.env.AWS_LAMBDA_FUNCTION_NAME!,
     InvocationType: 'Event',
-    Payload: new TextEncoder().encode(JSON.stringify({
-      ...event,
-      body: JSON.stringify({ ...body, jobId }),
-    })),
+    Payload: new TextEncoder().encode(JSON.stringify(workerPayload)),
   }));
 
   return ok(event, { jobId, status: 'processing' });
@@ -550,15 +596,17 @@ async function chat(event: APIGatewayProxyEvent, userId: string): Promise<APIGat
 
 async function extractRecurring(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
   const body = JSON.parse(event.body ?? '{}');
-  const { files, text, jobId: existingJobId } = body as {
+  const { files, text, jobId: existingJobId, fileKeys: existingFileKeys } = body as {
     files?: { base64: string; mimeType: string }[];
     text?: string;
     jobId?: string;
+    fileKeys?: string[];
   };
 
-  // Async worker invocation — do the actual work
-  if (existingJobId) {
-    return processExtractRecurring(event, userId, existingJobId, files, text);
+  // Async worker invocation — load files from S3 and process
+  if (existingJobId && existingFileKeys) {
+    const loadedFiles = await loadJobFiles(existingJobId, existingFileKeys);
+    return processExtractRecurring(event, userId, existingJobId, loadedFiles, text);
   }
 
   if ((!files || files.length === 0) && !text?.trim()) {
@@ -566,6 +614,12 @@ async function extractRecurring(event: APIGatewayProxyEvent, userId: string): Pr
   }
 
   const jobId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  // Store files in S3 (avoid Lambda invoke payload limit)
+  let fileKeys: string[] = [];
+  if (files && files.length > 0) {
+    fileKeys = await storeJobFiles(jobId, files);
+  }
 
   await putItem({
     PK: 'GLOBAL',
@@ -577,14 +631,19 @@ async function extractRecurring(event: APIGatewayProxyEvent, userId: string): Pr
     createdAt: new Date().toISOString(),
   });
 
+  // Invoke self async — only pass fileKeys (not full files)
   const lambda = new LambdaClient({});
+  const workerPayload = {
+    resource: event.resource,
+    httpMethod: event.httpMethod,
+    headers: event.headers,
+    requestContext: event.requestContext,
+    body: JSON.stringify({ jobId, fileKeys, text }),
+  };
   await lambda.send(new InvokeCommand({
     FunctionName: process.env.AWS_LAMBDA_FUNCTION_NAME!,
     InvocationType: 'Event',
-    Payload: new TextEncoder().encode(JSON.stringify({
-      ...event,
-      body: JSON.stringify({ ...body, jobId }),
-    })),
+    Payload: new TextEncoder().encode(JSON.stringify(workerPayload)),
   }));
 
   return ok(event, { jobId, status: 'processing' });

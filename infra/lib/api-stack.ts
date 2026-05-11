@@ -173,9 +173,11 @@ export class ApiStack extends Stack {
       new PolicyStatement({
         effect: Effect.ALLOW,
         actions: ['lambda:InvokeFunction'],
-        resources: [aiFn.functionArn],
+        resources: [`arn:aws:lambda:${this.region}:${this.account}:function:${name(env_name, 'fn', 'ai')}`],
       }),
     );
+    aiFn.addEnvironment('RECEIPTS_BUCKET', receiptsBucket.bucketName);
+    receiptsBucket.grantReadWrite(aiFn);
     const ai = api.root.addResource('ai');
     ai.addResource('categorize').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
     const aiIntegration = new LambdaIntegration(aiFn, { timeout: Duration.seconds(29) });
