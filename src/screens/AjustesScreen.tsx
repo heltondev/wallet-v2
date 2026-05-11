@@ -122,39 +122,39 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
     return (
       <div
         onClick={onClick}
-        className={`ajustes__row ${onClick ? 'ajustes__row--clickable' : ''} ${last ? 'ajustes__row--last' : ''}`}
+        className={`settings-screen__row ${onClick ? 'settings-screen__row--clickable' : ''} ${last ? 'settings-screen__row--last' : ''}`}
       >
         {Ic && <Ic size={17} color={danger ? 'var(--neg)' : 'var(--text-2)'} stroke={1.8} />}
-        <span className={`ajustes__row-label ${danger ? 'ajustes__row-label--danger' : ''}`}>{label}</span>
-        {detail && <span className="ajustes__row-detail">{detail}</span>}
+        <span className={`settings-screen__row-label ${danger ? 'settings-screen__row-label--danger' : ''}`}>{label}</span>
+        {detail && <span className="settings-screen__row-detail">{detail}</span>}
         {onClick && <Icons.chevR size={14} color="var(--text-4)" />}
       </div>
     );
   };
 
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="ajustes__section">
-      <div className="ajustes__section-title">{title}</div>
-      <div className="ajustes__section-body">{children}</div>
+    <div className="settings-screen__section">
+      <div className="settings-screen__section-title">{title}</div>
+      <div className="settings-screen__section-body">{children}</div>
     </div>
   );
 
   return (
-    <div className="phone-surface ajustes" data-screen-label="Settings">
-      <div className="ajustes__status-bar"><IOSStatusBar /></div>
-      <div className="ajustes__scroll no-scrollbar">
-        <div className="ajustes__page-header">
-          <h1 className="ajustes__page-title">Ajustes</h1>
+    <div className="phone-surface settings-screen" data-screen-label="Settings">
+      <div className="settings-screen__status-bar"><IOSStatusBar /></div>
+      <div className="settings-screen__scroll no-scrollbar">
+        <div className="settings-screen__page-header">
+          <h1 className="settings-screen__page-title">Ajustes</h1>
         </div>
 
         {/* Profile */}
-        <div className="ajustes__profile">
-          <div className="ajustes__avatar">
+        <div className="settings-screen__profile">
+          <div className="settings-screen__avatar">
             {initials}
           </div>
-          <div className="ajustes__profile-info">
-            <div className="ajustes__profile-name">{userName || 'Usuário'}</div>
-            <div className="ajustes__profile-email">{userEmail}</div>
+          <div className="settings-screen__profile-info">
+            <div className="settings-screen__profile-name">{userName || 'Usuário'}</div>
+            <div className="settings-screen__profile-email">{userEmail}</div>
           </div>
         </div>
 
@@ -162,9 +162,9 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
           <Row label="Carteiras e contas" detail={String(accountCount)} icon="wallet" onClick={() => onNavigate?.('accounts')} />
           <Row label="Categorias" detail={String(categoryCount)} icon="grid" onClick={() => onNavigate?.('categories')} />
           {editingBudget ? (
-            <div className="ajustes__budget-edit">
+            <div className="settings-screen__budget-edit">
               <Icons.trending size={17} color="var(--text-2)" stroke={1.8} />
-              <span className="ajustes__budget-prefix">R$</span>
+              <span className="settings-screen__budget-prefix">R$</span>
               <input
                 autoFocus
                 type="text"
@@ -172,7 +172,7 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
                 onChange={e => setBudgetInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') saveBudget(); }}
                 onBlur={saveBudget}
-                className="ajustes__budget-input"
+                className="settings-screen__budget-input"
                 placeholder="9500"
               />
             </div>
@@ -195,9 +195,9 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
         <Section title="DADOS">
           <Row label="Exportar dados" detail={`${tx.length} transações`} icon="download" onClick={() => setExportOpen(!exportOpen)} />
           {exportOpen && (
-            <div className="ajustes__export-row">
-              <button onClick={exportCSV} className="ajustes__export-btn">CSV</button>
-              <button onClick={exportJSON} className="ajustes__export-btn">JSON</button>
+            <div className="settings-screen__export-row">
+              <button onClick={exportCSV} className="settings-screen__export-btn">CSV</button>
+              <button onClick={exportJSON} className="settings-screen__export-btn">JSON</button>
             </div>
           )}
           <Row label="Backup na nuvem" detail="Ativo" icon="cloud" last />

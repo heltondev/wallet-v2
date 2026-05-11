@@ -31,34 +31,34 @@ export function CategoriasScreen({ tx, currency }: CategoriasScreenProps) {
   const label = monthLabelUpper(currentMonthKey());
 
   return (
-    <div className="phone-surface categorias" data-screen-label="Categories">
-      <div className="categorias__status-bar"><IOSStatusBar/></div>
-      <div className="categorias__scroll no-scrollbar">
-        <div className="categorias__header">
-          <h1 className="categorias__title">Categorias</h1>
-          <span className="categorias__month">{label}</span>
+    <div className="phone-surface categories-screen" data-screen-label="Categories">
+      <div className="categories-screen__status-bar"><IOSStatusBar/></div>
+      <div className="categories-screen__scroll no-scrollbar">
+        <div className="categories-screen__header">
+          <h1 className="categories-screen__title">Categorias</h1>
+          <span className="categories-screen__month">{label}</span>
         </div>
-        <div className="categorias__grid">
+        <div className="categories-screen__grid">
           {data.map(d => {
             const catMeta = CATS[d.cat];
             return (
-              <div key={d.cat} className="categorias__card">
-                <div className="categorias__card-top">
+              <div key={d.cat} className="categories-screen__card">
+                <div className="categories-screen__card-top">
                   <CategoryIcon cat={d.cat} size={32} radius={8}/>
                 </div>
-                <div className="categorias__card-label">{catMeta?.label ?? d.cat}</div>
-                <div className="money categorias__card-amount">{fmtAmount(d.spent, currency, {decimals:0})}</div>
-                <div className="money categorias__card-budget">sem orçamento</div>
+                <div className="categories-screen__card-label">{catMeta?.label ?? d.cat}</div>
+                <div className="money categories-screen__card-amount">{fmtAmount(d.spent, currency, {decimals:0})}</div>
+                <div className="money categories-screen__card-budget">sem orçamento</div>
               </div>
             );
           })}
           {data.length === 0 && (
-            <div className="categorias__empty">
+            <div className="categories-screen__empty">
               Sem gastos registrados
             </div>
           )}
           {/* + new category */}
-          <button className="categorias__add-btn">
+          <button className="categories-screen__add-btn">
             <Icons.plus size={20} color="var(--text-3)"/>
             Nova categoria
           </button>

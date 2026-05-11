@@ -37,53 +37,53 @@ export function PrevisaoA({ tx, currency }: PrevisaoAProps) {
   if (tx.length === 0) return <EmptyPrevisao />;
 
   return (
-    <div className="phone-surface previsao-a" data-screen-label="Forecast A">
-      <div className="previsao-a__status-bar"><IOSStatusBar/></div>
-      <div className="previsao-a__scroll no-scrollbar">
-        <div className="previsao-a__header">
-          <div className="previsao-a__label">PREVISÃO PARA</div>
-          <h1 className="previsao-a__title">{nextMonthLabel()}</h1>
+    <div className="phone-surface forecast-screen" data-screen-label="Forecast A">
+      <div className="forecast-screen__status-bar"><IOSStatusBar/></div>
+      <div className="forecast-screen__scroll no-scrollbar">
+        <div className="forecast-screen__header">
+          <div className="forecast-screen__label">PREVISÃO PARA</div>
+          <h1 className="forecast-screen__title">{nextMonthLabel()}</h1>
         </div>
 
-        <div className="previsao-a__balance-card">
-          <div className="previsao-a__balance-label">Saldo atual do mês</div>
-          <div className="money previsao-a__balance-value" style={{ color: stats.balance >= 0 ? 'var(--pos)' : 'var(--neg)' }}>
+        <div className="forecast-screen__balance-card">
+          <div className="forecast-screen__balance-label">Saldo atual do mês</div>
+          <div className="money forecast-screen__balance-value" style={{ color: stats.balance >= 0 ? 'var(--pos)' : 'var(--neg)' }}>
             {fmtAmount(stats.balance, currency, {decimals:0})}
           </div>
-          <div className="previsao-a__balance-note">
+          <div className="forecast-screen__balance-note">
             Dados insuficientes para projeção completa. Continue adicionando transações.
           </div>
         </div>
 
-        <div className="previsao-a__section-header">
-          <h3 className="previsao-a__section-title">Gastos por categoria</h3>
-          <span className="previsao-a__section-count">{stats.categories.length} categorias</span>
+        <div className="forecast-screen__section-header">
+          <h3 className="forecast-screen__section-title">Gastos por categoria</h3>
+          <span className="forecast-screen__section-count">{stats.categories.length} categorias</span>
         </div>
-        <div className="previsao-a__cat-list">
+        <div className="forecast-screen__cat-list">
           {stats.categories.length === 0 ? (
-            <div className="previsao-a__cat-empty">
+            <div className="forecast-screen__cat-empty">
               Sem dados de gastos
             </div>
           ) : stats.categories.map(([cat, amount]) => (
-            <div key={cat} className="previsao-a__cat-row">
+            <div key={cat} className="forecast-screen__cat-row">
               <CategoryIcon cat={cat} size={28} radius={8}/>
-              <div className="previsao-a__cat-name">{CATS[cat]?.label ?? cat}</div>
-              <span className="money previsao-a__cat-amount">
+              <div className="forecast-screen__cat-name">{CATS[cat]?.label ?? cat}</div>
+              <span className="money forecast-screen__cat-amount">
                 −{fmtAmount(amount, currency, {decimals:0}).replace('−','')}
               </span>
             </div>
           ))}
         </div>
 
-        <div className="previsao-a__summary-card">
-          <div className="previsao-a__summary-grid">
+        <div className="forecast-screen__summary-card">
+          <div className="forecast-screen__summary-grid">
             <div>
-              <div className="previsao-a__summary-label">Entradas</div>
-              <div className="money previsao-a__summary-value previsao-a__summary-value--pos">{fmtAmount(stats.ins, currency, {decimals:0})}</div>
+              <div className="forecast-screen__summary-label">Entradas</div>
+              <div className="money forecast-screen__summary-value forecast-screen__summary-value--pos">{fmtAmount(stats.ins, currency, {decimals:0})}</div>
             </div>
             <div>
-              <div className="previsao-a__summary-label">Saídas</div>
-              <div className="money previsao-a__summary-value previsao-a__summary-value--neg">{fmtAmount(stats.outs, currency, {decimals:0})}</div>
+              <div className="forecast-screen__summary-label">Saídas</div>
+              <div className="money forecast-screen__summary-value forecast-screen__summary-value--neg">{fmtAmount(stats.outs, currency, {decimals:0})}</div>
             </div>
           </div>
         </div>
