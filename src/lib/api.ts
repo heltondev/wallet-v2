@@ -43,6 +43,15 @@ export const listAccounts = () =>
 export const listCategories = () =>
   apiFetch<Record<string, unknown>[]>('/categories');
 
+export const createCategory = (data: Record<string, unknown>) =>
+  apiFetch<Record<string, unknown>>('/categories', { method: 'POST', body: JSON.stringify(data) });
+
+export const updateCategory = (slug: string, data: Record<string, unknown>) =>
+  apiFetch<Record<string, unknown>>(`/categories/${slug}`, { method: 'PUT', body: JSON.stringify(data) });
+
+export const deleteCategory = (slug: string) =>
+  apiFetch<void>(`/categories/${slug}`, { method: 'DELETE' });
+
 // Budgets
 export const listBudgets = (month?: string) =>
   apiFetch<Record<string, unknown>[]>(month ? `/budgets?month=${month}` : '/budgets');

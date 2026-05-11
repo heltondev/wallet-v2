@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
-import { listCategories } from '../lib/api';
+import { listCategories, createCategory, updateCategory, deleteCategory } from '../lib/api';
 import { CATS } from '../data/categories';
 import type { CategoryMeta } from '../types';
 import './ManageCategories.scss';
@@ -10,9 +10,10 @@ interface ManageCategoriesProps {
   onBack?: () => void;
 }
 
-interface CustomCategory extends CategoryMeta {
+interface CategoryEntry extends CategoryMeta {
   slug: string;
-  custom?: boolean;
+  hidden?: boolean;
+  isDefault?: boolean;
 }
 
 const ICON_NAMES = Object.keys(Icons);
@@ -21,79 +22,144 @@ const COLOR_TOKENS = [
   'var(--cat-mercado)', 'var(--cat-restaurante)', 'var(--cat-transporte)',
   'var(--cat-casa)', 'var(--cat-saude)', 'var(--cat-lazer)',
   'var(--cat-trabalho)', 'var(--cat-assinaturas)', 'var(--cat-educacao)',
-  'var(--cat-outros)',
+  'var(--cat-outros)', 'var(--cat-pets)', 'var(--cat-compras)',
+  'var(--cat-viagem)', 'var(--cat-impostos)', 'var(--cat-seguros)',
+  'var(--cat-investimentos)', 'var(--cat-doacoes)', 'var(--cat-presentes)',
+  'var(--cat-servicos)', 'var(--cat-utilities)', 'var(--cat-alimentacao)',
+  'var(--cat-transferencia)',
 ];
 
 function slugify(str: string): string {
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+  return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
 export function ManageCategories({ onBack }: ManageCategoriesProps) {
-  const [customCats, setCustomCats] = useState<CustomCategory[]>([]);
+  const [categories, setCategories] = useState<CategoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [label, setLabel] = useState('');
+  const [labelEn, setLabelEn] = useState('');
   const [selectedColor, setSelectedColor] = useState(COLOR_TOKENS[0]);
   const [selectedIcon, setSelectedIcon] = useState('wallet');
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-  const fetchCategories = () => {
+  const loadCategories = async () => {
     setLoading(true);
-    listCategories()
-      .then(data => {
-        const cats = (data as unknown as (CategoryMeta & { slug: string })[])
-          .filter(c => !CATS[c.slug])
-          .map(c => ({ ...c, labelEn: c.labelEn ?? c.label, custom: true }));
-        setCustomCats(cats);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    try {
+      const apiCats = await listCategories() as unknown as (CategoryMeta & { slug: string; hidden?: boolean })[];
+      const overrides: Record<string, CategoryMeta & { hidden?: boolean }> = {};
+      for (const c of apiCats) {
+        overrides[c.slug] = c;
+      }
+
+      const all: CategoryEntry[] = [];
+
+      for (const [slug, cat] of Object.entries(CATS)) {
+        const override = overrides[slug];
+        if (override?.hidden) continue;
+        all.push({
+          slug,
+          label: override?.label ?? cat.label,
+          labelEn: override?.labelEn ?? cat.labelEn,
+          color: override?.color ?? cat.color,
+          icon: override?.icon ?? cat.icon,
+          isDefault: true,
+        });
+        delete overrides[slug];
+      }
+
+      for (const [slug, cat] of Object.entries(overrides)) {
+        if (cat.hidden) continue;
+        all.push({
+          slug,
+          label: cat.label,
+          labelEn: cat.labelEn ?? cat.label,
+          color: cat.color,
+          icon: cat.icon,
+          isDefault: false,
+        });
+      }
+
+      setCategories(all);
+    } catch {
+      const all = Object.entries(CATS).map(([slug, cat]) => ({
+        slug, ...cat, isDefault: true,
+      }));
+      setCategories(all);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchCategories(); }, []);
+  useEffect(() => { loadCategories(); }, []);
+
+  const resetForm = () => {
+    setLabel(''); setLabelEn('');
+    setSelectedColor(COLOR_TOKENS[0]); setSelectedIcon('wallet');
+    setEditingSlug(null); setShowForm(false);
+  };
+
+  const startEdit = (cat: CategoryEntry) => {
+    setEditingSlug(cat.slug);
+    setLabel(cat.label);
+    setLabelEn(cat.labelEn);
+    setSelectedColor(cat.color);
+    setSelectedIcon(cat.icon);
+    setShowForm(true);
+  };
+
+  const startNew = () => {
+    resetForm();
+    setShowForm(true);
+  };
 
   const handleSave = async () => {
     if (!label.trim()) return;
     setSaving(true);
-    const slug = slugify(label);
-    const newCat: CustomCategory = {
-      slug,
-      label: label.trim(),
-      labelEn: label.trim(),
-      color: selectedColor,
-      icon: selectedIcon,
-      custom: true,
-    };
-    setCustomCats(prev => [...prev, newCat]);
-    setLabel('');
-    setSelectedColor(COLOR_TOKENS[0]);
-    setSelectedIcon('wallet');
-    setShowForm(false);
-    setSaving(false);
+    try {
+      const slug = editingSlug ?? slugify(label);
+      const data = { slug, label: label.trim(), labelEn: labelEn.trim() || label.trim(), color: selectedColor, icon: selectedIcon };
+
+      if (editingSlug) {
+        await updateCategory(slug, data);
+      } else {
+        await createCategory(data);
+      }
+      await loadCategories();
+      resetForm();
+    } catch {
+      // failed
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (slug: string) => {
+  const handleDelete = async (slug: string) => {
     if (confirmDelete !== slug) {
       setConfirmDelete(slug);
       return;
     }
     setConfirmDelete(null);
-    setCustomCats(prev => prev.filter(c => c.slug !== slug));
+    try {
+      const cat = categories.find(c => c.slug === slug);
+      if (cat?.isDefault) {
+        await updateCategory(slug, { slug, label: cat.label, labelEn: cat.labelEn, color: cat.color, icon: cat.icon, hidden: true });
+      } else {
+        await deleteCategory(slug);
+      }
+      setCategories(prev => prev.filter(c => c.slug !== slug));
+    } catch {
+      // failed
+    }
   };
 
-  const renderCategoryIcon = (iconName: string, color: string) => {
+  const renderIcon = (iconName: string, color: string) => {
     const Ic = Icons[iconName as keyof typeof Icons];
     if (!Ic) return null;
     return <Ic size={17} color={color} stroke={1.8} />;
   };
-
-  const defaultEntries = Object.entries(CATS);
 
   return (
     <div className="manage-categories">
@@ -102,46 +168,48 @@ export function ManageCategories({ onBack }: ManageCategoriesProps) {
       </div>
 
       <div className="manage-categories__scroll no-scrollbar">
-        {/* Header */}
         <div className="manage-categories__header">
           {onBack && (
             <button onClick={onBack} className="manage-categories__back-btn">
               <Icons.chevL size={20} color="var(--text-2)" />
             </button>
           )}
-          <h1 className="manage-categories__title">
-            Categorias
-          </h1>
+          <h1 className="manage-categories__title">Categorias</h1>
         </div>
 
-        {/* Add button + form — at top */}
-        {!showForm && (
+        {/* Add / Edit form */}
+        {!showForm ? (
           <div className="manage-categories__add-wrap">
-            <button
-              onClick={() => setShowForm(true)}
-              className="manage-categories__add-btn"
-            >
+            <button onClick={startNew} className="manage-categories__add-btn">
               <Icons.plus size={16} color="var(--text-2)" />
               Adicionar categoria
             </button>
           </div>
-        )}
-
-        {showForm && (
+        ) : (
           <div className="manage-categories__form">
-            <div className="manage-categories__form-title">Nova categoria</div>
+            <div className="manage-categories__form-title">
+              {editingSlug ? 'Editar categoria' : 'Nova categoria'}
+            </div>
             <input
               type="text"
-              placeholder="Nome da categoria"
+              placeholder="Nome (PT-BR)"
               value={label}
               onChange={e => setLabel(e.target.value)}
               className="manage-categories__input"
             />
-            {label.trim() && (
+            <input
+              type="text"
+              placeholder="Name (EN)"
+              value={labelEn}
+              onChange={e => setLabelEn(e.target.value)}
+              className="manage-categories__input"
+            />
+            {!editingSlug && label.trim() && (
               <div className="manage-categories__slug-preview">
                 slug: {slugify(label)}
               </div>
             )}
+
             <div>
               <div className="manage-categories__picker-label">Cor</div>
               <div className="manage-categories__color-grid">
@@ -155,6 +223,7 @@ export function ManageCategories({ onBack }: ManageCategoriesProps) {
                 ))}
               </div>
             </div>
+
             <div>
               <div className="manage-categories__picker-label">Ícone</div>
               <div className="manage-categories__icon-grid">
@@ -172,12 +241,13 @@ export function ManageCategories({ onBack }: ManageCategoriesProps) {
                 })}
               </div>
             </div>
+
             <div className="manage-categories__form-actions">
-              <button onClick={() => setShowForm(false)} className="manage-categories__cancel-btn">Cancelar</button>
+              <button onClick={resetForm} className="manage-categories__cancel-btn">Cancelar</button>
               <button
                 onClick={handleSave}
                 disabled={saving || !label.trim()}
-                className={`manage-categories__save-btn ${label.trim() ? 'manage-categories__save-btn--active' : 'manage-categories__save-btn--disabled'} ${saving ? 'manage-categories__save-btn--saving' : ''}`}
+                className={`manage-categories__save-btn ${label.trim() ? 'manage-categories__save-btn--active' : 'manage-categories__save-btn--disabled'}`}
               >
                 {saving ? 'Salvando...' : 'Salvar'}
               </button>
@@ -185,65 +255,33 @@ export function ManageCategories({ onBack }: ManageCategoriesProps) {
           </div>
         )}
 
-        {/* Default categories */}
-        <div className="manage-categories__section">
-          <div className="manage-categories__section-label">
-            PADRÃO
-          </div>
+        {/* Category list — unified */}
+        {loading ? (
+          <div className="manage-categories__loading">Carregando...</div>
+        ) : (
           <div className="manage-categories__list">
-            {defaultEntries.map(([slug, cat]) => (
-              <div key={slug} className="manage-categories__item">
+            {categories.map((cat) => (
+              <div key={cat.slug} className="manage-categories__item">
                 <div className="manage-categories__icon-box" style={{ background: cat.color }}>
-                  {renderCategoryIcon(cat.icon, '#fff')}
+                  {renderIcon(cat.icon, '#fff')}
                 </div>
                 <div className="manage-categories__item-info">
                   <div className="manage-categories__item-label">{cat.label}</div>
+                  <div className="manage-categories__item-label-en">{cat.labelEn}</div>
                 </div>
-                <span className="manage-categories__item-slug">{slug}</span>
+                <button onClick={() => startEdit(cat)} className="manage-categories__edit-btn">
+                  <Icons.pencil size={15} color="var(--text-4)" />
+                </button>
+                <button
+                  onClick={() => handleDelete(cat.slug)}
+                  className="manage-categories__delete-btn"
+                >
+                  <Icons.trash size={15} color={confirmDelete === cat.slug ? 'var(--neg)' : 'var(--text-4)'} />
+                </button>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Custom categories */}
-        <div className="manage-categories__section">
-          <div className="manage-categories__section-label">
-            PERSONALIZADAS
-          </div>
-          {loading ? (
-            <div className="manage-categories__loading">
-              Carregando...
-            </div>
-          ) : customCats.length === 0 && !showForm ? (
-            <div className="manage-categories__empty">
-              Nenhuma categoria personalizada
-            </div>
-          ) : (
-            <div className="manage-categories__list">
-              {customCats.map((cat) => (
-                <div key={cat.slug} className="manage-categories__item">
-                  <div className="manage-categories__icon-box" style={{ background: cat.color }}>
-                    {renderCategoryIcon(cat.icon, '#fff')}
-                  </div>
-                  <div className="manage-categories__item-info">
-                    <div className="manage-categories__item-label">{cat.label}</div>
-                  </div>
-                  <span className="manage-categories__item-slug">{cat.slug}</span>
-                  <button
-                    onClick={() => handleDelete(cat.slug)}
-                    className="manage-categories__delete-btn"
-                  >
-                    <Icons.trash
-                      size={16}
-                      color={confirmDelete === cat.slug ? 'var(--neg)' : 'var(--text-4)'}
-                    />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
+        )}
       </div>
     </div>
   );
