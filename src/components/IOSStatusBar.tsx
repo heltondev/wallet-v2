@@ -8,7 +8,7 @@ interface IOSStatusBarProps {
 export const IOSStatusBar: React.FC<IOSStatusBarProps> = ({ dark = false, time = '9:41' }) => {
   const c = dark ? '#fff' : '#000';
   return (
-    <div style={{
+    <div className="ios-status-bar" style={{
       display: 'flex', gap: 154, alignItems: 'center', justifyContent: 'center',
       padding: '21px 24px 19px', boxSizing: 'border-box',
       position: 'relative', zIndex: 20, width: '100%',

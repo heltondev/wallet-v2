@@ -112,6 +112,10 @@ body {
   .home-ind {
     display: none;
   }
+
+  .ios-status-bar {
+    display: none !important;
+  }
 }
 
 .toast {
