@@ -4,6 +4,7 @@ import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { signOut, getSession } from '../lib/auth';
 import { getSettings, updateSettings, listAccounts, listCategories } from '../lib/api';
+import { CATS } from '../data/categories';
 import type { FabKind, CurrencyCode } from '../types';
 
 interface RowProps {
@@ -55,7 +56,7 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', onNavigate, onSign
     }).catch(() => {});
 
     listAccounts().then(a => setAccountCount(a.length)).catch(() => {});
-    listCategories().then(c => setCategoryCount(c.length)).catch(() => {});
+    listCategories().then(c => setCategoryCount(Object.keys(CATS).length + c.length)).catch(() => setCategoryCount(Object.keys(CATS).length));
   }, []);
 
   const toggleTheme = async () => {
