@@ -19,9 +19,9 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ active = 'home', onC
     ...(fabKind!=='tab' ? [{ id:'settings', label:'Ajustes', icon:'settings' }] : []),
   ];
   return (
-    <div style={{
-      position:'absolute',left:0,right:0,bottom:0,
-      paddingBottom:24,paddingTop:8,
+    <div className="bottom-tab-bar" style={{
+      position:'fixed',left:0,right:0,bottom:0,
+      paddingBottom:'calc(8px + env(safe-area-inset-bottom, 0px))',paddingTop:8,
       background:'color-mix(in oklch, var(--bg-0) 92%, transparent)',
       backdropFilter:'blur(20px)',
       borderTop:'1px solid var(--border-1)',
