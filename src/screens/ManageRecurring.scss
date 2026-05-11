@@ -80,8 +80,7 @@
 
 	&__item {
 		display: flex;
-		align-items: center;
-		gap: $s-3-raw;
+		flex-direction: column;
 		padding: 14px $s-4-raw;
 
 		&:not(:last-child) {
@@ -103,32 +102,50 @@
 		flex-shrink: 0;
 	}
 
-	&__item-info {
-		flex: 1;
-		min-width: 0;
+	&__item-row1 {
+		display: flex;
+		align-items: center;
+		gap: 10px;
 	}
 
 	&__item-desc {
+		flex: 1;
 		font-size: $fs-body;
 		font-weight: $fw-medium;
 		color: $text-1;
-		white-space: nowrap;
+		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
-	&__item-meta {
+	&__item-amount {
+		font-size: $fs-body;
+		font-weight: $fw-semibold;
+		font-family: $font-mono;
+		color: $text-1;
+		white-space: nowrap;
+		flex-shrink: 0;
+		@include money;
+
+		&--income {
+			color: $pos;
+		}
+	}
+
+	&__item-row2 {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: 6px;
-		margin-top: 2px;
+		margin-top: 8px;
 	}
 
 	&__item-freq {
 		font-size: $fs-caption;
 		font-weight: $fw-semibold;
 		font-family: $font-mono;
-		padding: 2px 6px;
+		padding: 2px 8px;
 		border-radius: 4px;
 		background: $bg-3;
 		color: $text-2;
@@ -137,34 +154,43 @@
 	&__item-day {
 		font-size: $fs-caption;
 		color: $text-3;
+		font-family: $font-mono;
+	}
+
+	&__item-currency {
+		font-size: $fs-caption;
+		font-family: $font-mono;
+		padding: 2px 6px;
+		border-radius: 4px;
+		background: $bg-3;
+		color: $text-3;
 	}
 
 	&__item-workspace {
 		font-size: $fs-caption;
 		color: $text-3;
-		padding: 2px 6px;
+		padding: 2px 8px;
 		border-radius: 4px;
 		background: $bg-3;
 	}
 
-	&__item-amount {
-		font-size: $fs-small;
-		font-weight: $fw-semibold;
-		font-family: $font-mono;
-		color: $text-1;
-		white-space: nowrap;
-		@include money;
-
-		&--income {
-			color: $pos;
-		}
-	}
-
-	&__item-actions {
+	&__item-row3 {
 		display: flex;
 		align-items: center;
-		gap: 4px;
-		flex-shrink: 0;
+		gap: 8px;
+		margin-top: 8px;
+		padding-top: 8px;
+		border-top: 1px solid $border-1;
+	}
+
+	&__item-status {
+		font-size: $fs-caption;
+		color: $text-3;
+		font-family: $font-mono;
+	}
+
+	&__item-spacer {
+		flex: 1;
 	}
 
 	&__icon-btn {

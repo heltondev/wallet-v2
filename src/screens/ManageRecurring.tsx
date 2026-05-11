@@ -706,35 +706,43 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
                 key={r.id}
                 className={`manage-recurring__item ${!r.active ? 'manage-recurring__item--inactive' : ''}`}
               >
-                <CatIcon slug={r.cat} />
-                <div className="manage-recurring__item-info">
+                {/* Row 1: icon + desc + amount */}
+                <div className="manage-recurring__item-row1">
+                  <CatIcon slug={r.cat} />
                   <div className="manage-recurring__item-desc">{r.desc}</div>
-                  <div className="manage-recurring__item-meta">
-                    <span className="manage-recurring__item-freq">{freqLabel(r.frequency)}</span>
-                    {dayInfo(r) && (
-                      <span className="manage-recurring__item-day">{dayInfo(r)}</span>
-                    )}
-                    {r.workspaceId && (() => {
-                      const ws = workspaces.find(w => w.id === r.workspaceId);
-                      return ws ? (
-                        <span className="manage-recurring__item-workspace">{ws.icon} {ws.name}</span>
-                      ) : null;
-                    })()}
-                  </div>
+                  <span
+                    className={`manage-recurring__item-amount ${r.amount >= 0 ? 'manage-recurring__item-amount--income' : ''}`}
+                  >
+                    {r.amount >= 0 ? '+' : ''}{r.currency === 'BRL' ? 'R$ ' : r.currency === 'USD' ? '$ ' : '€ '}
+                    {Math.abs(r.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
                 </div>
-                <span
-                  className={`manage-recurring__item-amount ${r.amount >= 0 ? 'manage-recurring__item-amount--income' : ''}`}
-                >
-                  {r.amount >= 0 ? '+' : ''}{r.currency === 'BRL' ? 'R$ ' : r.currency === 'USD' ? '$ ' : '€ '}
-                  {Math.abs(r.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
-                <div className="manage-recurring__item-actions">
+
+                {/* Row 2: meta badges */}
+                <div className="manage-recurring__item-row2">
+                  <span className="manage-recurring__item-freq">{freqLabel(r.frequency)}</span>
+                  {dayInfo(r) && (
+                    <span className="manage-recurring__item-day">{dayInfo(r)}</span>
+                  )}
+                  <span className="manage-recurring__item-currency">{r.currency}</span>
+                  {r.workspaceId && (() => {
+                    const ws = workspaces.find(w => w.id === r.workspaceId);
+                    return ws ? (
+                      <span className="manage-recurring__item-workspace">{ws.icon} {ws.name}</span>
+                    ) : null;
+                  })()}
+                </div>
+
+                {/* Row 3: actions */}
+                <div className="manage-recurring__item-row3">
                   <button
                     onClick={() => handleToggleActive(r)}
                     className={`manage-recurring__toggle-sm ${r.active ? 'manage-recurring__toggle-sm--on' : 'manage-recurring__toggle-sm--off'}`}
                   >
                     <span className="manage-recurring__toggle-sm-knob" />
                   </button>
+                  <span className="manage-recurring__item-status">{r.active ? 'Ativo' : 'Pausado'}</span>
+                  <div className="manage-recurring__item-spacer" />
                   <button onClick={() => openEdit(r)} className="manage-recurring__icon-btn">
                     <Icons.pencil size={15} color="var(--text-3)" />
                   </button>
