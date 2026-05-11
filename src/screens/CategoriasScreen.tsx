@@ -21,7 +21,7 @@ export function CategoriasScreen({ fabKind: _fabKind = 'circle' }: CategoriasScr
     {cat:'trabalho', spent:120, budget:400},
   ];
   return (
-    <div className="phone-surface" style={{height:'100%',position:'relative',overflow:'hidden'}} data-screen-label="Categories">
+    <div className="phone-surface" style={{height:'100%',position:'relative'}} data-screen-label="Categories">
       <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
       <div style={{height:'100%',overflow:'auto',paddingTop:54,paddingBottom:140}} className="no-scrollbar">
         <div style={{padding:'8px 16px 6px',display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>

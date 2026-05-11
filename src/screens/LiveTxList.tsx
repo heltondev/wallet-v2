@@ -38,7 +38,7 @@ export function LiveTxList({ tx, displayCurrency }: LiveTxListProps) {
   },[filtered]);
 
   return (
-    <div className="phone-surface" style={{height:'100%',position:'relative',overflow:'hidden'}}>
+    <div className="phone-surface" style={{height:'100%',position:'relative'}}>
       <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
       <div style={{height:'100%',overflow:'auto',paddingTop:54,paddingBottom:140}} className="no-scrollbar">
         <div style={{padding:'8px 16px 6px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>

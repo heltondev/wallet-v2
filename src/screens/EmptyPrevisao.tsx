@@ -5,7 +5,7 @@ import { BottomTabBar } from '../components/BottomTabBar';
 
 export function EmptyPrevisao() {
   return (
-    <div className="phone-surface" style={{height:'100%',position:'relative',overflow:'hidden'}} data-screen-label="Empty Forecast">
+    <div className="phone-surface" style={{height:'100%',position:'relative'}} data-screen-label="Empty Forecast">
       <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
       <div style={{height:'100%',overflow:'auto',paddingTop:54,paddingBottom:140}} className="no-scrollbar">
         <div style={{padding:'8px 16px 14px'}}>

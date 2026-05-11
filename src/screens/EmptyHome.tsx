@@ -4,7 +4,7 @@ import { BottomTabBar } from '../components/BottomTabBar';
 
 export function EmptyHome() {
   return (
-    <div className="phone-surface" style={{height:'100%',position:'relative',overflow:'hidden'}} data-screen-label="Empty Home">
+    <div className="phone-surface" style={{height:'100%',position:'relative'}} data-screen-label="Empty Home">
       <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
       <div style={{height:'100%',padding:'80px 24px 90px',display:'flex',flexDirection:'column'}}>
         <div>
