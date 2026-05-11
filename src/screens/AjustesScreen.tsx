@@ -79,6 +79,11 @@ export function AjustesScreen({ fabKind = 'circle', onNavigate }: AjustesScreenP
             <Row label="Escanear recibo" icon="search" last/>
           </div>
         </Section>
+        <Section title="ADMIN">
+          <div onClick={() => onNavigate?.('admin-costs')} style={{cursor:'pointer'}}>
+            <Row label="Custos de infraestrutura" icon="trending" last/>
+          </div>
+        </Section>
         <Section title="SUPORTE">
           <Row label="Sobre" last/>
         </Section>

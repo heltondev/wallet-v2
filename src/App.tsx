@@ -7,6 +7,7 @@ import { CategoriasScreen } from './screens/CategoriasScreen';
 import { AjustesScreen } from './screens/AjustesScreen';
 import { AiChat } from './screens/AiChat';
 import { AiInsights } from './screens/AiInsights';
+import { AdminCosts } from './screens/AdminCosts';
 import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL } from './utils/formatters';
@@ -142,6 +143,11 @@ export function App() {
         {subScreen === 'ai-insights' && (
           <div style={{ height: '100%', position: 'relative' }}>
             <AiInsights fabKind={fab} onBack={() => setSubScreen(null)} />
+          </div>
+        )}
+        {subScreen === 'admin-costs' && (
+          <div style={{ height: '100%', position: 'relative' }}>
+            <AdminCosts fabKind={fab} onBack={() => setSubScreen(null)} />
           </div>
         )}
 
