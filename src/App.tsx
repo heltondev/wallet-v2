@@ -16,7 +16,7 @@ import { fmtBRL } from './utils/formatters';
 import { TweaksPanel } from './tweaks/TweaksPanel';
 import { TweakSection, TweakRadio, TweakColor, TweakButton } from './tweaks/TweakControls';
 import { ACCENT_OPTIONS } from './data/constants';
-import { isAuthenticated, signOut } from './lib/auth';
+import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
 import { listTransactions, createTransaction, listAccounts } from './lib/api';
 import type { Transaction, Account, TabId, FabKind, ToastData, CurrencyCode } from './types';
 
@@ -78,12 +78,23 @@ export function App() {
   const [tweaksOpen, setTweaksOpen] = useState(false);
   const [subScreen, setSubScreen] = useState<string | null>(null);
 
-  // Check auth on mount
+  // Check auth on mount — handle OAuth callback if present
   useEffect(() => {
-    isAuthenticated().then(ok => {
-      setAuthed(ok);
-      setAuthLoading(false);
-    });
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+
+    if (code) {
+      // OAuth callback — exchange code for tokens
+      window.history.replaceState({}, '', '/');
+      handleAuthCallback(code)
+        .then(() => { setAuthed(true); setAuthLoading(false); })
+        .catch(() => { setAuthed(false); setAuthLoading(false); });
+    } else {
+      isAuthenticated().then(ok => {
+        setAuthed(ok);
+        setAuthLoading(false);
+      });
+    }
   }, []);
 
   // Load data from API after auth
