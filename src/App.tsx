@@ -39,10 +39,9 @@ interface WalletSettings {
   accent: string;
   fab: FabKind;
   currency: 'BRL' | 'USD';
-  monthlyBudget: number;
 }
 
-const DEFAULT_SETTINGS: WalletSettings = { theme: 'dark', accent: '#10B981', fab: 'circle', currency: 'BRL', monthlyBudget: 9500 };
+const DEFAULT_SETTINGS: WalletSettings = { theme: 'dark', accent: '#10B981', fab: 'circle', currency: 'BRL' };
 
 export function App() {
   const [authed, setAuthed] = useState(false);
@@ -52,7 +51,6 @@ export function App() {
   const [accent] = useState(DEFAULT_SETTINGS.accent);
   const [fab] = useState<FabKind>(DEFAULT_SETTINGS.fab);
   const [currency, setCurrency] = useState<'BRL' | 'USD'>(DEFAULT_SETTINGS.currency);
-  const [monthlyBudget, setMonthlyBudget] = useState(DEFAULT_SETTINGS.monthlyBudget);
 
   const [tab, setTab] = useState<TabId>('home');
   const [sheet, setSheet] = useState(false);
@@ -109,7 +107,6 @@ export function App() {
       setRecurringItems(recData as unknown as RecurringTransaction[]);
       if (settingsData.theme) setTheme(settingsData.theme as 'dark' | 'light');
       if (settingsData.currency) setCurrency(settingsData.currency as 'BRL' | 'USD');
-      if (settingsData.monthlyBudget) setMonthlyBudget(settingsData.monthlyBudget as number);
       setWorkspaces(wsData as unknown as Workspace[]);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao carregar dados';
@@ -127,10 +124,8 @@ export function App() {
     : tx;
 
   const activeBudget = activeWorkspace
-    ? workspaces.find(w => w.id === activeWorkspace)?.monthlyBudget ?? monthlyBudget
-    : workspaces.length > 0
-      ? workspaces.reduce((sum, w) => sum + w.monthlyBudget, 0)
-      : monthlyBudget;
+    ? workspaces.find(w => w.id === activeWorkspace)?.monthlyBudget ?? 0
+    : workspaces.reduce((sum, w) => sum + w.monthlyBudget, 0);
 
   const activeCurrency = activeWorkspace
     ? workspaces.find(w => w.id === activeWorkspace)?.currency ?? currency
@@ -249,7 +244,6 @@ export function App() {
             onSettingsChange={(s) => {
               if (s.theme) setTheme(s.theme);
               if (s.currency) setCurrency(s.currency as 'BRL' | 'USD');
-              if (s.monthlyBudget) setMonthlyBudget(s.monthlyBudget);
             }}
           />
         )}

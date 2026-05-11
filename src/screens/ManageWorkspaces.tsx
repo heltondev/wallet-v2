@@ -170,13 +170,18 @@ export function ManageWorkspaces({ onBack }: ManageWorkspacesProps) {
                 </button>
               ))}
             </div>
-            <input
-              type="text"
-              placeholder="Orçamento mensal"
-              value={form.monthlyBudget}
-              onChange={e => setForm({ ...form, monthlyBudget: e.target.value })}
-              className="manage-workspaces__input"
-            />
+            <div className="manage-workspaces__budget-field">
+              <span className="manage-workspaces__budget-currency">
+                {form.currency === 'BRL' ? 'R$' : form.currency === 'USD' ? '$' : '€'}
+              </span>
+              <input
+                type="text"
+                placeholder="Orçamento mensal"
+                value={form.monthlyBudget}
+                onChange={e => setForm({ ...form, monthlyBudget: e.target.value })}
+                className="manage-workspaces__input manage-workspaces__input--budget"
+              />
+            </div>
             <input
               type="number"
               placeholder="Ordem (0, 1, 2...)"
@@ -217,7 +222,7 @@ export function ManageWorkspaces({ onBack }: ManageWorkspacesProps) {
                 <div className="manage-workspaces__item-info">
                   <div className="manage-workspaces__item-name">{ws.name}</div>
                   <div className="manage-workspaces__item-meta">
-                    {ws.currency} · R$ {ws.monthlyBudget.toLocaleString('pt-BR')}
+                    {ws.currency} · {ws.currency === 'BRL' ? 'R$' : ws.currency === 'USD' ? '$' : '€'} {ws.monthlyBudget.toLocaleString('pt-BR')}
                   </div>
                 </div>
                 <button onClick={() => openEdit(ws)} className="manage-workspaces__edit-btn">

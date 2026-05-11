@@ -13,7 +13,7 @@ interface AjustesScreenProps {
   tx?: Transaction[];
   onNavigate?: (screen: string) => void;
   onSignOut?: () => void;
-  onSettingsChange?: (settings: { theme?: 'dark' | 'light'; currency?: CurrencyCode; monthlyBudget?: number }) => void;
+  onSettingsChange?: (settings: { theme?: 'dark' | 'light'; currency?: CurrencyCode }) => void;
 }
 
 export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigate, onSignOut, onSettingsChange }: AjustesScreenProps) {
@@ -21,11 +21,8 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
   const [userName, setUserName] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [currency, setCurrency] = useState<CurrencyCode>('BRL');
-  const [budget, setBudget] = useState(0);
   const [accountCount, setAccountCount] = useState(0);
   const [categoryCount, setCategoryCount] = useState(0);
-  const [editingBudget, setEditingBudget] = useState(false);
-  const [budgetInput, setBudgetInput] = useState('');
   const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
@@ -41,7 +38,6 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
     getSettings().then(s => {
       if (s.theme) setTheme(s.theme as 'dark' | 'light');
       if (s.currency) setCurrency(s.currency as CurrencyCode);
-      if (s.monthlyBudget) setBudget(s.monthlyBudget as number);
     }).catch(() => {});
 
     listAccounts().then(a => setAccountCount(a.length)).catch(() => {});
@@ -99,16 +95,6 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
     await updateSettings({ currency: next }).catch(() => {});
   };
 
-  const saveBudget = async () => {
-    const val = parseFloat(budgetInput.replace(/\./g, '').replace(',', '.'));
-    if (!isNaN(val) && val > 0) {
-      setBudget(val);
-      onSettingsChange?.({ monthlyBudget: val });
-      await updateSettings({ monthlyBudget: val }).catch(() => {});
-    }
-    setEditingBudget(false);
-  };
-
   const initials = userName
     .split(' ')
     .map(w => w[0])
@@ -163,36 +149,7 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
           <Row label="Carteiras e contas" detail={String(accountCount)} icon="wallet" onClick={() => onNavigate?.('accounts')} />
           <Row label="Categorias" detail={String(categoryCount)} icon="grid" onClick={() => onNavigate?.('categories')} />
           <Row label="Recorrentes" icon="repeat" onClick={() => onNavigate?.('recurring')} />
-          <Row label="Espaços" icon="grid" onClick={() => onNavigate?.('workspaces')} />
-          {editingBudget ? (
-            <div className="settings-screen__budget-edit">
-              <Icons.trending size={17} color="var(--text-2)" stroke={1.8} />
-              <span className="settings-screen__budget-prefix">R$</span>
-              <input
-                autoFocus
-                type="text"
-                value={budgetInput}
-                onChange={e => setBudgetInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') saveBudget(); }}
-                className="settings-screen__budget-input"
-                placeholder="3000"
-              />
-              <button onClick={saveBudget} className="settings-screen__budget-save">
-                <Icons.check size={16} color="#0A0A0A" stroke={2.4} />
-              </button>
-              <button onClick={() => setEditingBudget(false)} className="settings-screen__budget-cancel">
-                <Icons.x size={16} color="var(--text-4)" />
-              </button>
-            </div>
-          ) : (
-            <Row
-              label="Orçamento mensal"
-              detail={`R$ ${budget.toLocaleString('pt-BR')}`}
-              icon="trending"
-              last
-              onClick={() => { setBudgetInput(String(budget)); setEditingBudget(true); }}
-            />
-          )}
+          <Row label="Espaços" icon="grid" last onClick={() => onNavigate?.('workspaces')} />
         </Section>
 
         <Section title="APARÊNCIA">

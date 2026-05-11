@@ -65,6 +65,24 @@
 		@include input;
 	}
 
+	&__budget-field {
+		display: flex;
+		align-items: center;
+		gap: $s-2-raw;
+	}
+
+	&__budget-currency {
+		font-family: $font-mono;
+		font-size: $fs-small;
+		font-weight: $fw-semibold;
+		color: $text-2;
+		flex-shrink: 0;
+	}
+
+	&__input--budget {
+		flex: 1;
+	}
+
 	&__currency-row {
 		display: flex;
 		gap: $s-2-raw;
