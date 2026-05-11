@@ -14,12 +14,13 @@ import { ManageAccounts } from './screens/ManageAccounts';
 import { ManageCategories } from './screens/ManageCategories';
 import { ManagePrompts } from './screens/ManagePrompts';
 import { ManageRecurring } from './screens/ManageRecurring';
+import { ManageWorkspaces } from './screens/ManageWorkspaces';
 import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL } from './utils/formatters';
 import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
-import { listTransactions, createTransaction, listAccounts, getSettings, generateRecurring } from './lib/api';
-import type { Transaction, Account, TabId, FabKind, ToastData, CurrencyCode } from './types';
+import { listTransactions, createTransaction, listAccounts, getSettings, generateRecurring, listWorkspaces } from './lib/api';
+import type { Transaction, Account, Workspace, TabId, FabKind, ToastData, CurrencyCode } from './types';
 import './App.scss';
 
 
@@ -59,6 +60,8 @@ export function App() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [toast, setToast] = useState<ToastData | null>(null);
   const [subScreen, setSubScreen] = useState<string | null>(null);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
 
   // Check auth on mount — handle OAuth callback if present
   useEffect(() => {
@@ -97,12 +100,13 @@ export function App() {
 
   const loadData = async () => {
     try {
-      const [txData, accData, settingsData] = await Promise.all([listTransactions(), listAccounts(), getSettings()]);
+      const [txData, accData, settingsData, wsData] = await Promise.all([listTransactions(), listAccounts(), getSettings(), listWorkspaces()]);
       setTx(txData as unknown as Transaction[]);
       setAccounts(accData as unknown as Account[]);
       if (settingsData.theme) setTheme(settingsData.theme as 'dark' | 'light');
       if (settingsData.currency) setCurrency(settingsData.currency as 'BRL' | 'USD');
       if (settingsData.monthlyBudget) setMonthlyBudget(settingsData.monthlyBudget as number);
+      setWorkspaces(wsData as unknown as Workspace[]);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao carregar dados';
       showToast(msg, 0);
@@ -113,6 +117,20 @@ export function App() {
     setToast({ desc, amount });
     setTimeout(() => setToast(null), 2200);
   };
+
+  const filteredTx = activeWorkspace
+    ? tx.filter(t => t.workspaceId === activeWorkspace)
+    : tx;
+
+  const activeBudget = activeWorkspace
+    ? workspaces.find(w => w.id === activeWorkspace)?.monthlyBudget ?? monthlyBudget
+    : workspaces.length > 0
+      ? workspaces.reduce((sum, w) => sum + w.monthlyBudget, 0)
+      : monthlyBudget;
+
+  const activeCurrency = activeWorkspace
+    ? workspaces.find(w => w.id === activeWorkspace)?.currency ?? currency
+    : currency;
 
   // Apply theme attribute
   useEffect(() => {
@@ -192,16 +210,30 @@ export function App() {
         />
 
         {tab === 'home' && (
-          <LiveHome tx={tx} currency={currency} monthlyBudget={monthlyBudget} onTabChange={(id) => setTab(id as TabId)} />
+          <LiveHome
+            tx={filteredTx}
+            currency={activeCurrency}
+            monthlyBudget={activeBudget}
+            onTabChange={(id) => setTab(id as TabId)}
+            workspaces={workspaces}
+            activeWorkspace={activeWorkspace}
+            onWorkspaceChange={setActiveWorkspace}
+          />
         )}
         {tab === 'list' && (
-          <LiveTxList tx={tx} displayCurrency={currency} />
+          <LiveTxList
+            tx={filteredTx}
+            displayCurrency={activeCurrency}
+            workspaces={workspaces}
+            activeWorkspace={activeWorkspace}
+            onWorkspaceChange={setActiveWorkspace}
+          />
         )}
         {tab === 'forecast' && (
-          <PrevisaoA tx={tx} currency={currency} />
+          <PrevisaoA tx={filteredTx} currency={activeCurrency} />
         )}
         {tab === 'cats' && (
-          <CategoriasScreen tx={tx} currency={currency} />
+          <CategoriasScreen tx={filteredTx} currency={activeCurrency} />
         )}
         {tab === 'settings' && !subScreen && (
           <AjustesScreen
@@ -274,6 +306,11 @@ export function App() {
         {subScreen === 'recurring' && (
           <div className="app__sub-screen">
             <ManageRecurring onBack={() => setSubScreen(null)} />
+          </div>
+        )}
+        {subScreen === 'workspaces' && (
+          <div className="app__sub-screen">
+            <ManageWorkspaces onBack={() => { setSubScreen(null); loadData(); }} />
           </div>
         )}
 

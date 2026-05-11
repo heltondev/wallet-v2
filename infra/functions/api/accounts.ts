@@ -24,7 +24,8 @@ async function createAccount(event: APIGatewayProxyEvent, userId: string): Promi
     institution,
     currency,
     createdAt: new Date().toISOString(),
-  };
+  } as Record<string, unknown>;
+  if (body.workspaceId) item.workspaceId = body.workspaceId;
 
   await putItem(item);
   return created(event, item);
@@ -48,6 +49,7 @@ async function updateAccount(event: APIGatewayProxyEvent, userId: string): Promi
   if (body.name !== undefined) attrs.name = body.name;
   if (body.institution !== undefined) attrs.institution = body.institution;
   if (body.currency !== undefined) attrs.currency = body.currency;
+  if (body.workspaceId !== undefined) attrs.workspaceId = body.workspaceId;
   attrs.updatedAt = new Date().toISOString();
 
   await updateItem(`USER#${userId}`, sk, attrs);

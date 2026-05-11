@@ -113,6 +113,19 @@ export const deleteRecurring = (id: string) =>
 export const generateRecurring = () =>
   apiFetch<{ generated: Record<string, unknown>[] }>('/recurring/generate', { method: 'POST' });
 
+// Workspaces
+export const listWorkspaces = () =>
+  apiFetch<Record<string, unknown>[]>('/workspaces');
+
+export const createWorkspace = (data: Record<string, unknown>) =>
+  apiFetch<Record<string, unknown>>('/workspaces', { method: 'POST', body: JSON.stringify(data) });
+
+export const updateWorkspace = (id: string, data: Record<string, unknown>) =>
+  apiFetch<Record<string, unknown>>(`/workspaces/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+
+export const deleteWorkspace = (id: string) =>
+  apiFetch<void>(`/workspaces/${id}`, { method: 'DELETE' });
+
 // Receipts
 export const getUploadUrl = (txId: string, fileName: string, contentType: string) =>
   apiFetch<{ uploadUrl: string; key: string }>('/receipts/upload-url', { method: 'POST', body: JSON.stringify({ txId, fileName, contentType }) });

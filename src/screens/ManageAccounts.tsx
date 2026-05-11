@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
-import { listAccounts, createAccount } from '../lib/api';
-import type { Account, CurrencyCode } from '../types';
+import { listAccounts, createAccount, listWorkspaces } from '../lib/api';
+import type { Account, Workspace, CurrencyCode } from '../types';
 import './ManageAccounts.scss';
 
 interface ManageAccountsProps {
@@ -18,6 +18,8 @@ export function ManageAccounts({ onBack }: ManageAccountsProps) {
   const [name, setName] = useState('');
   const [institution, setInstitution] = useState('');
   const [currency, setCurrency] = useState<CurrencyCode>('BRL');
+  const [workspaceId, setWorkspaceId] = useState('');
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
@@ -29,16 +31,24 @@ export function ManageAccounts({ onBack }: ManageAccountsProps) {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchAccounts(); }, []);
+  useEffect(() => {
+    fetchAccounts();
+    listWorkspaces()
+      .then(data => setWorkspaces(data as unknown as Workspace[]))
+      .catch(() => {});
+  }, []);
 
   const handleSave = async () => {
     if (!name.trim()) return;
     setSaving(true);
     try {
-      await createAccount({ name: name.trim(), institution: institution.trim(), currency });
+      const payload: Record<string, unknown> = { name: name.trim(), institution: institution.trim(), currency };
+      if (workspaceId) payload.workspaceId = workspaceId;
+      await createAccount(payload);
       setName('');
       setInstitution('');
       setCurrency('BRL');
+      setWorkspaceId('');
       setShowForm(false);
       fetchAccounts();
     } catch {
@@ -117,6 +127,18 @@ export function ManageAccounts({ onBack }: ManageAccountsProps) {
                 </button>
               ))}
             </div>
+            {workspaces.length > 0 && (
+              <select
+                value={workspaceId}
+                onChange={e => setWorkspaceId(e.target.value)}
+                className="manage-accounts__input"
+              >
+                <option value="">Sem espaço</option>
+                {workspaces.map(ws => (
+                  <option key={ws.id} value={ws.id}>{ws.icon} {ws.name}</option>
+                ))}
+              </select>
+            )}
             <div className="manage-accounts__form-actions">
               <button
                 onClick={() => setShowForm(false)}

@@ -163,6 +163,7 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
           <Row label="Carteiras e contas" detail={String(accountCount)} icon="wallet" onClick={() => onNavigate?.('accounts')} />
           <Row label="Categorias" detail={String(categoryCount)} icon="grid" onClick={() => onNavigate?.('categories')} />
           <Row label="Recorrentes" icon="repeat" onClick={() => onNavigate?.('recurring')} />
+          <Row label="Espaços" icon="grid" onClick={() => onNavigate?.('workspaces')} />
           {editingBudget ? (
             <div className="settings-screen__budget-edit">
               <Icons.trending size={17} color="var(--text-2)" stroke={1.8} />

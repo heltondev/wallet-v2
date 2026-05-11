@@ -1,0 +1,44 @@
+@use '../styles/variables' as *;
+@use '../styles/mixins' as *;
+
+.workspace-selector {
+  padding: 0 $s-4-raw;
+  margin-bottom: $s-2-raw;
+
+  &__track {
+    display: flex;
+    gap: $s-2-raw;
+    overflow-x: auto;
+    @include no-scrollbar;
+  }
+
+  &__pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: $r-pill;
+    border: 1px solid $border-1;
+    background: transparent;
+    color: $text-3;
+    font-family: $font-sans;
+    font-size: $fs-small;
+    font-weight: $fw-medium;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+
+    &--active {
+      background: $text-1;
+      color: $bg-0;
+      border-color: $text-1;
+    }
+  }
+
+  &__icon {
+    font-size: 14px;
+    line-height: 1;
+  }
+}

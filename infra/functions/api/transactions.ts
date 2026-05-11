@@ -38,6 +38,7 @@ async function createTransaction(event: APIGatewayProxyEvent, userId: string): P
   if (body.receiptKey) item.receiptKey = body.receiptKey;
   if (body.receiptName) item.receiptName = body.receiptName;
   if (body.recurringId) item.recurringId = body.recurringId;
+  if (body.workspaceId) item.workspaceId = body.workspaceId;
 
   await putItem(item);
   return created(event, item);
@@ -85,6 +86,7 @@ async function updateTransaction(event: APIGatewayProxyEvent, userId: string): P
   if (fxRate !== undefined) attrs.fxRate = fxRate;
   if (receiptKey !== undefined) attrs.receiptKey = receiptKey;
   if (receiptName !== undefined) attrs.receiptName = receiptName;
+  if (body.workspaceId !== undefined) attrs.workspaceId = body.workspaceId;
   attrs.updatedAt = new Date().toISOString();
 
   // Mark as override if editing a recurring-generated transaction

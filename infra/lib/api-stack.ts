@@ -164,6 +164,15 @@ export class ApiStack extends Stack {
     recurringById.addMethod('DELETE', new LambdaIntegration(recurringFn), authOptions);
     recurring.addResource('generate').addMethod('POST', new LambdaIntegration(recurringFn), authOptions);
 
+    // Workspaces
+    const workspacesFn = buildHandler('WorkspacesFn', 'workspaces', 'functions/api/workspaces.ts');
+    const workspaces = api.root.addResource('workspaces');
+    workspaces.addMethod('POST', new LambdaIntegration(workspacesFn), authOptions);
+    workspaces.addMethod('GET', new LambdaIntegration(workspacesFn), authOptions);
+    const workspaceById = workspaces.addResource('{id}');
+    workspaceById.addMethod('PUT', new LambdaIntegration(workspacesFn), authOptions);
+    workspaceById.addMethod('DELETE', new LambdaIntegration(workspacesFn), authOptions);
+
     // Admin - Costs
     const costsFn = buildHandler('CostsFn', 'costs', 'functions/api/costs.ts');
     costsFn.addToRolePolicy(

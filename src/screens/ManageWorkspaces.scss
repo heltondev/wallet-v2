@@ -1,0 +1,178 @@
+@use '../styles/variables' as *;
+@use '../styles/mixins' as *;
+
+.manage-workspaces {
+  @include screen;
+
+  &__status-bar {
+    @include status-bar-wrapper;
+  }
+
+  &__scroll {
+    @include screen-scroll;
+  }
+
+  &__header {
+    @include screen-header;
+  }
+
+  &__back-btn {
+    @include btn-icon;
+  }
+
+  &__title {
+    @include heading-1;
+    flex: 1;
+  }
+
+  &__error {
+    margin: 0 $s-4-raw $s-3-raw;
+    padding: 10px 14px;
+    background: $neg-bg;
+    color: $neg;
+    border-radius: $r-input;
+    font-size: $fs-small;
+  }
+
+  &__add-wrap {
+    padding: 0 $s-4-raw $s-4-raw;
+  }
+
+  &__add-btn {
+    @include btn-secondary;
+    display: flex;
+    align-items: center;
+    gap: $s-2-raw;
+    width: 100%;
+    justify-content: center;
+  }
+
+  &__form {
+    @include card;
+    margin: 0 $s-4-raw $s-4-raw;
+    display: flex;
+    flex-direction: column;
+    gap: $s-3-raw;
+  }
+
+  &__form-title {
+    font-size: $fs-body;
+    font-weight: $fw-semibold;
+    color: $text-1;
+  }
+
+  &__input {
+    @include input;
+  }
+
+  &__currency-row {
+    display: flex;
+    gap: $s-2-raw;
+  }
+
+  &__currency-btn {
+    flex: 1;
+    padding: 8px 0;
+    border-radius: $r-input;
+    font-family: $font-mono;
+    font-size: $fs-small;
+    font-weight: $fw-medium;
+    cursor: pointer;
+    border: 1px solid $border-1;
+    background: transparent;
+    color: $text-3;
+
+    &--active {
+      background: $text-1;
+      color: $bg-0;
+      border-color: $text-1;
+    }
+  }
+
+  &__form-actions {
+    display: flex;
+    gap: $s-2-raw;
+    padding-top: $s-2-raw;
+  }
+
+  &__cancel-btn {
+    @include btn-secondary;
+    flex: 1;
+  }
+
+  &__save-btn {
+    @include btn-primary;
+    flex: 1;
+
+    &--disabled {
+      background: $bg-3;
+      color: $text-4;
+      cursor: not-allowed;
+    }
+
+    &--saving {
+      opacity: 0.7;
+    }
+  }
+
+  &__loading {
+    text-align: center;
+    color: $text-3;
+    padding: 40px $s-4-raw;
+    font-size: $fs-small;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $s-3-raw;
+    padding: 48px $s-4-raw;
+  }
+
+  &__empty-text {
+    color: $text-4;
+    font-size: $fs-small;
+  }
+
+  &__list {
+    @include card-sm;
+    margin: 0 $s-4-raw;
+  }
+
+  &__item {
+    @include row;
+  }
+
+  &__item-icon {
+    font-size: 20px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  &__item-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__item-name {
+    font-size: $fs-body;
+    font-weight: $fw-medium;
+    color: $text-1;
+  }
+
+  &__item-meta {
+    font-size: $fs-caption;
+    color: $text-3;
+    font-family: $font-mono;
+    margin-top: 2px;
+  }
+
+  &__edit-btn {
+    @include btn-icon;
+  }
+
+  &__delete-btn {
+    @include btn-icon;
+  }
+}

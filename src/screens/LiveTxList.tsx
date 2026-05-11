@@ -5,7 +5,8 @@ import { Chip } from '../components/Chip';
 import { TransactionGroup } from '../components/TransactionGroup';
 import { TransactionRow } from '../components/TransactionRow';
 import { convertAmount } from '../utils/formatters';
-import type { Transaction, CurrencyCode } from '../types';
+import { WorkspaceSelector } from '../components/WorkspaceSelector';
+import type { Transaction, Workspace, CurrencyCode } from '../types';
 import './LiveTxList.scss';
 
 interface GroupedDay {
@@ -18,9 +19,12 @@ interface GroupedDay {
 interface LiveTxListProps {
   tx: Transaction[];
   displayCurrency: CurrencyCode;
+  workspaces?: Workspace[];
+  activeWorkspace?: string | null;
+  onWorkspaceChange?: (id: string | null) => void;
 }
 
-export function LiveTxList({ tx, displayCurrency }: LiveTxListProps) {
+export function LiveTxList({ tx, displayCurrency, workspaces = [], activeWorkspace = null, onWorkspaceChange }: LiveTxListProps) {
   const [filter, setFilter] = useState<'all' | 'out' | 'in'>('all');
   const filtered = useMemo(()=>{
     if (filter==='out') return tx.filter(item=>item.amount<0);
@@ -42,6 +46,9 @@ export function LiveTxList({ tx, displayCurrency }: LiveTxListProps) {
     <div className="phone-surface live-tx-list">
       <div className="live-tx-list__status-bar"><IOSStatusBar/></div>
       <div className="live-tx-list__scroll no-scrollbar">
+        {workspaces.length > 0 && onWorkspaceChange && (
+          <WorkspaceSelector workspaces={workspaces} activeId={activeWorkspace} onChange={onWorkspaceChange} />
+        )}
         <div className="live-tx-list__header">
           <h1 className="live-tx-list__title">Transações</h1>
           <button className="live-tx-list__search-btn">

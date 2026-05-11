@@ -36,6 +36,7 @@ async function createRecurring(event: APIGatewayProxyEvent, userId: string): Pro
     active: body.active !== undefined ? body.active : true,
     fxRate: body.fxRate ?? 1,
     notes: body.notes ?? null,
+    workspaceId: body.workspaceId ?? null,
     lastGenerated: null,
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
@@ -62,7 +63,7 @@ async function updateRecurring(event: APIGatewayProxyEvent, userId: string): Pro
   const allowedFields = [
     'desc', 'amount', 'currency', 'cat', 'account', 'frequency',
     'customDays', 'dayOfMonth', 'dayOfWeek', 'startDate', 'endDate',
-    'active', 'fxRate', 'notes', 'lastGenerated',
+    'active', 'fxRate', 'notes', 'workspaceId', 'lastGenerated',
   ];
 
   const attrs: Record<string, unknown> = {};
@@ -153,6 +154,7 @@ async function generateRecurring(event: APIGatewayProxyEvent, userId: string): P
       fxRate: r.fxRate ?? 1,
       recurringId: r.id,
       createdAt: now.toISOString(),
+      ...(r.workspaceId ? { workspaceId: r.workspaceId } : {}),
     };
 
     await putItem(tx);

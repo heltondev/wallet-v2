@@ -1,5 +1,14 @@
 export type CurrencyCode = 'BRL' | 'USD' | 'EUR';
 
+export interface Workspace {
+  id: string;
+  name: string;
+  currency: CurrencyCode;
+  monthlyBudget: number;
+  icon: string;
+  order: number;
+}
+
 export interface Transaction {
   id: number;
   date: string; // ISO date string e.g. '2026-05-11'
@@ -16,6 +25,7 @@ export interface Transaction {
   receiptName?: string;
   recurringId?: string;
   isRecurringOverride?: boolean;
+  workspaceId?: string;
 }
 
 export interface Account {
@@ -23,6 +33,7 @@ export interface Account {
   name: string;
   institution: string;
   currency: CurrencyCode;
+  workspaceId?: string;
 }
 
 export interface CategoryMeta {
@@ -102,6 +113,7 @@ export interface RecurringTransaction {
   lastGenerated: string | null;
   createdAt: string;
   updatedAt: string;
+  workspaceId?: string;
 }
 
 export interface AiExtractResult {

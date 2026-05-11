@@ -7,7 +7,8 @@ import { StatCard } from '../components/StatCard';
 import { TransactionRow } from '../components/TransactionRow';
 import { fmtAmount, convertAmount } from '../utils/formatters';
 import { currentMonth, currentYear, currentMonthKey, monthLabel, daysRemainingInMonth } from '../utils/dates';
-import type { Transaction, TabId, CurrencyCode } from '../types';
+import { WorkspaceSelector } from '../components/WorkspaceSelector';
+import type { Transaction, Workspace, TabId, CurrencyCode } from '../types';
 import './LiveHome.scss';
 
 interface LiveHomeProps {
@@ -15,9 +16,12 @@ interface LiveHomeProps {
   currency: CurrencyCode;
   monthlyBudget: number;
   onTabChange: (tab: TabId) => void;
+  workspaces?: Workspace[];
+  activeWorkspace?: string | null;
+  onWorkspaceChange?: (id: string | null) => void;
 }
 
-export function LiveHome({ tx, currency, monthlyBudget, onTabChange }: LiveHomeProps) {
+export function LiveHome({ tx, currency, monthlyBudget, onTabChange, workspaces = [], activeWorkspace = null, onWorkspaceChange }: LiveHomeProps) {
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
   const m = useMemo(() => {
     let ins = 0;
@@ -39,6 +43,9 @@ export function LiveHome({ tx, currency, monthlyBudget, onTabChange }: LiveHomeP
     <div className="phone-surface live-home">
       <div className="live-home__status-bar"><IOSStatusBar dark={dark} /></div>
       <div className="live-home__scroll no-scrollbar">
+        {workspaces.length > 0 && onWorkspaceChange && (
+          <WorkspaceSelector workspaces={workspaces} activeId={activeWorkspace} onChange={onWorkspaceChange} />
+        )}
         <MonthSelector month={month} year={year} />
         <div className="live-home__balance-wrap" key={m.balance}>
           <div className="live-home__balance-anim">
