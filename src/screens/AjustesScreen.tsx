@@ -1,7 +1,6 @@
 import type { ReactNode, ComponentType } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
-import { BottomTabBar } from '../components/BottomTabBar';
 import { signOut } from '../lib/auth';
 import type { FabKind } from '../types';
 
@@ -24,7 +23,7 @@ interface AjustesScreenProps {
   onSignOut?: () => void;
 }
 
-export function AjustesScreen({ fabKind = 'circle', onNavigate, onSignOut }: AjustesScreenProps) {
+export function AjustesScreen({ fabKind: _fabKind = 'circle', onNavigate, onSignOut }: AjustesScreenProps) {
   const Row = ({ label, detail, icon, last, danger }: RowProps) => {
     const Ic = icon ? (Icons as Record<string, ComponentType<{ size?: number; color?: string; stroke?: number }>>)[icon] : null;
     return (
@@ -94,7 +93,6 @@ export function AjustesScreen({ fabKind = 'circle', onNavigate, onSignOut }: Aju
           </div>
         </Section>
       </div>
-      <BottomTabBar active="settings" fabKind={fabKind}/>
     </div>
   );
 }

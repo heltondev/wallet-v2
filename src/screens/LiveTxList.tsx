@@ -4,10 +4,8 @@ import { IOSStatusBar } from '../components/IOSStatusBar';
 import { Chip } from '../components/Chip';
 import { TransactionGroup } from '../components/TransactionGroup';
 import { TransactionRow } from '../components/TransactionRow';
-import { FAB } from '../components/FAB';
-import { BottomTabBar } from '../components/BottomTabBar';
 import { convertAmount } from '../utils/formatters';
-import type { Transaction, TabId, FabKind, CurrencyCode } from '../types';
+import type { Transaction, CurrencyCode } from '../types';
 
 interface GroupedDay {
   day: string;
@@ -18,13 +16,10 @@ interface GroupedDay {
 
 interface LiveTxListProps {
   tx: Transaction[];
-  fabKind: FabKind;
   displayCurrency: CurrencyCode;
-  onAdd: () => void;
-  onTabChange: (tab: TabId) => void;
 }
 
-export function LiveTxList({ tx, fabKind, displayCurrency, onAdd, onTabChange }: LiveTxListProps) {
+export function LiveTxList({ tx, displayCurrency }: LiveTxListProps) {
   const [filter, setFilter] = useState<'all' | 'out' | 'in'>('all');
   const filtered = useMemo(()=>{
     if (filter==='out') return tx.filter(item=>item.amount<0);
@@ -70,8 +65,6 @@ export function LiveTxList({ tx, fabKind, displayCurrency, onAdd, onTabChange }:
           </div>
         )}
       </div>
-      <FAB kind={fabKind} onClick={onAdd}/>
-      <BottomTabBar active="list" onChange={onTabChange} fabKind={fabKind} onAdd={onAdd}/>
     </div>
   );
 }

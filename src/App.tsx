@@ -17,25 +17,6 @@ import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
 import { listTransactions, createTransaction, listAccounts } from './lib/api';
 import type { Transaction, Account, TabId, FabKind, ToastData, CurrencyCode } from './types';
 
-/* Overlay interceptors for screens not yet wired live */
-function FabIntercept({ fabKind, onAdd }: { fabKind: FabKind; onAdd: () => void }) {
-  if (fabKind === 'tab') return null;
-  return <FAB kind={fabKind} onClick={onAdd} />;
-}
-
-function TabIntercept({
-  active,
-  fabKind,
-  onChange,
-  onAdd,
-}: {
-  active: TabId;
-  fabKind: FabKind;
-  onChange: (tab: string) => void;
-  onAdd: () => void;
-}) {
-  return <BottomTabBar active={active} fabKind={fabKind} onChange={onChange} onAdd={onAdd} />;
-}
 
 const PT_WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
@@ -196,57 +177,19 @@ export function App() {
         />
 
         {tab === 'home' && (
-          <LiveHome
-            tx={tx}
-            currency={currency}
-            fabKind={fab}
-            onAdd={() => setSheet(true)}
-            onTabChange={(id) => setTab(id as TabId)}
-          />
+          <LiveHome tx={tx} currency={currency} onTabChange={(id) => setTab(id as TabId)} />
         )}
         {tab === 'list' && (
-          <LiveTxList
-            tx={tx}
-            fabKind={fab}
-            displayCurrency={currency}
-            onAdd={() => setSheet(true)}
-            onTabChange={(id) => setTab(id as TabId)}
-          />
+          <LiveTxList tx={tx} displayCurrency={currency} />
         )}
         {tab === 'forecast' && (
-          <div style={{ height: '100%', position: 'relative' }}>
-            <PrevisaoA fabKind={fab} />
-            <FabIntercept fabKind={fab} onAdd={() => setSheet(true)} />
-            <TabIntercept
-              active="forecast"
-              fabKind={fab}
-              onChange={(id) => setTab(id as TabId)}
-              onAdd={() => setSheet(true)}
-            />
-          </div>
+          <PrevisaoA fabKind={fab} />
         )}
         {tab === 'cats' && (
-          <div style={{ height: '100%', position: 'relative' }}>
-            <CategoriasScreen fabKind={fab} />
-            <FabIntercept fabKind={fab} onAdd={() => setSheet(true)} />
-            <TabIntercept
-              active="cats"
-              fabKind={fab}
-              onChange={(id) => setTab(id as TabId)}
-              onAdd={() => setSheet(true)}
-            />
-          </div>
+          <CategoriasScreen fabKind={fab} />
         )}
         {tab === 'settings' && !subScreen && (
-          <div style={{ height: '100%', position: 'relative' }}>
-            <AjustesScreen fabKind={fab} onNavigate={(s) => setSubScreen(s)} onSignOut={handleSignOut} />
-            <TabIntercept
-              active="settings"
-              fabKind={fab}
-              onChange={(id) => { setSubScreen(null); setTab(id as TabId); }}
-              onAdd={() => setSheet(true)}
-            />
-          </div>
+          <AjustesScreen fabKind={fab} onNavigate={(s) => setSubScreen(s)} onSignOut={handleSignOut} />
         )}
         {subScreen === 'ai-chat' && (
           <div style={{ height: '100%', position: 'relative' }}>
@@ -286,6 +229,19 @@ export function App() {
               }
             }} />
           </div>
+        )}
+
+        {/* Global tab bar + FAB — outside all screens */}
+        {!subScreen && (
+          <>
+            <FAB kind={fab} onClick={() => setSheet(true)} />
+            <BottomTabBar
+              active={tab}
+              fabKind={fab}
+              onChange={(id) => setTab(id)}
+              onAdd={() => setSheet(true)}
+            />
+          </>
         )}
 
         <AddSheet open={sheet} onClose={() => setSheet(false)} onSave={onSave} accounts={accounts} />

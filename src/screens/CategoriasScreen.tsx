@@ -3,15 +3,13 @@ import { CATS } from '../data/categories';
 import { fmtBRL } from '../utils/formatters';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { CategoryIcon } from '../components/CategoryIcon';
-import { FAB } from '../components/FAB';
-import { BottomTabBar } from '../components/BottomTabBar';
 import type { FabKind } from '../types';
 
 interface CategoriasScreenProps {
   fabKind?: FabKind;
 }
 
-export function CategoriasScreen({ fabKind = 'circle' }: CategoriasScreenProps) {
+export function CategoriasScreen({ fabKind: _fabKind = 'circle' }: CategoriasScreenProps) {
   const data = [
     {cat:'mercado', spent:920, budget:1200},
     {cat:'restaurante', spent:480, budget:600},
@@ -63,8 +61,6 @@ export function CategoriasScreen({ fabKind = 'circle' }: CategoriasScreenProps) 
           </button>
         </div>
       </div>
-      <FAB kind={fabKind}/>
-      <BottomTabBar active="cats" fabKind={fabKind}/>
     </div>
   );
 }

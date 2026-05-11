@@ -5,20 +5,16 @@ import { BalanceCard } from '../components/BalanceCard';
 import { BudgetBar } from '../components/BudgetBar';
 import { StatCard } from '../components/StatCard';
 import { TransactionRow } from '../components/TransactionRow';
-import { FAB } from '../components/FAB';
-import { BottomTabBar } from '../components/BottomTabBar';
 import { fmtAmount, convertAmount } from '../utils/formatters';
-import type { Transaction, TabId, FabKind, CurrencyCode } from '../types';
+import type { Transaction, TabId, CurrencyCode } from '../types';
 
 interface LiveHomeProps {
   tx: Transaction[];
   currency: CurrencyCode;
-  fabKind: FabKind;
-  onAdd: () => void;
   onTabChange: (tab: TabId) => void;
 }
 
-export function LiveHome({ tx, currency, fabKind, onAdd, onTabChange }: LiveHomeProps) {
+export function LiveHome({ tx, currency, onTabChange }: LiveHomeProps) {
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
   const m = useMemo(() => {
     let ins = 0;
@@ -62,8 +58,6 @@ export function LiveHome({ tx, currency, fabKind, onAdd, onTabChange }: LiveHome
           ))}
         </div>
       </div>
-      <FAB kind={fabKind} onClick={onAdd} />
-      <BottomTabBar active="home" onChange={onTabChange} fabKind={fabKind} onAdd={onAdd} />
     </div>
   );
 }

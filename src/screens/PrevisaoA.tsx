@@ -4,15 +4,13 @@ import { fmtBRL, fmtUSD } from '../utils/formatters';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { BarChart } from '../components/BarChart';
 import { CategoryIcon } from '../components/CategoryIcon';
-import { FAB } from '../components/FAB';
-import { BottomTabBar } from '../components/BottomTabBar';
 import type { FabKind } from '../types';
 
 interface PrevisaoAProps {
   fabKind?: FabKind;
 }
 
-export function PrevisaoA({ fabKind = 'circle' }: PrevisaoAProps) {
+export function PrevisaoA({ fabKind: _fabKind = 'circle' }: PrevisaoAProps) {
   const data = [
     {label:'DEZ', value:3200},
     {label:'JAN', value:3850},
@@ -108,8 +106,6 @@ export function PrevisaoA({ fabKind = 'circle' }: PrevisaoAProps) {
           }}>Ajustar previsão por categoria →</button>
         </div>
       </div>
-      <FAB kind={fabKind}/>
-      <BottomTabBar active="forecast" fabKind={fabKind}/>
     </div>
   );
 }
