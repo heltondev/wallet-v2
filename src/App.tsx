@@ -10,6 +10,8 @@ import { AiInsights } from './screens/AiInsights';
 import { AdminCosts } from './screens/AdminCosts';
 import { ReceiptScreen } from './screens/ReceiptScreen';
 import { LoginScreen } from './screens/LoginScreen';
+import { ManageAccounts } from './screens/ManageAccounts';
+import { ManageCategories } from './screens/ManageCategories';
 import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL } from './utils/formatters';
@@ -238,6 +240,17 @@ export function App() {
                 showToast(msg, 0);
               }
             }} />
+          </div>
+        )}
+
+        {subScreen === 'accounts' && (
+          <div style={{ height: '100%', position: 'relative' }}>
+            <ManageAccounts onBack={() => { setSubScreen(null); loadData(); }} />
+          </div>
+        )}
+        {subScreen === 'categories' && (
+          <div style={{ height: '100%', position: 'relative' }}>
+            <ManageCategories onBack={() => setSubScreen(null)} />
           </div>
         )}
 
