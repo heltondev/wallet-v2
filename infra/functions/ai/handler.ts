@@ -12,9 +12,35 @@ async function loadPrompt(feature: string): Promise<string> {
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
 const MONTHLY_BUDGET_USD = parseFloat(process.env.AI_MONTHLY_BUDGET ?? '5');
 
+interface ContentPart {
+  type: string;
+  text?: string;
+  image_url?: { url: string; detail?: string };
+  file?: { filename?: string; file_data: string };
+}
+
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
-  content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
+  content: string | ContentPart[];
+}
+
+function buildFileContent(files: { base64: string; mimeType: string; name?: string }[]): ContentPart[] {
+  return files.map((file, i) => {
+    const dataUrl = `data:${file.mimeType};base64,${file.base64}`;
+    if (file.mimeType === 'application/pdf') {
+      return {
+        type: 'file',
+        file: {
+          filename: file.name ?? `document-${i + 1}.pdf`,
+          file_data: dataUrl,
+        },
+      };
+    }
+    return {
+      type: 'image_url',
+      image_url: { url: dataUrl, detail: 'high' },
+    };
+  });
 }
 
 interface OpenAiResponse {
@@ -293,8 +319,8 @@ async function extractReceipt(event: APIGatewayProxyEvent, userId: string): Prom
 
   const systemPrompt = buildExtractPrompt(basePrompt, userContext);
 
-  // Build user content array
-  const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [];
+  // Build user content array — PDFs as file, images as image_url
+  const userContent: ContentPart[] = [];
 
   if (text?.trim()) {
     userContent.push({ type: 'text', text: text.trim() });
@@ -303,12 +329,7 @@ async function extractReceipt(event: APIGatewayProxyEvent, userId: string): Prom
   }
 
   if (files) {
-    for (const file of files) {
-      userContent.push({
-        type: 'image_url',
-        image_url: { url: `data:${file.mimeType};base64,${file.base64}` },
-      });
-    }
+    userContent.push(...buildFileContent(files));
   }
 
   const model = 'gpt-4o';
@@ -469,27 +490,22 @@ async function extractRecurring(event: APIGatewayProxyEvent, userId: string): Pr
 
   const systemPrompt = buildExtractPrompt(basePrompt, userContext);
 
-  const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [];
+  const userContent: ContentPart[] = [];
 
   if (text?.trim()) {
     userContent.push({ type: 'text', text: text.trim() });
   } else {
-    userContent.push({ type: 'text', text: 'Identify all recurring transactions/subscriptions from the provided document(s).' });
+    userContent.push({ type: 'text', text: 'Identify all recurring transactions/subscriptions from the provided document(s). Cross-reference ALL documents to find patterns across months.' });
   }
 
   if (files) {
-    for (const file of files) {
-      userContent.push({
-        type: 'image_url',
-        image_url: { url: `data:${file.mimeType};base64,${file.base64}` },
-      });
-    }
+    userContent.push(...buildFileContent(files));
   }
 
   const model = 'gpt-4o';
   const result = await callOpenAi(systemPrompt, userContent, model, {
     responseFormat: 'json',
-    maxTokens: 8000,
+    maxTokens: 16000,
   });
 
   await logUsage('extract-recurring', model, result.promptTokens, result.completionTokens);

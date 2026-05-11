@@ -11,6 +11,7 @@ import './CategoriasScreen.scss';
 interface CategoriasScreenProps {
   tx: Transaction[];
   currency: CurrencyCode;
+  workspaceId?: string | null;
 }
 
 export function CategoriasScreen({ tx, currency }: CategoriasScreenProps) {

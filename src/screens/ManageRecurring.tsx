@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import type { ComponentType } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
-import { listRecurring, createRecurring, updateRecurring, deleteRecurring, listAccounts, aiExtractRecurring } from '../lib/api';
+import { listRecurring, createRecurring, updateRecurring, deleteRecurring, listAccounts, aiExtractRecurring, listWorkspaces } from '../lib/api';
 import { CATS } from '../data/categories';
-import type { RecurringTransaction, RecurringFrequency, CurrencyCode, Account, ExtractedRecurring, AiExtractRecurringResult } from '../types';
+import type { RecurringTransaction, RecurringFrequency, CurrencyCode, Account, Workspace, ExtractedRecurring, AiExtractRecurringResult } from '../types';
 import './ManageRecurring.scss';
 
 interface ManageRecurringProps {
@@ -49,6 +49,7 @@ interface FormData {
   endDate: string;
   notes: string;
   active: boolean;
+  workspaceId: string;
 }
 
 const emptyForm = (): FormData => ({
@@ -66,11 +67,13 @@ const emptyForm = (): FormData => ({
   endDate: '',
   notes: '',
   active: true,
+  workspaceId: '',
 });
 
 export function ManageRecurring({ onBack }: ManageRecurringProps) {
   const [items, setItems] = useState<RecurringTransaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -167,6 +170,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
       endDate: '',
       notes: r.notes ?? '',
       active: true,
+      workspaceId: '',
     });
   };
 
@@ -206,9 +210,10 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [recData, accData] = await Promise.all([listRecurring(), listAccounts()]);
+      const [recData, accData, wsData] = await Promise.all([listRecurring(), listAccounts(), listWorkspaces()]);
       setItems(recData as unknown as RecurringTransaction[]);
       setAccounts(accData as unknown as Account[]);
+      setWorkspaces(wsData as unknown as Workspace[]);
     } catch {
       // silent
     } finally {
@@ -244,6 +249,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
       endDate: r.endDate ?? '',
       notes: r.notes ?? '',
       active: r.active,
+      workspaceId: r.workspaceId ?? '',
     });
     setShowForm(true);
   };
@@ -276,6 +282,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
       fxRate: 1,
       notes: form.notes.trim() || null,
       active: form.active,
+      workspaceId: form.workspaceId || null,
     };
 
     try {
@@ -545,6 +552,19 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
               ))}
             </select>
 
+            {workspaces.length > 0 && (
+              <select
+                value={form.workspaceId}
+                onChange={e => setField('workspaceId', e.target.value)}
+                className="manage-recurring__select"
+              >
+                <option value="">Sem espaço</option>
+                {workspaces.map(ws => (
+                  <option key={ws.id} value={ws.id}>{ws.icon} {ws.name}</option>
+                ))}
+              </select>
+            )}
+
             <div className="manage-recurring__row-2col">
               <select
                 value={form.currency}
@@ -694,6 +714,12 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
                     {dayInfo(r) && (
                       <span className="manage-recurring__item-day">{dayInfo(r)}</span>
                     )}
+                    {r.workspaceId && (() => {
+                      const ws = workspaces.find(w => w.id === r.workspaceId);
+                      return ws ? (
+                        <span className="manage-recurring__item-workspace">{ws.icon} {ws.name}</span>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
                 <span

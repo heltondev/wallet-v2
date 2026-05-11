@@ -327,6 +327,17 @@
     flex: 0.6;
   }
 
+  &__workspace-label {
+    padding: 10px 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--border-1);
+    border-radius: 8px;
+    color: var(--text-3);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
   // Keypad
   &__keypad {
     padding: 2px 0;

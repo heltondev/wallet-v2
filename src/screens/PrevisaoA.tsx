@@ -11,9 +11,10 @@ import './PrevisaoA.scss';
 interface PrevisaoAProps {
   tx: Transaction[];
   currency: CurrencyCode;
+  workspaceId?: string | null;
 }
 
-export function PrevisaoA({ tx, currency }: PrevisaoAProps) {
+export function PrevisaoA({ tx, currency, workspaceId = null }: PrevisaoAProps) {
   const stats = useMemo(() => {
     let ins = 0;
     let outs = 0;
@@ -44,6 +45,12 @@ export function PrevisaoA({ tx, currency }: PrevisaoAProps) {
           <div className="forecast-screen__label">PREVISÃO PARA</div>
           <h1 className="forecast-screen__title">{nextMonthLabel()}</h1>
         </div>
+
+        {workspaceId && (
+          <div className="forecast-screen__workspace-notice">
+            Previsão filtrada por espaço de trabalho
+          </div>
+        )}
 
         <div className="forecast-screen__balance-card">
           <div className="forecast-screen__balance-label">Saldo atual do mês</div>

@@ -4,7 +4,7 @@ import { CATS } from '../data/categories';
 import { FX } from '../data/constants';
 import { NumericKeypad } from '../components/NumericKeypad';
 import { aiExtractReceipt, aiLearnCategory, getUploadUrl, uploadFileToS3, updateTransaction } from '../lib/api';
-import type { Account, CurrencyCode, ExtractedTransaction, AiExtractResult } from '../types';
+import type { Account, Workspace, CurrencyCode, ExtractedTransaction, AiExtractResult } from '../types';
 import './AddSheet.scss';
 
 const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = { BRL: 'R$', USD: '$', EUR: '€' };
@@ -19,13 +19,15 @@ function dateToFields(dateStr: string) {
 interface AddSheetSaveData {
   desc: string; cat: string; amount: number; currency: CurrencyCode;
   fxRate: number; account: string; date: string; day: string; wd: string;
+  workspaceId?: string | null;
 }
 
 interface AddSheetProps {
   open: boolean; onClose: () => void; onSave: (data: AddSheetSaveData) => Promise<string | undefined>; accounts: Account[];
+  activeWorkspace?: string | null; workspaces?: Workspace[];
 }
 
-export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
+export function AddSheet({ open, onClose, onSave, accounts, activeWorkspace = null, workspaces = [] }: AddSheetProps) {
   const [kind, setKind] = useState<'out' | 'in'>('out');
   const [amount, setAmount] = useState('0,00');
   const [cat, setCat] = useState('mercado');
@@ -33,6 +35,7 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? '');
   const [currency, setCurrency] = useState<CurrencyCode>('BRL');
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [workspaceId, setWorkspaceId] = useState<string>(activeWorkspace ?? '');
 
   // AI state
   const [files, setFiles] = useState<{ name: string; base64: string; mimeType: string }[]>([]);
@@ -67,7 +70,7 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
     setAccountId(accounts[0]?.id ?? ''); setCurrency(accounts[0]?.currency ?? 'BRL');
     setSelectedDate(new Date().toISOString().slice(0, 10));
     setFiles([]); setAiText(''); setAiExpanded(false); setAiLoading(false); setAiDone(false);
-    setAiSuggestedCat(null); setAiSuggestedDesc(null);
+    setAiSuggestedCat(null); setAiSuggestedDesc(null); setWorkspaceId(activeWorkspace ?? '');
     setReceiptFile(null); setReceiptUploading(false);
     setReviewMode(false); setExtractResult(null); setCheckedTx([]); setTxCategories([]); setSavingReview(false);
   };
@@ -193,6 +196,7 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
           fxRate: CURRENCY_FX[txCurrency],
           account: matchedAccount?.name ?? selectedAccount?.name ?? accounts[0]?.name ?? 'Cash',
           ...dateToFields(tx.date?.match(/^\d{4}-\d{2}-\d{2}$/) ? tx.date : new Date().toISOString().slice(0, 10)),
+          workspaceId: workspaceId || null,
         });
       }
     } finally {
@@ -220,6 +224,7 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
       cat: finalCat, amount: signedAmount, currency, fxRate,
       account: selectedAccount?.name ?? accounts[0]?.name ?? 'Cash',
       ...dateToFields(selectedDate),
+      workspaceId: workspaceId || null,
     });
     // Upload receipt if attached
     if (txId && receiptFile) {
@@ -445,6 +450,21 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
                 <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
               ))}
             </select>
+          )}
+
+          {workspaces.length > 0 && (
+            activeWorkspace ? (
+              <div className="add-sheet__workspace-label">
+                {(() => { const ws = workspaces.find(w => w.id === activeWorkspace); return ws ? `${ws.icon} ${ws.name}` : 'Espaço selecionado'; })()}
+              </div>
+            ) : (
+              <select value={workspaceId} onChange={e => setWorkspaceId(e.target.value)} className="add-sheet__select">
+                <option value="">Sem espaço</option>
+                {workspaces.map(ws => (
+                  <option key={ws.id} value={ws.id}>{ws.icon} {ws.name}</option>
+                ))}
+              </select>
+            )
           )}
         </div>
 

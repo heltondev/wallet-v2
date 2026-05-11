@@ -144,7 +144,7 @@ export function App() {
     root.style.setProperty('--pos-bg', `color-mix(in oklch, ${accent} 18%, transparent)`);
   }, [accent]);
 
-  const onSave = async (data: { desc: string; cat: string; amount: number; currency: CurrencyCode; fxRate: number; account: string; date?: string; day?: string; wd?: string }): Promise<string | undefined> => {
+  const onSave = async (data: { desc: string; cat: string; amount: number; currency: CurrencyCode; fxRate: number; account: string; date?: string; day?: string; wd?: string; workspaceId?: string | null }): Promise<string | undefined> => {
     try {
       const fields = data.date ? data : { ...txDateFields(), ...data };
       const result = await createTransaction(fields);
@@ -230,10 +230,10 @@ export function App() {
           />
         )}
         {tab === 'forecast' && (
-          <PrevisaoA tx={filteredTx} currency={activeCurrency} />
+          <PrevisaoA tx={filteredTx} currency={activeCurrency} workspaceId={activeWorkspace} />
         )}
         {tab === 'cats' && (
-          <CategoriasScreen tx={filteredTx} currency={activeCurrency} />
+          <CategoriasScreen tx={filteredTx} currency={activeCurrency} workspaceId={activeWorkspace} />
         )}
         {tab === 'settings' && !subScreen && (
           <AjustesScreen
@@ -327,7 +327,7 @@ export function App() {
           </>
         )}
 
-        <AddSheet open={sheet} onClose={() => setSheet(false)} onSave={onSave} accounts={accounts} />
+        <AddSheet open={sheet} onClose={() => setSheet(false)} onSave={onSave} accounts={accounts} activeWorkspace={activeWorkspace} workspaces={workspaces} />
 
         {toast && (
           <div className="toast">
