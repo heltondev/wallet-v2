@@ -1,0 +1,82 @@
+// ─── Fonts ────────────────────────────────────────────────
+$font-sans: var(--font-sans);
+$font-mono: var(--font-mono);
+
+// ─── Radii ────────────────────────────────────────────────
+$r-card: var(--r-card);       // 16px
+$r-card-sm: var(--r-card-sm); // 12px
+$r-input: var(--r-input);     // 8px
+$r-pill: var(--r-pill);       // 999px
+
+// ─── Spacing ──────────────────────────────────────────────
+$s-1: var(--s-1);  // 4px
+$s-2: var(--s-2);  // 8px
+$s-3: var(--s-3);  // 12px
+$s-4: var(--s-4);  // 16px
+$s-5: var(--s-5);  // 24px
+$s-6: var(--s-6);  // 32px
+
+// Raw values for calculations
+$s-1-raw: 4px;
+$s-2-raw: 8px;
+$s-3-raw: 12px;
+$s-4-raw: 16px;
+$s-5-raw: 24px;
+$s-6-raw: 32px;
+
+// ─── Colors (runtime via CSS custom props) ────────────────
+$bg-0: var(--bg-0);
+$bg-1: var(--bg-1);
+$bg-2: var(--bg-2);
+$bg-3: var(--bg-3);
+$bg-4: var(--bg-4);
+
+$text-1: var(--text-1);
+$text-2: var(--text-2);
+$text-3: var(--text-3);
+$text-4: var(--text-4);
+
+$border-1: var(--border-1);
+$border-2: var(--border-2);
+
+$pos: var(--pos);
+$pos-bg: var(--pos-bg);
+$neg: var(--neg);
+$neg-bg: var(--neg-bg);
+$warn: var(--warn);
+
+// ─── Typography sizes ─────────────────────────────────────
+$fs-display: 54px;
+$fs-h1: 24px;
+$fs-h2: 18px;
+$fs-h3: 14px;
+$fs-body: 14.5px;
+$fs-small: 13px;
+$fs-caption: 11px;
+$fs-mono-label: 11px;
+$fs-mono-value: 13px;
+
+// ─── Font weights ─────────────────────────────────────────
+$fw-regular: 400;
+$fw-medium: 500;
+$fw-semibold: 600;
+$fw-bold: 700;
+
+// ─── Z-index ──────────────────────────────────────────────
+$z-status-bar: 10;
+$z-tab-bar: 10;
+$z-fab: 11;
+$z-sheet: 90;
+$z-toast: 80;
+$z-island: 50;
+
+// ─── Layout ───────────────────────────────────────────────
+$tab-bar-height: 70px;
+$scroll-bottom: 100px;
+$phone-width: 390px;
+$phone-height: 844px;
+$island-width: 120px;
+$island-height: 34px;
+
+// ─── Breakpoints ──────────────────────────────────────────
+$bp-mobile: 500px;

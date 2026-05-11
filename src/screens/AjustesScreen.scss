@@ -17,8 +17,8 @@
 		right: 0;
 		bottom: 100px;
 		overflow: auto;
-		padding-top: 54px;
-		// padding-bottom: 20px;
+		padding-top: 1rem;
+		height: calc(100vh - 75px);
 	}
 
 	&__page-header {

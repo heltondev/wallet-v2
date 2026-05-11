@@ -1,0 +1,221 @@
+@use 'variables' as *;
+
+// ─── Typography ───────────────────────────────────────────
+@mixin font-sans {
+  font-family: $font-sans;
+}
+
+@mixin font-mono {
+  font-family: $font-mono;
+  font-variant-numeric: tabular-nums;
+}
+
+@mixin heading-1 {
+  font-size: $fs-h1;
+  font-weight: $fw-semibold;
+  letter-spacing: -0.6px;
+  color: $text-1;
+  margin: 0;
+}
+
+@mixin heading-2 {
+  font-size: $fs-h2;
+  font-weight: $fw-semibold;
+  letter-spacing: -0.3px;
+  color: $text-1;
+  margin: 0;
+}
+
+@mixin mono-label {
+  font-family: $font-mono;
+  font-size: $fs-mono-label;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: $text-3;
+}
+
+@mixin mono-value {
+  font-family: $font-mono;
+  font-size: $fs-mono-value;
+  color: $text-3;
+}
+
+@mixin money {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'ss01' 1;
+}
+
+// ─── Layout ───────────────────────────────────────────────
+@mixin screen {
+  height: 100%;
+  position: relative;
+  background: $bg-0;
+}
+
+@mixin screen-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: $scroll-bottom;
+  overflow: auto;
+  padding-top: 54px;
+  padding-bottom: 20px;
+}
+
+@mixin screen-header {
+  padding: $s-2-raw $s-4-raw $s-5-raw;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@mixin status-bar-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: $z-status-bar;
+}
+
+// ─── Cards ────────────────────────────────────────────────
+@mixin card {
+  background: $bg-1;
+  border: 1px solid $border-1;
+  border-radius: $r-card;
+  padding: 18px;
+}
+
+@mixin card-sm {
+  background: $bg-1;
+  border: 1px solid $border-1;
+  border-radius: $r-card-sm;
+  overflow: hidden;
+}
+
+// ─── Sections ─────────────────────────────────────────────
+@mixin section {
+  margin-bottom: 18px;
+}
+
+@mixin section-label {
+  @include mono-label;
+  letter-spacing: 1px;
+  padding: 0 $s-4-raw 6px;
+}
+
+@mixin section-body {
+  margin: 0 $s-4-raw;
+  @include card-sm;
+}
+
+// ─── Rows ─────────────────────────────────────────────────
+@mixin row {
+  display: flex;
+  align-items: center;
+  gap: $s-3-raw;
+  padding: 14px $s-4-raw;
+  border-bottom: 1px solid $border-1;
+
+  &:last-child,
+  &--last {
+    border-bottom: none;
+  }
+}
+
+@mixin row-label {
+  flex: 1;
+  font-size: $fs-body;
+  font-weight: $fw-medium;
+  color: $text-1;
+}
+
+@mixin row-detail {
+  font-size: $fs-small;
+  color: $text-3;
+  font-family: $font-mono;
+}
+
+// ─── Buttons ──────────────────────────────────────────────
+@mixin btn-primary {
+  width: 100%;
+  padding: 14px 0;
+  border-radius: 10px;
+  border: none;
+  background: $pos;
+  color: #0A0A0A;
+  font-size: 15px;
+  font-weight: $fw-semibold;
+  font-family: $font-sans;
+  cursor: pointer;
+
+  &:disabled {
+    background: $bg-3;
+    color: $text-4;
+    cursor: not-allowed;
+  }
+}
+
+@mixin btn-secondary {
+  padding: 12px 20px;
+  border-radius: $r-input;
+  background: transparent;
+  border: 1px solid $border-2;
+  color: $text-2;
+  font-family: $font-sans;
+  font-weight: $fw-medium;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+@mixin btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+@mixin btn-danger {
+  color: $neg;
+}
+
+// ─── Forms ────────────────────────────────────────────────
+@mixin input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  background: $bg-2;
+  border: 1px solid $border-1;
+  border-radius: $r-input;
+  color: $text-1;
+  font-family: $font-sans;
+  font-size: 14px;
+  outline: none;
+}
+
+@mixin select {
+  @include input;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%2371717A' d='M0 0h10L5 6z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+// ─── Utilities ────────────────────────────────────────────
+@mixin no-scrollbar {
+  &::-webkit-scrollbar { display: none; }
+  scrollbar-width: none;
+}
+
+@mixin mobile-only {
+  @media (max-width: $bp-mobile) {
+    @content;
+  }
+}
+
+@mixin desktop-only {
+  @media (min-width: #{$bp-mobile + 1}) {
+    @content;
+  }
+}
