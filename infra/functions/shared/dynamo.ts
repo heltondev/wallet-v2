@@ -32,6 +32,7 @@ export async function queryItems(
   pk: string,
   skPrefix?: string,
   indexName?: string,
+  options?: { limit?: number; scanForward?: boolean },
 ): Promise<Record<string, unknown>[]> {
   const params: Record<string, unknown> = {
     TableName: TABLE_NAME,
@@ -43,6 +44,8 @@ export async function queryItems(
       : { ':pk': pk },
   };
   if (indexName) params.IndexName = indexName;
+  if (options?.limit) params.Limit = options.limit;
+  if (options?.scanForward !== undefined) params.ScanIndexForward = options.scanForward;
 
   const { Items } = await doc.send(new QueryCommand(params as any));
   return Items ?? [];

@@ -32,8 +32,21 @@ export function ReceiptUpload({ onExtracted, onClose }: ReceiptUploadProps) {
       setStage('loading');
 
       try {
-        const data = await aiExtractReceipt(base64, file.type);
-        setExtracted(data);
+        const rawBase64 = base64.includes(',') ? base64.split(',')[1] : base64;
+        const result = await aiExtractReceipt(
+          [{ base64: rawBase64, mimeType: file.type }],
+          '',
+        );
+        const tx = result.transactions[0];
+        if (tx) {
+          setExtracted({
+            desc: tx.desc,
+            amount: tx.amount,
+            currency: tx.currency,
+            cat: tx.cat,
+            date: tx.date,
+          });
+        }
         setStage('review');
       } catch {
         setStage('upload');

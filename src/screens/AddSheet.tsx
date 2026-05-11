@@ -4,7 +4,7 @@ import { CATS } from '../data/categories';
 import { FX } from '../data/constants';
 import { NumericKeypad } from '../components/NumericKeypad';
 import { aiExtractReceipt, getUploadUrl, uploadFileToS3, updateTransaction } from '../lib/api';
-import type { Account, CurrencyCode } from '../types';
+import type { Account, CurrencyCode, ExtractedTransaction, AiExtractResult } from '../types';
 
 const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = { BRL: 'R$', USD: '$', EUR: '€' };
 const CURRENCY_FX: Record<CurrencyCode, number> = { BRL: 1, USD: FX, EUR: FX * 1.08 };
@@ -55,6 +55,13 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
+  // Review mode state
+  const [reviewMode, setReviewMode] = useState(false);
+  const [extractResult, setExtractResult] = useState<AiExtractResult | null>(null);
+  const [checkedTx, setCheckedTx] = useState<boolean[]>([]);
+  const [txCategories, setTxCategories] = useState<string[]>([]);
+  const [savingReview, setSavingReview] = useState(false);
+
   // Receipt attachment state
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptUploading, setReceiptUploading] = useState(false);
@@ -69,6 +76,7 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
     setSelectedDate(new Date().toISOString().slice(0, 10));
     setFiles([]); setAiText(''); setAiExpanded(false); setAiLoading(false); setAiDone(false);
     setReceiptFile(null); setReceiptUploading(false);
+    setReviewMode(false); setExtractResult(null); setCheckedTx([]); setTxCategories([]); setSavingReview(false);
   };
 
   useEffect(() => { if (open) reset(); }, [open]);
@@ -124,39 +132,81 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
     if (files.length === 0 && !aiText.trim()) return;
     setAiLoading(true);
     try {
-      const result = await aiExtractReceipt(
-        files.length > 0 ? files[0].base64 : '',
-        files.length > 0 ? files[0].mimeType : 'text/plain',
-      );
+      const payload = files.map(f => ({ base64: f.base64, mimeType: f.mimeType }));
+      const result = await aiExtractReceipt(payload, aiText);
 
-      // Auto-fill form from AI response
-      if (result.desc) setDesc(result.desc as string);
-      if (result.cat) {
-        const catStr = result.cat as string;
-        setCat(allCatKeys.includes(catStr) ? catStr : 'outros');
+      if (result.transactions.length === 1) {
+        // Single transaction — auto-fill the form directly
+        const tx = result.transactions[0];
+        if (tx.desc) setDesc(tx.desc);
+        if (tx.cat) setCat(allCatKeys.includes(tx.cat) ? tx.cat : 'outros');
+        if (tx.amount != null) {
+          setKind(tx.amount >= 0 ? 'in' : 'out');
+          setAmount(Math.abs(tx.amount).toFixed(2).replace('.', ','));
+        }
+        if (tx.currency && ['BRL', 'USD', 'EUR'].includes(tx.currency)) {
+          setCurrency(tx.currency);
+        }
+        if (tx.date?.match(/^\d{4}-\d{2}-\d{2}$/)) setSelectedDate(tx.date);
+        if (tx.account) {
+          const matched = accounts.find(a => a.name.toLowerCase() === tx.account?.toLowerCase());
+          if (matched) setAccountId(matched.id);
+        }
+        setAiDone(true);
+      } else if (result.transactions.length > 1) {
+        // Multiple transactions — enter review mode
+        setExtractResult(result);
+        setCheckedTx(result.transactions.map(() => true));
+        setTxCategories(result.transactions.map(tx => tx.cat));
+        setReviewMode(true);
+        setAiDone(true);
       }
-      if (result.amount != null) {
-        const amt = result.amount as number;
-        setKind(amt >= 0 ? 'in' : 'out');
-        const absAmt = Math.abs(amt);
-        const formatted = absAmt.toFixed(2).replace('.', ',');
-        setAmount(formatted);
-      }
-      if (result.currency) {
-        const cur = result.currency as string;
-        if (['BRL', 'USD', 'EUR'].includes(cur)) setCurrency(cur as CurrencyCode);
-      }
-      if (result.date) {
-        const dateStr = result.date as string;
-        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) setSelectedDate(dateStr);
-      }
-      setAiDone(true);
     } catch {
       // AI failed — user fills manually
     } finally {
       setAiLoading(false);
     }
   };
+
+  const toggleTx = (idx: number) => {
+    setCheckedTx(prev => prev.map((v, i) => i === idx ? !v : v));
+  };
+
+  const changeTxCategory = (idx: number, newCat: string) => {
+    setTxCategories(prev => prev.map((v, i) => i === idx ? newCat : v));
+  };
+
+  const handleApproveReview = async () => {
+    if (!extractResult) return;
+    setSavingReview(true);
+    try {
+      for (let i = 0; i < extractResult.transactions.length; i++) {
+        if (!checkedTx[i]) continue;
+        const tx = extractResult.transactions[i];
+        const finalCat = txCategories[i] || tx.cat;
+        const positive = tx.amount >= 0;
+        const matchedAccount = tx.account
+          ? accounts.find(a => a.name.toLowerCase() === tx.account?.toLowerCase())
+          : null;
+        const txCurrency = (['BRL', 'USD', 'EUR'].includes(tx.currency) ? tx.currency : 'BRL') as CurrencyCode;
+
+        await onSave({
+          desc: tx.desc || (positive ? 'Entrada' : CATS[finalCat]?.label ?? finalCat),
+          cat: positive ? 'salario' : finalCat,
+          amount: tx.amount,
+          currency: txCurrency,
+          fxRate: CURRENCY_FX[txCurrency],
+          account: matchedAccount?.name ?? selectedAccount?.name ?? accounts[0]?.name ?? 'Cash',
+          ...dateToFields(tx.date?.match(/^\d{4}-\d{2}-\d{2}$/) ? tx.date : new Date().toISOString().slice(0, 10)),
+        });
+      }
+    } finally {
+      setSavingReview(false);
+    }
+    onClose();
+  };
+
+  const checkedCount = checkedTx.filter(Boolean).length;
 
   const numAmount = parseFloat(amount.replace(/\./g, '').replace(',', '.')) || 0;
   const positive = kind === 'in';
@@ -209,6 +259,26 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
       }} className="no-scrollbar">
         <div style={{ width: 36, height: 4, background: 'var(--bg-4)', borderRadius: 2, margin: '0 auto 14px' }} />
 
+        {/* Review Mode */}
+        {reviewMode && extractResult && (
+          <ReviewPanel
+            result={extractResult}
+            checkedTx={checkedTx}
+            txCategories={txCategories}
+            onToggle={toggleTx}
+            onChangeCategory={changeTxCategory}
+            onApprove={handleApproveReview}
+            onCancel={() => { setReviewMode(false); setExtractResult(null); }}
+            checkedCount={checkedCount}
+            saving={savingReview}
+            accounts={accounts}
+            allCatKeys={allCatKeys}
+          />
+        )}
+
+        {/* AI Section — hidden during review */}
+        {!reviewMode && (
+        <>
         {/* AI Section */}
         <div style={{
           border: '1px solid var(--border-1)', borderRadius: 12,
@@ -442,6 +512,264 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
             Salvar
           </button>
         </div>
+        </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Review Panel Component ─── */
+
+const REVIEW_CURRENCY_SYMBOLS: Record<string, string> = { BRL: 'R$', USD: '$', EUR: '€' };
+
+interface ReviewPanelProps {
+  result: AiExtractResult;
+  checkedTx: boolean[];
+  txCategories: string[];
+  onToggle: (idx: number) => void;
+  onChangeCategory: (idx: number, cat: string) => void;
+  onApprove: () => void;
+  onCancel: () => void;
+  checkedCount: number;
+  saving: boolean;
+  accounts: Account[];
+  allCatKeys: string[];
+}
+
+function ReviewPanel({
+  result, checkedTx, txCategories, onToggle, onChangeCategory,
+  onApprove, onCancel, checkedCount, saving, allCatKeys,
+}: ReviewPanelProps) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-1)', fontFamily: 'var(--font-sans)' }}>
+            {result.transactions.length} transações encontradas
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
+            {result.document.type} — {result.document.language}
+          </div>
+        </div>
+        <button onClick={onCancel} style={{
+          background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+          color: 'var(--text-3)', fontSize: 12, fontFamily: 'var(--font-sans)',
+        }}>
+          Voltar
+        </button>
+      </div>
+
+      {/* Warnings */}
+      {result.warnings.length > 0 && (
+        <div style={{
+          padding: '8px 12px', background: 'rgba(250, 204, 21, 0.08)',
+          border: '1px solid rgba(250, 204, 21, 0.2)', borderRadius: 8,
+        }}>
+          {result.warnings.map((w, i) => (
+            <div key={i} style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'var(--font-sans)', lineHeight: 1.4 }}>
+              {w}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Transaction list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {result.transactions.map((tx, idx) => (
+          <ReviewRow
+            key={idx}
+            tx={tx}
+            checked={checkedTx[idx]}
+            category={txCategories[idx]}
+            onToggle={() => onToggle(idx)}
+            onChangeCategory={(cat) => onChangeCategory(idx, cat)}
+            allCatKeys={allCatKeys}
+          />
+        ))}
+      </div>
+
+      {/* Suggestions */}
+      {result.suggestions.length > 0 && (
+        <div style={{ padding: '8px 12px', background: 'var(--bg-0)', borderRadius: 8, border: '1px solid var(--border-1)' }}>
+          {result.suggestions.map((s, i) => (
+            <div key={i} style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-sans)', lineHeight: 1.4 }}>
+              {s}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Action buttons */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+        <button onClick={onCancel} style={{
+          flex: 1, padding: '14px 0', borderRadius: 8,
+          background: 'transparent', border: '1px solid var(--border-2)',
+          color: 'var(--text-2)', fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 13,
+          cursor: 'pointer',
+        }}>
+          Cancelar
+        </button>
+        <button onClick={onApprove} disabled={checkedCount === 0 || saving} style={{
+          flex: 1.4, padding: '14px 0', borderRadius: 8,
+          background: (checkedCount === 0 || saving) ? 'var(--bg-3)' : 'var(--pos)',
+          color: (checkedCount === 0 || saving) ? 'var(--text-4)' : '#0A0A0A',
+          border: 'none', fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 14,
+          cursor: (checkedCount === 0 || saving) ? 'not-allowed' : 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        }}>
+          {saving ? (
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>Salvando...</span>
+          ) : (
+            <>
+              <Icons.check size={16} stroke={2.4} color={(checkedCount === 0) ? 'var(--text-4)' : '#0A0A0A'} />
+              Aprovar {checkedCount} transaç{checkedCount === 1 ? 'ão' : 'ões'}
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Single Review Row ─── */
+
+interface ReviewRowProps {
+  tx: ExtractedTransaction;
+  checked: boolean;
+  category: string;
+  onToggle: () => void;
+  onChangeCategory: (cat: string) => void;
+  allCatKeys: string[];
+}
+
+function ReviewRow({ tx, checked, category, onToggle, onChangeCategory, allCatKeys }: ReviewRowProps) {
+  const isExpense = tx.amount < 0;
+  const amtColor = isExpense ? 'var(--text-1)' : 'var(--pos)';
+  const sym = REVIEW_CURRENCY_SYMBOLS[tx.currency] ?? '$';
+  const absAmt = Math.abs(tx.amount).toFixed(2).replace('.', ',');
+  const lowConfidence = tx.catConfidence === 'low' || tx.catConfidence === 'medium';
+  const catMeta = CATS[category];
+
+  return (
+    <div
+      onClick={onToggle}
+      style={{
+        display: 'flex', alignItems: 'flex-start', gap: 10,
+        padding: '10px 12px', background: checked ? 'var(--bg-0)' : 'var(--bg-2)',
+        border: `1px solid ${checked ? 'var(--border-1)' : 'var(--border-0)'}`,
+        borderRadius: 10, cursor: 'pointer',
+        opacity: checked ? 1 : 0.5,
+        transition: 'opacity 0.15s, background 0.15s',
+      }}
+    >
+      {/* Checkbox */}
+      <div style={{
+        width: 20, height: 20, borderRadius: 6, marginTop: 2, flexShrink: 0,
+        border: checked ? 'none' : '1.5px solid var(--border-2)',
+        background: checked ? 'var(--pos)' : 'transparent',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {checked && <Icons.check size={12} stroke={2.5} color="#0A0A0A" />}
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+          <span style={{
+            fontSize: 13, fontWeight: 600, color: 'var(--text-1)', fontFamily: 'var(--font-sans)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {tx.desc}
+          </span>
+          <span className="money" style={{ fontSize: 14, fontWeight: 600, color: amtColor, flexShrink: 0 }}>
+            {sym} {absAmt}
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+          {/* Date */}
+          <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
+            {tx.date}
+          </span>
+
+          {/* Account */}
+          {tx.account && (
+            <span style={{
+              fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--font-mono)',
+              background: 'var(--bg-2)', padding: '1px 6px', borderRadius: 4,
+            }}>
+              {tx.account}
+            </span>
+          )}
+
+          {/* Category badge */}
+          {lowConfidence ? (
+            <select
+              value={category}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => { e.stopPropagation(); onChangeCategory(e.target.value); }}
+              style={{
+                fontSize: 10, fontFamily: 'var(--font-sans)', fontWeight: 600,
+                background: 'rgba(250, 204, 21, 0.12)', color: 'var(--text-2)',
+                border: '1px solid rgba(250, 204, 21, 0.3)', borderRadius: 4,
+                padding: '1px 4px', cursor: 'pointer',
+                appearance: 'none' as const, WebkitAppearance: 'none' as const,
+              }}
+            >
+              <option value={tx.cat}>{CATS[tx.cat]?.label ?? tx.cat}</option>
+              {tx.catAlternatives
+                .filter(a => a !== tx.cat)
+                .map(alt => (
+                  <option key={alt} value={alt}>{CATS[alt]?.label ?? alt}</option>
+                ))}
+              {allCatKeys
+                .filter(k => k !== tx.cat && !tx.catAlternatives.includes(k))
+                .map(k => (
+                  <option key={k} value={k}>{CATS[k]?.label ?? k}</option>
+                ))}
+            </select>
+          ) : (
+            <span style={{
+              fontSize: 10, fontFamily: 'var(--font-sans)', fontWeight: 600,
+              background: catMeta?.color ? `${catMeta.color}22` : 'var(--bg-3)',
+              color: catMeta?.color ?? 'var(--text-2)',
+              padding: '1px 6px', borderRadius: 4,
+            }}>
+              {catMeta?.label ?? category}
+            </span>
+          )}
+
+          {/* Confidence indicator for low/medium */}
+          {lowConfidence && (
+            <span style={{ fontSize: 9, color: 'rgba(250, 204, 21, 0.7)', fontFamily: 'var(--font-mono)' }}>
+              {tx.catConfidence}
+            </span>
+          )}
+        </div>
+
+        {/* Notes preview */}
+        {tx.notes && (
+          <div style={{
+            fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-sans)',
+            marginTop: 4, lineHeight: 1.3,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {tx.notes}
+          </div>
+        )}
+
+        {/* Payment method */}
+        {tx.payment?.method && (
+          <span style={{
+            fontSize: 10, color: 'var(--text-4)', fontFamily: 'var(--font-mono)',
+            marginTop: 2, display: 'inline-block',
+          }}>
+            {tx.payment.method}{tx.payment.cardLast4 ? ` ****${tx.payment.cardLast4}` : ''}
+            {tx.payment.installments ? ` ${tx.payment.installmentNumber}/${tx.payment.installments}x` : ''}
+          </span>
+        )}
       </div>
     </div>
   );

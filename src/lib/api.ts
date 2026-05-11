@@ -61,8 +61,14 @@ export const updateSettings = (data: Record<string, unknown>) =>
 export const aiCategorize = (desc: string, amount: number) =>
   apiFetch<{ category: string; confidence: number }>('/ai/categorize', { method: 'POST', body: JSON.stringify({ desc, amount }) });
 
-export const aiExtractReceipt = (file: string, mimeType: string) =>
-  apiFetch<Record<string, unknown>>('/ai/extract-receipt', { method: 'POST', body: JSON.stringify({ file, mimeType }) });
+export const aiExtractReceipt = (
+  files: { base64: string; mimeType: string }[],
+  text: string,
+) =>
+  apiFetch<import('../types').AiExtractResult>('/ai/extract-receipt', {
+    method: 'POST',
+    body: JSON.stringify({ files, text }),
+  });
 
 export const aiInsights = (month: string) =>
   apiFetch<{ summary: string; patterns: string[]; alerts: string[]; tips: string[] }>('/ai/insights', { method: 'POST', body: JSON.stringify({ month }) });
