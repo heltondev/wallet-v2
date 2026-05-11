@@ -11,15 +11,17 @@ async function createCategory(event: APIGatewayProxyEvent, userId: string): Prom
     return badRequest(event, 'Missing required fields: slug, label, color, icon');
   }
 
-  const item = {
+  const item: Record<string, unknown> = {
     PK: `USER#${userId}`,
     SK: `CAT#${slug}`,
     slug,
     label,
+    labelEn: body.labelEn ?? label,
     color,
     icon,
     createdAt: new Date().toISOString(),
   };
+  if (body.hidden !== undefined) item.hidden = body.hidden;
 
   await putItem(item);
   return created(event, item);
@@ -34,19 +36,24 @@ async function updateCategory(event: APIGatewayProxyEvent, userId: string): Prom
   const slug = event.pathParameters?.slug;
   if (!slug) return badRequest(event, 'Missing category slug');
 
-  const sk = `CAT#${slug}`;
-  const existing = await getItem(`USER#${userId}`, sk);
-  if (!existing) return notFound(event, 'Category not found');
-
   const body = JSON.parse(event.body ?? '{}');
-  const attrs: Record<string, unknown> = {};
-  if (body.label !== undefined) attrs.label = body.label;
-  if (body.color !== undefined) attrs.color = body.color;
-  if (body.icon !== undefined) attrs.icon = body.icon;
-  attrs.updatedAt = new Date().toISOString();
+  const now = new Date().toISOString();
 
-  await updateItem(`USER#${userId}`, sk, attrs);
-  return ok(event, { ...existing, ...attrs });
+  // Upsert — create if not exists, update if exists
+  const item: Record<string, unknown> = {
+    PK: `USER#${userId}`,
+    SK: `CAT#${slug}`,
+    slug,
+    label: body.label,
+    labelEn: body.labelEn,
+    color: body.color,
+    icon: body.icon,
+    updatedAt: now,
+  };
+  if (body.hidden !== undefined) item.hidden = body.hidden;
+
+  await putItem(item);
+  return ok(event, item);
 }
 
 async function removeCategory(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
