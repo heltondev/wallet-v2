@@ -25,7 +25,7 @@ export function CategoriasScreen({ fabKind = 'circle' }: CategoriasScreenProps) 
   return (
     <div className="phone-surface" style={{height:'100%',position:'relative',overflow:'hidden'}} data-screen-label="Categories">
       <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
-      <div style={{height:'100%',overflow:'auto',paddingTop:54,paddingBottom:90}} className="no-scrollbar">
+      <div style={{height:'100%',overflow:'auto',paddingTop:54,paddingBottom:140}} className="no-scrollbar">
         <div style={{padding:'8px 16px 6px',display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
           <h1 style={{fontSize:24,fontWeight:600,letterSpacing:-0.6,margin:0,color:'var(--text-1)'}}>Categorias</h1>
           <span style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',letterSpacing:0.5,textTransform:'uppercase'}}>MAI · 2026</span>
