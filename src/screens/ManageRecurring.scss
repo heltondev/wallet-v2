@@ -74,18 +74,17 @@
 
 	// List
 	&__list {
-		margin: 18px $s-4-raw 0;
-		@include card-sm;
+		margin-top: 10px;
 	}
 
 	&__item {
 		display: flex;
 		flex-direction: column;
 		padding: 14px $s-4-raw;
-
-		&:not(:last-child) {
-			border-bottom: 1px solid $border-1;
-		}
+		margin: 0 $s-4-raw 10px;
+		background: $bg-1;
+		border: 1px solid $border-1;
+		border-radius: $r-card-sm;
 
 		&--inactive {
 			opacity: 0.45;
