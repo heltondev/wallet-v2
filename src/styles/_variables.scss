@@ -70,9 +70,11 @@ $z-sheet: 90;
 $z-toast: 80;
 $z-island: 50;
 
-// ─── Layout ───────────────────────────────────────────────
+// ─── Screen layout ────────────────────────────────────────
+$screen-padding-top: 54px;
+$screen-padding-bottom: 20px;
+$screen-scroll-bottom: 100px;
 $tab-bar-height: 70px;
-$scroll-bottom: 100px;
 $phone-width: 390px;
 $phone-height: 844px;
 $island-width: 120px;

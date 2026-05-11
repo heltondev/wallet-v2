@@ -1,3 +1,5 @@
+@use '../styles/variables' as *;
+
 .settings-screen {
 	height: 100%;
 	position: relative;
@@ -15,9 +17,9 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		bottom: 100px;
+		bottom: $screen-scroll-bottom;
 		overflow: auto;
-		padding-top: 1rem;
+		padding-top: $screen-padding-top;
 		height: calc(100vh - 75px);
 	}
 
