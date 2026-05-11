@@ -6,7 +6,8 @@ import { TransactionGroup } from '../components/TransactionGroup';
 import { TransactionRow } from '../components/TransactionRow';
 import { FAB } from '../components/FAB';
 import { BottomTabBar } from '../components/BottomTabBar';
-import type { Transaction, TabId, FabKind } from '../types';
+import { convertAmount } from '../utils/formatters';
+import type { Transaction, TabId, FabKind, CurrencyCode } from '../types';
 
 interface GroupedDay {
   day: string;
@@ -18,11 +19,12 @@ interface GroupedDay {
 interface LiveTxListProps {
   tx: Transaction[];
   fabKind: FabKind;
+  displayCurrency: CurrencyCode;
   onAdd: () => void;
   onTabChange: (tab: TabId) => void;
 }
 
-export function LiveTxList({ tx, fabKind, onAdd, onTabChange }: LiveTxListProps) {
+export function LiveTxList({ tx, fabKind, displayCurrency, onAdd, onTabChange }: LiveTxListProps) {
   const [filter, setFilter] = useState<'all' | 'out' | 'in'>('all');
   const filtered = useMemo(()=>{
     if (filter==='out') return tx.filter(item=>item.amount<0);
@@ -35,7 +37,7 @@ export function LiveTxList({ tx, fabKind, onAdd, onTabChange }: LiveTxListProps)
       const k = item.day+'_'+item.wd;
       if (!g[k]) g[k] = { day:item.day, wd:item.wd, items:[], total:0 };
       g[k].items.push(item);
-      g[k].total += item.amount;
+      g[k].total += convertAmount(item.amount, item.currency, displayCurrency);
     });
     return Object.values(g);
   },[filtered]);
@@ -58,7 +60,7 @@ export function LiveTxList({ tx, fabKind, onAdd, onTabChange }: LiveTxListProps)
         </div>
         {grouped.map(grp=>(
           <TransactionGroup key={grp.day+grp.wd} day={grp.day} weekday={grp.wd.toUpperCase()+(grp.day==='14'?' · HOJE':'')} total={grp.total}>
-            {grp.items.map(row=>(<TransactionRow key={row.id} tx={row}/>))}
+            {grp.items.map(row=>(<TransactionRow key={row.id} tx={row} displayCurrency={displayCurrency}/>))}
           </TransactionGroup>
         ))}
         {grouped.length===0 && (

@@ -10,9 +10,9 @@ import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL } from './utils/formatters';
 import { TweaksPanel } from './tweaks/TweaksPanel';
 import { TweakSection, TweakRadio, TweakColor, TweakButton } from './tweaks/TweakControls';
-import { INITIAL_TX } from './data/sampleTransactions';
+import { INITIAL_TX, INITIAL_ACCOUNTS } from './data/sampleTransactions';
 import { ACCENT_OPTIONS, TWEAKS_DEFAULTS } from './data/constants';
-import type { Transaction, TabId, FabKind, ToastData } from './types';
+import type { Transaction, TabId, FabKind, ToastData, CurrencyCode } from './types';
 
 /* Overlay interceptors for screens not yet wired live */
 function FabIntercept({ fabKind, onAdd }: { fabKind: FabKind; onAdd: () => void }) {
@@ -43,6 +43,7 @@ export function App() {
   const [tab, setTab] = useState<TabId>('home');
   const [sheet, setSheet] = useState(false);
   const [tx, setTx] = useState<Transaction[]>(INITIAL_TX);
+  const [accounts] = useState(INITIAL_ACCOUNTS);
   const [toast, setToast] = useState<ToastData | null>(null);
   const [tweaksOpen, setTweaksOpen] = useState(false);
 
@@ -58,8 +59,8 @@ export function App() {
     root.style.setProperty('--pos-bg', `color-mix(in oklch, ${accent} 18%, transparent)`);
   }, [accent]);
 
-  const onSave = (data: { desc: string; cat: string; amount: number; account: string }) => {
-    const newId = Math.max(...tx.map((t) => t.id)) + 1;
+  const onSave = (data: { desc: string; cat: string; amount: number; currency: CurrencyCode; fxRate: number; account: string }) => {
+    const newId = Math.max(...tx.map((item) => item.id)) + 1;
     setTx([{ id: newId, day: '14', wd: 'qua', ...data }, ...tx]);
     setToast({ desc: data.desc, amount: data.amount });
     setTimeout(() => setToast(null), 2200);
@@ -90,6 +91,7 @@ export function App() {
           <LiveTxList
             tx={tx}
             fabKind={fab}
+            displayCurrency={currency}
             onAdd={() => setSheet(true)}
             onTabChange={(id) => setTab(id as TabId)}
           />
@@ -130,7 +132,7 @@ export function App() {
           </div>
         )}
 
-        <AddSheet open={sheet} onClose={() => setSheet(false)} onSave={onSave} />
+        <AddSheet open={sheet} onClose={() => setSheet(false)} onSave={onSave} accounts={accounts} />
 
         {toast && (
           <div className="toast">

@@ -1,17 +1,21 @@
 import { CATS } from '../data/categories';
-import { fmtBRL } from '../utils/formatters';
+import { fmtAmount, convertAmount } from '../utils/formatters';
 import { CategoryIcon } from './CategoryIcon';
-import type { Transaction } from '../types';
+import type { Transaction, CurrencyCode } from '../types';
 
 interface TransactionRowProps {
   tx: Transaction;
   compact?: boolean;
   onClick?: () => void;
+  displayCurrency?: CurrencyCode;
 }
 
-export function TransactionRow({ tx, compact = false, onClick }: TransactionRowProps) {
+export function TransactionRow({ tx, compact = false, onClick, displayCurrency = 'BRL' }: TransactionRowProps) {
   const c = CATS[tx.cat] || CATS.outros;
   const positive = tx.amount > 0;
+  const showConversion = tx.currency !== displayCurrency;
+  const convertedAmount = showConversion ? convertAmount(tx.amount, tx.currency, displayCurrency) : null;
+
   return (
     <div onClick={onClick} style={{
       display:'flex',alignItems:'center',gap:12,
@@ -32,9 +36,13 @@ export function TransactionRow({ tx, compact = false, onClick }: TransactionRowP
           color: positive?'var(--pos)':'var(--text-1)',
           letterSpacing:-0.2,
         }}>
-          {positive?'+':'\u2212'}{fmtBRL(Math.abs(tx.amount)).replace('\u2212','')}
+          {positive?'+':'\u2212'}{fmtAmount(Math.abs(tx.amount), tx.currency).replace('\u2212','')}
         </div>
-        {tx.amount_usd && <div className="money" style={{fontSize:11,color:'var(--text-4)',marginTop:1,fontFamily:'var(--font-mono)'}}>\u2248 ${Math.abs(tx.amount_usd).toFixed(0)}</div>}
+        {showConversion && convertedAmount !== null && (
+          <div className="money" style={{fontSize:11,color:'var(--text-4)',marginTop:1,fontFamily:'var(--font-mono)'}}>
+            ≈ {fmtAmount(Math.abs(convertedAmount), displayCurrency, { decimals: 0 })}
+          </div>
+        )}
       </div>
     </div>
   );

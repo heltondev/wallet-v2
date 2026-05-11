@@ -1,3 +1,5 @@
+export type CurrencyCode = 'BRL' | 'USD' | 'EUR';
+
 export interface Transaction {
   id: number;
   day: string;
@@ -5,8 +7,17 @@ export interface Transaction {
   desc: string;
   cat: string;
   amount: number;
+  currency: CurrencyCode;
+  fxRate: number;
   account: string;
   amount_usd?: number;
+}
+
+export interface Account {
+  id: string;
+  name: string;
+  institution: string;
+  currency: CurrencyCode;
 }
 
 export interface CategoryMeta {
