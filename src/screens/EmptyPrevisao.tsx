@@ -7,7 +7,7 @@ export function EmptyPrevisao() {
   return (
     <div className="phone-surface" style={{height:'100%',position:'relative'}} data-screen-label="Empty Forecast">
       <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
-      <div style={{height:'100%',overflow:'auto',paddingTop:54,paddingBottom:140}} className="no-scrollbar">
+      <div style={{height:'100%',overflow:'auto',paddingTop:54,paddingBottom:200}} className="no-scrollbar">
         <div style={{padding:'8px 16px 14px'}}>
           <div style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',letterSpacing:1.2,textTransform:'uppercase'}}>PRÓXIMO MÊS</div>
           <h1 style={{fontSize:26,fontWeight:600,letterSpacing:-0.6,margin:0,color:'var(--text-1)'}}>Junho 2026</h1>

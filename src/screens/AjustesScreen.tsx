@@ -44,7 +44,7 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', onNavigate, onSign
   return (
     <div className="phone-surface" style={{height:'100%',position:'relative'}} data-screen-label="Settings">
       <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
-      <div style={{height:'100%',overflow:'auto',paddingTop:54,paddingBottom:140}} className="no-scrollbar">
+      <div style={{height:'100%',overflow:'auto',paddingTop:54,paddingBottom:200}} className="no-scrollbar">
         <div style={{padding:'8px 16px 18px'}}>
           <h1 style={{fontSize:24,fontWeight:600,letterSpacing:-0.6,margin:0,color:'var(--text-1)'}}>Ajustes</h1>
         </div>

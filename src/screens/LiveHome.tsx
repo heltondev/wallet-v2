@@ -30,7 +30,7 @@ export function LiveHome({ tx, currency, onTabChange }: LiveHomeProps) {
   return (
     <div className="phone-surface" style={{ height: '100%', position: 'relative' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}><IOSStatusBar dark={dark} /></div>
-      <div style={{ height: '100%', overflow: 'auto', paddingTop: 50, paddingBottom: 140 }} className="no-scrollbar">
+      <div style={{ height: '100%', overflow: 'auto', paddingTop: 50, paddingBottom: 200 }} className="no-scrollbar">
         <MonthSelector month="Maio" year={2026} />
         <div style={{ padding: '4px 16px 14px' }} key={m.balance}>
           <div style={{ animation: 'countup .3s ease' }}>
