@@ -1,4 +1,5 @@
 import { signInWithGoogle } from '../lib/auth';
+import './LoginScreen.scss';
 
 interface LoginScreenProps {
   onAuthenticated: () => void;
@@ -6,57 +7,20 @@ interface LoginScreenProps {
 
 export function LoginScreen({ onAuthenticated: _onAuthenticated }: LoginScreenProps) {
   return (
-    <div className="phone-surface" style={{
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '0 28px',
-    }}>
-      <div style={{ width: '100%', maxWidth: 320, textAlign: 'center' }}>
+    <div className="phone-surface login">
+      <div className="login__container">
         {/* Brand */}
-        <h1 style={{
-          fontFamily: 'var(--font-sans)',
-          fontSize: 42,
-          fontWeight: 700,
-          letterSpacing: -2,
-          color: 'var(--text-1)',
-          margin: 0,
-          lineHeight: 1,
-        }}>
+        <h1 className="login__brand">
           Wallet
         </h1>
-        <p style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: 12,
-          color: 'var(--text-3)',
-          margin: '8px 0 0',
-          letterSpacing: 0.5,
-          textTransform: 'uppercase',
-        }}>
+        <p className="login__subtitle">
           Controle financeiro pessoal
         </p>
 
-        <div style={{ margin: '48px 0 0' }}>
+        <div className="login__actions">
           <button
             onClick={signInWithGoogle}
-            style={{
-              width: '100%',
-              padding: '14px 0',
-              borderRadius: 12,
-              border: '1px solid var(--border-2)',
-              background: 'var(--bg-1)',
-              color: 'var(--text-1)',
-              fontFamily: 'var(--font-sans)',
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-            }}
+            className="login__google-btn"
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -68,13 +32,7 @@ export function LoginScreen({ onAuthenticated: _onAuthenticated }: LoginScreenPr
           </button>
         </div>
 
-        <p style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: 11,
-          color: 'var(--text-4)',
-          margin: '24px 0 0',
-          lineHeight: 1.5,
-        }}>
+        <p className="login__invite">
           Acesso por convite
         </p>
       </div>

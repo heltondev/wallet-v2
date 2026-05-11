@@ -1,0 +1,74 @@
+.transaction-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: default;
+
+  &--default {
+    padding: 12px 0;
+  }
+
+  &--compact {
+    padding: 10px 0;
+  }
+
+  &--clickable {
+    cursor: pointer;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__desc {
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--text-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__meta {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__meta-dot {
+    opacity: 0.5;
+  }
+
+  &__amounts {
+    text-align: right;
+  }
+
+  &__amount {
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+
+    &--positive {
+      color: var(--pos);
+    }
+
+    &--negative {
+      color: var(--text-1);
+    }
+  }
+
+  &__converted {
+    font-size: 11px;
+    color: var(--text-4);
+    margin-top: 1px;
+    font-family: var(--font-mono);
+  }
+}

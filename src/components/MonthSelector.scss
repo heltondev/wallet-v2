@@ -1,0 +1,82 @@
+.month-selector {
+  padding: 8px 16px 12px;
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  &__nav-btn {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  &__center {
+    text-align: center;
+  }
+
+  &__year {
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+
+  &__month {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-1);
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  &__months {
+    display: flex;
+    gap: 0;
+    position: relative;
+  }
+
+  &__month-item {
+    flex: 1;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-4);
+    font-weight: 400;
+    position: relative;
+
+    &--active {
+      color: var(--text-1);
+      font-weight: 600;
+    }
+  }
+
+  &__month-indicator {
+    position: absolute;
+    bottom: -1px;
+    left: 30%;
+    right: 30%;
+    height: 2px;
+    background: var(--pos);
+  }
+
+  &__months-line {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border-1);
+    z-index: -1;
+  }
+}

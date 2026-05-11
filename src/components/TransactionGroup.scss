@@ -1,0 +1,41 @@
+.transaction-group {
+  padding: 0 16px;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 14px 0 6px;
+    border-bottom: 1px solid var(--border-1);
+    margin-bottom: 4px;
+  }
+
+  &__date {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  &__day {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-1);
+    font-family: var(--font-mono);
+    letter-spacing: 0.2px;
+  }
+
+  &__weekday {
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  &__total {
+    font-size: 12px;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    font-weight: 400;
+  }
+}

@@ -6,6 +6,7 @@ import { TransactionGroup } from '../components/TransactionGroup';
 import { TransactionRow } from '../components/TransactionRow';
 import { convertAmount } from '../utils/formatters';
 import type { Transaction, CurrencyCode } from '../types';
+import './LiveTxList.scss';
 
 interface GroupedDay {
   day: string;
@@ -38,16 +39,16 @@ export function LiveTxList({ tx, displayCurrency }: LiveTxListProps) {
   },[filtered]);
 
   return (
-    <div className="phone-surface" style={{height:'100%',position:'relative'}}>
-      <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
-      <div style={{position:'absolute',top:0,left:0,right:0,bottom:100,overflow:'auto',paddingTop:54,paddingBottom:20}} className="no-scrollbar">
-        <div style={{padding:'8px 16px 6px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <h1 style={{fontSize:24,fontWeight:600,color:'var(--text-1)',letterSpacing:-0.6,margin:0}}>Transações</h1>
-          <button style={{background:'var(--bg-2)',border:'none',width:36,height:36,borderRadius:'var(--r-input)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}>
+    <div className="phone-surface live-tx-list">
+      <div className="live-tx-list__status-bar"><IOSStatusBar/></div>
+      <div className="live-tx-list__scroll no-scrollbar">
+        <div className="live-tx-list__header">
+          <h1 className="live-tx-list__title">Transações</h1>
+          <button className="live-tx-list__search-btn">
             <Icons.search size={17} color="var(--text-2)"/>
           </button>
         </div>
-        <div style={{display:'flex',gap:6,padding:'8px 16px 14px',overflowX:'auto'}} className="no-scrollbar">
+        <div className="live-tx-list__chips no-scrollbar">
           <Chip active={filter==='all'} onClick={()=>setFilter('all')}>Todas</Chip>
           <Chip active={filter==='out'} onClick={()=>setFilter('out')}>Saídas</Chip>
           <Chip active={filter==='in'}  onClick={()=>setFilter('in')}>Entradas</Chip>
@@ -59,9 +60,9 @@ export function LiveTxList({ tx, displayCurrency }: LiveTxListProps) {
           </TransactionGroup>
         ))}
         {grouped.length===0 && (
-          <div style={{padding:'80px 24px',textAlign:'center'}}>
+          <div className="live-tx-list__empty">
             <Icons.list size={24} color="var(--text-3)"/>
-            <p style={{fontSize:13,color:'var(--text-3)',marginTop:10,fontFamily:'var(--font-mono)'}}>Nada por aqui.</p>
+            <p className="live-tx-list__empty-text">Nada por aqui.</p>
           </div>
         )}
       </div>

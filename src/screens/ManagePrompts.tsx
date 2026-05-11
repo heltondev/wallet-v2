@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { listPrompts, getPrompt, updatePrompt } from '../lib/api';
+import './ManagePrompts.scss';
 
 interface ManagePromptsProps {
   onBack?: () => void;
@@ -28,27 +29,27 @@ function renderMarkdown(text: string) {
 
     if (line.startsWith('## ')) {
       elements.push(
-        <h2 key={i} style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-1)', margin: '20px 0 8px', letterSpacing: -0.3 }}>
+        <h2 key={i} className="manage-prompts__md-h2">
           {line.slice(3)}
         </h2>
       );
     } else if (line.startsWith('### ')) {
       elements.push(
-        <h3 key={i} style={{ fontSize: 14, fontWeight: 600, color: 'var(--pos)', margin: '16px 0 6px', fontFamily: 'var(--font-mono)', letterSpacing: 0.3 }}>
+        <h3 key={i} className="manage-prompts__md-h3">
           {line.slice(4)}
         </h3>
       );
     } else if (line.startsWith('# ')) {
       elements.push(
-        <h1 key={i} style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-1)', margin: '16px 0 10px', letterSpacing: -0.5 }}>
+        <h1 key={i} className="manage-prompts__md-h1">
           {line.slice(2)}
         </h1>
       );
     } else if (line.startsWith('- ')) {
       elements.push(
-        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '3px 0', marginLeft: 4 }}>
-          <span style={{ color: 'var(--text-3)', marginTop: 6, width: 5, height: 5, borderRadius: '50%', background: 'var(--text-3)', flexShrink: 0 }} />
-          <span style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5 }}>{renderInline(line.slice(2))}</span>
+        <div key={i} className="manage-prompts__md-bullet">
+          <span className="manage-prompts__md-bullet-dot" />
+          <span className="manage-prompts__md-bullet-text">{renderInline(line.slice(2))}</span>
         </div>
       );
     } else if (line.startsWith('```')) {
@@ -59,20 +60,15 @@ function renderMarkdown(text: string) {
         i++;
       }
       elements.push(
-        <pre key={i} style={{
-          background: 'var(--bg-2)', border: '1px solid var(--border-1)',
-          borderRadius: 8, padding: 12, margin: '8px 0',
-          fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-2)',
-          overflowX: 'auto', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-        }}>
+        <pre key={i} className="manage-prompts__md-code">
           {codeLines.join('\n')}
         </pre>
       );
     } else if (line.trim() === '') {
-      elements.push(<div key={i} style={{ height: 8 }} />);
+      elements.push(<div key={i} className="manage-prompts__md-spacer" />);
     } else {
       elements.push(
-        <p key={i} style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6, margin: '4px 0' }}>
+        <p key={i} className="manage-prompts__md-p">
           {renderInline(line)}
         </p>
       );
@@ -96,17 +92,17 @@ function renderInline(text: string): React.ReactNode {
     const token = match[0];
     if (token.startsWith('`')) {
       parts.push(
-        <code key={key++} style={{ background: 'var(--bg-2)', padding: '1px 5px', borderRadius: 4, fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--pos)' }}>
+        <code key={key++} className="manage-prompts__md-inline-code">
           {token.slice(1, -1)}
         </code>
       );
     } else if (token.startsWith('"')) {
       parts.push(
-        <span key={key++} style={{ color: 'var(--text-1)', fontWeight: 500 }}>{token}</span>
+        <span key={key++} className="manage-prompts__md-inline-quote">{token}</span>
       );
     } else if (token.startsWith('{')) {
       parts.push(
-        <code key={key++} style={{ background: 'var(--bg-2)', padding: '1px 5px', borderRadius: 4, fontSize: 12, fontFamily: 'var(--font-mono)', color: '#F59E0B' }}>
+        <code key={key++} className="manage-prompts__md-inline-template">
           {token}
         </code>
       );
@@ -184,82 +180,53 @@ export function ManagePrompts({ onBack }: ManagePromptsProps) {
   if (editing) {
     const label = FEATURES.find(f => f.key === editing)?.label ?? editing;
     return (
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-0)' }}>
+      <div className="manage-prompts__editor">
         <IOSStatusBar />
 
         {/* Header */}
-        <div style={{
-          padding: '8px 16px 10px', display: 'flex', alignItems: 'center', gap: 10,
-          borderBottom: '1px solid var(--border-1)', background: 'var(--bg-1)', flexShrink: 0,
-        }}>
-          <button onClick={() => setEditing(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+        <div className="manage-prompts__editor-header">
+          <button onClick={() => setEditing(null)} className="manage-prompts__back-btn">
             <Icons.chevL size={20} color="var(--text-2)" />
           </button>
-          <h1 style={{ fontSize: 18, fontWeight: 600, letterSpacing: -0.4, margin: 0, color: 'var(--text-1)', flex: 1 }}>
+          <h1 className="manage-prompts__editor-title">
             {label}
           </h1>
-          {saved && <span style={{ fontSize: 12, color: 'var(--pos)', fontFamily: 'var(--font-mono)' }}>Salvo ✓</span>}
+          {saved && <span className="manage-prompts__saved-indicator">Salvo ✓</span>}
         </div>
 
         {/* View mode toggle */}
-        <div style={{
-          display: 'flex', gap: 0, margin: '10px 16px 0',
-          border: '1px solid var(--border-1)', borderRadius: 8, overflow: 'hidden', flexShrink: 0,
-        }}>
+        <div className="manage-prompts__view-toggle">
           <button
             onClick={() => setViewMode('formatted')}
-            style={{
-              flex: 1, padding: '8px 0', border: 'none', fontSize: 12, fontWeight: 600,
-              fontFamily: 'var(--font-mono)', cursor: 'pointer',
-              background: viewMode === 'formatted' ? 'var(--text-1)' : 'var(--bg-1)',
-              color: viewMode === 'formatted' ? 'var(--bg-0)' : 'var(--text-3)',
-            }}
+            className={`manage-prompts__view-toggle-btn ${viewMode === 'formatted' ? 'manage-prompts__view-toggle-btn--active' : 'manage-prompts__view-toggle-btn--inactive'}`}
           >Formatado</button>
           <button
             onClick={() => setViewMode('raw')}
-            style={{
-              flex: 1, padding: '8px 0', border: 'none', fontSize: 12, fontWeight: 600,
-              fontFamily: 'var(--font-mono)', cursor: 'pointer',
-              background: viewMode === 'raw' ? 'var(--text-1)' : 'var(--bg-1)',
-              color: viewMode === 'raw' ? 'var(--bg-0)' : 'var(--text-3)',
-            }}
+            className={`manage-prompts__view-toggle-btn ${viewMode === 'raw' ? 'manage-prompts__view-toggle-btn--active' : 'manage-prompts__view-toggle-btn--inactive'}`}
           >Código</button>
         </div>
 
-        {/* Content area — full remaining space */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '10px 16px' }} className="no-scrollbar">
+        {/* Content area */}
+        <div className="manage-prompts__editor-content no-scrollbar">
           {viewMode === 'formatted' ? (
-            <div style={{ padding: '4px 0' }}>
+            <div className="manage-prompts__formatted">
               {renderedMarkdown}
             </div>
           ) : (
             <textarea
               value={editContent}
               onChange={e => setEditContent(e.target.value)}
-              style={{
-                width: '100%', height: '100%', minHeight: 'calc(100vh - 250px)',
-                boxSizing: 'border-box',
-                background: 'var(--bg-1)', border: '1px solid var(--border-1)',
-                borderRadius: 8, padding: 14, color: 'var(--text-1)',
-                fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.6,
-                outline: 'none', resize: 'none',
-              }}
+              className="manage-prompts__textarea"
             />
           )}
         </div>
 
-        {/* Save button — fixed at bottom */}
-        <div style={{ padding: '10px 16px 20px', flexShrink: 0, background: 'var(--bg-0)' }}>
+        {/* Save button */}
+        <div className="manage-prompts__editor-footer">
           <button
             onClick={handleSave}
             disabled={saving}
-            style={{
-              width: '100%', padding: '14px 0', borderRadius: 10,
-              border: 'none', background: saving ? 'var(--bg-3)' : 'var(--pos)',
-              color: saving ? 'var(--text-4)' : '#0A0A0A',
-              fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-sans)',
-              cursor: saving ? 'default' : 'pointer',
-            }}
+            className={`manage-prompts__save-btn ${saving ? 'manage-prompts__save-btn--disabled' : 'manage-prompts__save-btn--active'}`}
           >
             {saving ? 'Salvando...' : 'Salvar'}
           </button>
@@ -269,29 +236,29 @@ export function ManagePrompts({ onBack }: ManagePromptsProps) {
   }
 
   return (
-    <div style={{ height: '100%', position: 'relative', background: 'var(--bg-0)' }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+    <div className="manage-prompts">
+      <div className="manage-prompts__status-bar">
         <IOSStatusBar />
       </div>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 100, overflow: 'auto', paddingTop: 54, paddingBottom: 20 }} className="no-scrollbar">
-        <div style={{ padding: '8px 16px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="manage-prompts__scroll no-scrollbar">
+        <div className="manage-prompts__header">
           {onBack && (
-            <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <button onClick={onBack} className="manage-prompts__back-btn">
               <Icons.chevL size={20} color="var(--text-2)" />
             </button>
           )}
-          <h1 style={{ fontSize: 24, fontWeight: 600, letterSpacing: -0.6, margin: 0, color: 'var(--text-1)' }}>
+          <h1 className="manage-prompts__title">
             Prompts de AI
           </h1>
         </div>
 
         {loading ? (
-          <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
+          <div className="manage-prompts__loading">
             Carregando...
           </div>
         ) : (
-          <div style={{ margin: '0 16px', background: 'var(--bg-1)', border: '1px solid var(--border-1)', borderRadius: 'var(--r-card-sm)', overflow: 'hidden' }}>
-            {FEATURES.map((f, i) => {
+          <div className="manage-prompts__list">
+            {FEATURES.map((f) => {
               const content = prompts[f.key] ?? '';
               const lineCount = content.split('\n').length;
               const charCount = content.length;
@@ -299,15 +266,11 @@ export function ManagePrompts({ onBack }: ManagePromptsProps) {
                 <div
                   key={f.key}
                   onClick={() => openEditor(f.key)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
-                    borderBottom: i < FEATURES.length - 1 ? '1px solid var(--border-1)' : 'none',
-                    cursor: 'pointer',
-                  }}
+                  className="manage-prompts__item"
                 >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14.5, fontWeight: 500, color: 'var(--text-1)' }}>{f.label}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
+                  <div className="manage-prompts__item-info">
+                    <div className="manage-prompts__item-label">{f.label}</div>
+                    <div className="manage-prompts__item-meta">
                       {content ? `${lineCount} linhas · ${charCount} chars` : 'Não configurado'}
                     </div>
                   </div>

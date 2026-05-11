@@ -1,0 +1,36 @@
+.ios-status-bar {
+  display: flex;
+  gap: 154px;
+  align-items: center;
+  justify-content: center;
+  padding: 21px 24px 19px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 20;
+  width: 100%;
+
+  &__section {
+    flex: 1;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__time-section {
+    padding-top: 1.5px;
+  }
+
+  &__icons-section {
+    gap: 7px;
+    padding-top: 1px;
+    padding-right: 1px;
+  }
+
+  &__time {
+    font-family: -apple-system, "SF Pro", system-ui;
+    font-weight: 590;
+    font-size: 17px;
+    line-height: 22px;
+  }
+}

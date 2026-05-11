@@ -4,6 +4,7 @@ import { IOSStatusBar } from '../components/IOSStatusBar';
 import { ReceiptUpload } from '../components/ReceiptUpload';
 import { fmtAmount } from '../utils/formatters';
 import type { Transaction, FabKind, CurrencyCode } from '../types';
+import './ReceiptScreen.scss';
 
 export function ReceiptScreen({ fabKind: _fabKind, onBack, onSave }: {
   fabKind: FabKind;
@@ -18,47 +19,36 @@ export function ReceiptScreen({ fabKind: _fabKind, onBack, onSave }: {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-0)' }}>
+    <div className="receipt-screen">
       <IOSStatusBar />
-      <div style={{
-        padding: '8px 16px 12px', display: 'flex', alignItems: 'center', gap: 10,
-        borderBottom: '1px solid var(--border-1)', background: 'var(--bg-1)',
-      }}>
+      <div className="receipt-screen__header">
         {onBack && (
-          <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+          <button onClick={onBack} className="receipt-screen__back-btn">
             <Icons.chevL size={20} color="var(--text-2)" />
           </button>
         )}
         <Icons.search size={20} color="var(--pos)" />
-        <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 17, color: 'var(--text-1)' }}>
+        <span className="receipt-screen__title">
           Escanear Recibo
         </span>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div className="receipt-screen__body">
         {saved ? (
-          <div style={{ padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flex: 1, justifyContent: 'center' }}>
-            <div style={{ width: 56, height: 56, borderRadius: 28, background: 'var(--pos)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="receipt-screen__saved">
+            <div className="receipt-screen__saved-icon">
               <Icons.check size={28} color="#0A0A0A" stroke={2.4} />
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4 }}>Transação salva!</div>
-              <div style={{ fontSize: 14, color: 'var(--text-3)' }}>{saved.desc}</div>
-              <div className="money" style={{ fontSize: 22, fontWeight: 600, color: 'var(--text-1)', marginTop: 8 }}>
+            <div className="receipt-screen__saved-text">
+              <div className="receipt-screen__saved-title">Transação salva!</div>
+              <div className="receipt-screen__saved-desc">{saved.desc}</div>
+              <div className="money receipt-screen__saved-amount">
                 {fmtAmount(Math.abs(saved.amount ?? 0), (saved.currency ?? 'BRL') as CurrencyCode)}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={() => setSaved(null)} style={{
-                padding: '12px 20px', borderRadius: 'var(--r-input)', background: 'transparent',
-                border: '1px solid var(--border-2)', color: 'var(--text-2)', fontFamily: 'var(--font-sans)',
-                fontWeight: 500, fontSize: 14, cursor: 'pointer',
-              }}>Escanear outro</button>
-              <button onClick={onBack} style={{
-                padding: '12px 20px', borderRadius: 'var(--r-input)', background: 'var(--text-1)',
-                color: 'var(--bg-0)', border: 'none', fontFamily: 'var(--font-sans)',
-                fontWeight: 600, fontSize: 14, cursor: 'pointer',
-              }}>Voltar</button>
+            <div className="receipt-screen__saved-actions">
+              <button onClick={() => setSaved(null)} className="receipt-screen__scan-again-btn">Escanear outro</button>
+              <button onClick={onBack} className="receipt-screen__back-action-btn">Voltar</button>
             </div>
           </div>
         ) : (

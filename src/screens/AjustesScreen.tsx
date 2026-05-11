@@ -1,25 +1,12 @@
 import { useState, useEffect } from 'react';
-import type { ReactNode, ComponentType } from 'react';
+import type { ComponentType } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { signOut, getSession } from '../lib/auth';
 import { getSettings, updateSettings, listAccounts, listCategories } from '../lib/api';
 import { CATS } from '../data/categories';
 import type { Transaction, FabKind, CurrencyCode } from '../types';
-
-interface RowProps {
-  label: string;
-  detail?: string;
-  icon?: string;
-  last?: boolean;
-  danger?: boolean;
-  onClick?: () => void;
-}
-
-interface SectionProps {
-  title: string;
-  children: ReactNode;
-}
+import './AjustesScreen.scss';
 
 interface AjustesScreenProps {
   fabKind?: FabKind;
@@ -128,48 +115,46 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
     .slice(0, 2)
     .toUpperCase() || userEmail.slice(0, 2).toUpperCase();
 
-  const Row = ({ label, detail, icon, last, danger, onClick }: RowProps) => {
+  const Row = ({ label, detail, icon, last, danger, onClick }: {
+    label: string; detail?: string; icon?: string; last?: boolean; danger?: boolean; onClick?: () => void;
+  }) => {
     const Ic = icon ? (Icons as Record<string, ComponentType<{ size?: number; color?: string; stroke?: number }>>)[icon] : null;
     return (
       <div
         onClick={onClick}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
-          borderBottom: last ? 'none' : '1px solid var(--border-1)',
-          cursor: onClick ? 'pointer' : 'default',
-        }}
+        className={`ajustes__row ${onClick ? 'ajustes__row--clickable' : ''} ${last ? 'ajustes__row--last' : ''}`}
       >
         {Ic && <Ic size={17} color={danger ? 'var(--neg)' : 'var(--text-2)'} stroke={1.8} />}
-        <span style={{ flex: 1, fontSize: 14.5, color: danger ? 'var(--neg)' : 'var(--text-1)', fontWeight: 500 }}>{label}</span>
-        {detail && <span style={{ fontSize: 13, color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>{detail}</span>}
+        <span className={`ajustes__row-label ${danger ? 'ajustes__row-label--danger' : ''}`}>{label}</span>
+        {detail && <span className="ajustes__row-detail">{detail}</span>}
         {onClick && <Icons.chevR size={14} color="var(--text-4)" />}
       </div>
     );
   };
 
-  const Section = ({ title, children }: SectionProps) => (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)', letterSpacing: 1, textTransform: 'uppercase', padding: '0 16px 6px' }}>{title}</div>
-      <div style={{ margin: '0 16px', background: 'var(--bg-1)', border: '1px solid var(--border-1)', borderRadius: 'var(--r-card-sm)', overflow: 'hidden' }}>{children}</div>
+  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div className="ajustes__section">
+      <div className="ajustes__section-title">{title}</div>
+      <div className="ajustes__section-body">{children}</div>
     </div>
   );
 
   return (
-    <div className="phone-surface" style={{ height: '100%', position: 'relative' }} data-screen-label="Settings">
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}><IOSStatusBar /></div>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 100, overflow: 'auto', paddingTop: 54, paddingBottom: 20 }} className="no-scrollbar">
-        <div style={{ padding: '8px 16px 18px' }}>
-          <h1 style={{ fontSize: 24, fontWeight: 600, letterSpacing: -0.6, margin: 0, color: 'var(--text-1)' }}>Ajustes</h1>
+    <div className="phone-surface ajustes" data-screen-label="Settings">
+      <div className="ajustes__status-bar"><IOSStatusBar /></div>
+      <div className="ajustes__scroll no-scrollbar">
+        <div className="ajustes__page-header">
+          <h1 className="ajustes__page-title">Ajustes</h1>
         </div>
 
         {/* Profile */}
-        <div style={{ margin: '0 16px 18px', padding: '14px 16px', background: 'var(--bg-1)', border: '1px solid var(--border-1)', borderRadius: 'var(--r-card-sm)', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 42, height: 42, borderRadius: 21, background: 'var(--bg-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 600, color: 'var(--text-1)', fontFamily: 'var(--font-sans)' }}>
+        <div className="ajustes__profile">
+          <div className="ajustes__avatar">
             {initials}
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text-1)' }}>{userName || 'Usuário'}</div>
-            <div style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>{userEmail}</div>
+          <div className="ajustes__profile-info">
+            <div className="ajustes__profile-name">{userName || 'Usuário'}</div>
+            <div className="ajustes__profile-email">{userEmail}</div>
           </div>
         </div>
 
@@ -177,9 +162,9 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
           <Row label="Carteiras e contas" detail={String(accountCount)} icon="wallet" onClick={() => onNavigate?.('accounts')} />
           <Row label="Categorias" detail={String(categoryCount)} icon="grid" onClick={() => onNavigate?.('categories')} />
           {editingBudget ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px' }}>
+            <div className="ajustes__budget-edit">
               <Icons.trending size={17} color="var(--text-2)" stroke={1.8} />
-              <span style={{ fontSize: 14.5, color: 'var(--text-1)', fontWeight: 500 }}>R$</span>
+              <span className="ajustes__budget-prefix">R$</span>
               <input
                 autoFocus
                 type="text"
@@ -187,11 +172,7 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
                 onChange={e => setBudgetInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') saveBudget(); }}
                 onBlur={saveBudget}
-                style={{
-                  flex: 1, background: 'var(--bg-2)', border: '1px solid var(--border-2)',
-                  borderRadius: 8, padding: '8px 12px', color: 'var(--text-1)',
-                  fontFamily: 'var(--font-mono)', fontSize: 14, outline: 'none',
-                }}
+                className="ajustes__budget-input"
                 placeholder="9500"
               />
             </div>
@@ -214,17 +195,9 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
         <Section title="DADOS">
           <Row label="Exportar dados" detail={`${tx.length} transações`} icon="download" onClick={() => setExportOpen(!exportOpen)} />
           {exportOpen && (
-            <div style={{ display: 'flex', gap: 8, padding: '8px 16px 14px' }}>
-              <button onClick={exportCSV} style={{
-                flex: 1, padding: '12px 0', borderRadius: 8, border: '1px solid var(--border-2)',
-                background: 'var(--bg-2)', color: 'var(--text-1)', fontFamily: 'var(--font-mono)',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              }}>CSV</button>
-              <button onClick={exportJSON} style={{
-                flex: 1, padding: '12px 0', borderRadius: 8, border: '1px solid var(--border-2)',
-                background: 'var(--bg-2)', color: 'var(--text-1)', fontFamily: 'var(--font-mono)',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              }}>JSON</button>
+            <div className="ajustes__export-row">
+              <button onClick={exportCSV} className="ajustes__export-btn">CSV</button>
+              <button onClick={exportJSON} className="ajustes__export-btn">JSON</button>
             </div>
           )}
           <Row label="Backup na nuvem" detail="Ativo" icon="cloud" last />

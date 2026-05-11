@@ -1,0 +1,101 @@
+.empty-home {
+  height: 100%;
+  position: relative;
+
+  &__status-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+  }
+
+  &__body {
+    height: 100%;
+    padding: 80px 24px 90px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__month {
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+
+  &__greeting {
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.8px;
+    margin: 2px 0 0;
+    color: var(--text-1);
+  }
+
+  &__center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  &__balance-card {
+    border: 1.5px dashed var(--border-2);
+    border-radius: var(--r-card);
+    padding: 28px 24px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  &__balance-amount {
+    font-size: 60px;
+    font-weight: 600;
+    letter-spacing: -2.8px;
+    color: var(--text-4);
+    line-height: 1;
+  }
+
+  &__balance-label {
+    font-size: 13px;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__empty-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+    color: var(--text-1);
+  }
+
+  &__empty-desc {
+    font-size: 14px;
+    color: var(--text-3);
+    line-height: 1.45;
+    margin: 0;
+    max-width: 300px;
+  }
+
+  &__add-btn {
+    padding: 16px 0;
+    background: var(--text-1);
+    color: var(--bg-0);
+    border: none;
+    border-radius: var(--r-input);
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+}

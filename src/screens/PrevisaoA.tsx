@@ -6,6 +6,7 @@ import { CategoryIcon } from '../components/CategoryIcon';
 import { EmptyPrevisao } from './EmptyPrevisao';
 import { nextMonthLabel } from '../utils/dates';
 import type { Transaction, CurrencyCode } from '../types';
+import './PrevisaoA.scss';
 
 interface PrevisaoAProps {
   tx: Transaction[];
@@ -36,53 +37,53 @@ export function PrevisaoA({ tx, currency }: PrevisaoAProps) {
   if (tx.length === 0) return <EmptyPrevisao />;
 
   return (
-    <div className="phone-surface" style={{height:'100%',position:'relative'}} data-screen-label="Forecast A">
-      <div style={{position:'absolute',top:0,left:0,right:0,zIndex:10}}><IOSStatusBar/></div>
-      <div style={{position:'absolute',top:0,left:0,right:0,bottom:100,overflow:'auto',paddingTop:54,paddingBottom:20}} className="no-scrollbar">
-        <div style={{padding:'8px 16px 16px'}}>
-          <div style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',letterSpacing:1.2,textTransform:'uppercase',marginBottom:4}}>PREVISÃO PARA</div>
-          <h1 style={{fontSize:28,fontWeight:600,letterSpacing:-0.8,margin:0,color:'var(--text-1)'}}>{nextMonthLabel()}</h1>
+    <div className="phone-surface previsao-a" data-screen-label="Forecast A">
+      <div className="previsao-a__status-bar"><IOSStatusBar/></div>
+      <div className="previsao-a__scroll no-scrollbar">
+        <div className="previsao-a__header">
+          <div className="previsao-a__label">PREVISÃO PARA</div>
+          <h1 className="previsao-a__title">{nextMonthLabel()}</h1>
         </div>
 
-        <div style={{margin:'0 16px 14px',background:'var(--bg-1)',border:'1px solid var(--border-1)',borderRadius:'var(--r-card)',padding:'18px 18px 20px'}}>
-          <div style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',letterSpacing:0.8,textTransform:'uppercase',marginBottom:4}}>Saldo atual do mês</div>
-          <div className="money" style={{fontSize:42,fontWeight:600,letterSpacing:-1.8,lineHeight:1,color: stats.balance >= 0 ? 'var(--pos)' : 'var(--neg)'}}>
+        <div className="previsao-a__balance-card">
+          <div className="previsao-a__balance-label">Saldo atual do mês</div>
+          <div className="money previsao-a__balance-value" style={{ color: stats.balance >= 0 ? 'var(--pos)' : 'var(--neg)' }}>
             {fmtAmount(stats.balance, currency, {decimals:0})}
           </div>
-          <div style={{fontSize:12,color:'var(--text-3)',marginTop:8,lineHeight:1.45}}>
+          <div className="previsao-a__balance-note">
             Dados insuficientes para projeção completa. Continue adicionando transações.
           </div>
         </div>
 
-        <div style={{padding:'4px 16px 6px',display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
-          <h3 style={{fontSize:13,fontWeight:600,color:'var(--text-2)',margin:0,letterSpacing:0.5,textTransform:'uppercase',fontFamily:'var(--font-mono)'}}>Gastos por categoria</h3>
-          <span style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)'}}>{stats.categories.length} categorias</span>
+        <div className="previsao-a__section-header">
+          <h3 className="previsao-a__section-title">Gastos por categoria</h3>
+          <span className="previsao-a__section-count">{stats.categories.length} categorias</span>
         </div>
-        <div style={{margin:'4px 16px 14px',background:'var(--bg-1)',border:'1px solid var(--border-1)',borderRadius:'var(--r-card-sm)'}}>
+        <div className="previsao-a__cat-list">
           {stats.categories.length === 0 ? (
-            <div style={{padding:'20px 14px',textAlign:'center',color:'var(--text-3)',fontSize:13,fontFamily:'var(--font-mono)'}}>
+            <div className="previsao-a__cat-empty">
               Sem dados de gastos
             </div>
-          ) : stats.categories.map(([cat, amount], idx, arr) => (
-            <div key={cat} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',borderBottom: idx<arr.length-1?'1px solid var(--border-1)':'none'}}>
+          ) : stats.categories.map(([cat, amount]) => (
+            <div key={cat} className="previsao-a__cat-row">
               <CategoryIcon cat={cat} size={28} radius={8}/>
-              <div style={{flex:1,fontSize:13.5,color:'var(--text-1)',fontWeight:500}}>{CATS[cat]?.label ?? cat}</div>
-              <span className="money" style={{fontSize:13,fontWeight:600,color:'var(--text-1)',minWidth:80,textAlign:'right'}}>
+              <div className="previsao-a__cat-name">{CATS[cat]?.label ?? cat}</div>
+              <span className="money previsao-a__cat-amount">
                 −{fmtAmount(amount, currency, {decimals:0}).replace('−','')}
               </span>
             </div>
           ))}
         </div>
 
-        <div style={{margin:'0 16px 14px',padding:'18px',background:'var(--bg-1)',border:'1px solid var(--border-1)',borderRadius:'var(--r-card)'}}>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+        <div className="previsao-a__summary-card">
+          <div className="previsao-a__summary-grid">
             <div>
-              <div style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',letterSpacing:0.5,textTransform:'uppercase',marginBottom:4}}>Entradas</div>
-              <div className="money" style={{fontSize:20,fontWeight:600,color:'var(--pos)',letterSpacing:-0.5}}>{fmtAmount(stats.ins, currency, {decimals:0})}</div>
+              <div className="previsao-a__summary-label">Entradas</div>
+              <div className="money previsao-a__summary-value previsao-a__summary-value--pos">{fmtAmount(stats.ins, currency, {decimals:0})}</div>
             </div>
             <div>
-              <div style={{fontSize:11,color:'var(--text-3)',fontFamily:'var(--font-mono)',letterSpacing:0.5,textTransform:'uppercase',marginBottom:4}}>Saídas</div>
-              <div className="money" style={{fontSize:20,fontWeight:600,color:'var(--neg)',letterSpacing:-0.5}}>{fmtAmount(stats.outs, currency, {decimals:0})}</div>
+              <div className="previsao-a__summary-label">Saídas</div>
+              <div className="money previsao-a__summary-value previsao-a__summary-value--neg">{fmtAmount(stats.outs, currency, {decimals:0})}</div>
             </div>
           </div>
         </div>

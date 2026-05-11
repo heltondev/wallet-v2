@@ -1,0 +1,75 @@
+.budget-bar {
+  padding: 14px 16px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-card);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+
+  &__label {
+    font-size: 13px;
+    color: var(--text-2);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__amounts {
+    font-size: 13px;
+    color: var(--text-2);
+  }
+
+  &__spent {
+    color: var(--text-1);
+    font-weight: 600;
+  }
+
+  &__budget {
+    color: var(--text-4);
+  }
+
+  &__track {
+    height: 8px;
+    background: var(--bg-2);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  &__fill {
+    height: 100%;
+    transition: width 0.4s;
+  }
+
+  &__marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--bg-0);
+    opacity: 0.6;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
+  &__pct {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+
+  &__remaining {
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+  }
+}

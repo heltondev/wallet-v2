@@ -19,6 +19,7 @@ import { fmtBRL } from './utils/formatters';
 import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
 import { listTransactions, createTransaction, listAccounts, getSettings } from './lib/api';
 import type { Transaction, Account, TabId, FabKind, ToastData, CurrencyCode } from './types';
+import './App.scss';
 
 
 const PT_WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
@@ -142,13 +143,11 @@ export function App() {
   if (authLoading) {
     return (
       <div className="stage">
-        <div className="stage-bg" style={{ position: 'absolute', inset: 0, zIndex: -1 }} />
+        <div className="app__stage-bg" />
         <div className="phone-shell">
           <div className="island" />
-          <div className="phone-surface" style={{
-            height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)', fontSize: 13 }}>
+          <div className="phone-surface app__loading">
+            <span className="app__loading-text">
               Carregando...
             </span>
           </div>
@@ -160,12 +159,11 @@ export function App() {
   if (!authed) {
     return (
       <div className="stage">
-        <div className="stage-bg" style={{ position: 'absolute', inset: 0, zIndex: -1 }} />
+        <div className="app__stage-bg" />
         <div className="phone-shell">
           <div className="island" />
           <div
-            className="home-ind"
-            style={{ background: 'rgba(255,255,255,0.5)' }}
+            className={`home-ind ${theme === 'dark' ? 'app__home-ind--dark' : 'app__home-ind--light'}`}
           />
           <LoginScreen onAuthenticated={() => { setAuthed(true); }} />
         </div>
@@ -175,14 +173,11 @@ export function App() {
 
   return (
     <div className="stage">
-      <div className="stage-bg" style={{ position: 'absolute', inset: 0, zIndex: -1 }} />
+      <div className="app__stage-bg" />
       <div className="phone-shell" data-theme={theme}>
         <div className="island" />
         <div
-          className="home-ind"
-          style={{
-            background: theme === 'dark' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.25)',
-          }}
+          className={`home-ind ${theme === 'dark' ? 'app__home-ind--dark' : 'app__home-ind--light'}`}
         />
 
         {tab === 'home' && (
@@ -211,22 +206,22 @@ export function App() {
           />
         )}
         {subScreen === 'ai-chat' && (
-          <div style={{ height: '100%', position: 'relative' }}>
+          <div className="app__sub-screen">
             <AiChat fabKind={fab} onBack={() => setSubScreen(null)} />
           </div>
         )}
         {subScreen === 'ai-insights' && (
-          <div style={{ height: '100%', position: 'relative' }}>
+          <div className="app__sub-screen">
             <AiInsights fabKind={fab} onBack={() => setSubScreen(null)} />
           </div>
         )}
         {subScreen === 'admin-costs' && (
-          <div style={{ height: '100%', position: 'relative' }}>
+          <div className="app__sub-screen">
             <AdminCosts fabKind={fab} onBack={() => setSubScreen(null)} />
           </div>
         )}
         {subScreen === 'ai-receipt' && (
-          <div style={{ height: '100%', position: 'relative' }}>
+          <div className="app__sub-screen">
             <ReceiptScreen fabKind={fab} onBack={() => setSubScreen(null)} onSave={async (data) => {
               try {
                 const fields = {
@@ -251,17 +246,17 @@ export function App() {
         )}
 
         {subScreen === 'accounts' && (
-          <div style={{ height: '100%', position: 'relative' }}>
+          <div className="app__sub-screen">
             <ManageAccounts onBack={() => { setSubScreen(null); loadData(); }} />
           </div>
         )}
         {subScreen === 'categories' && (
-          <div style={{ height: '100%', position: 'relative' }}>
+          <div className="app__sub-screen">
             <ManageCategories onBack={() => setSubScreen(null)} />
           </div>
         )}
         {subScreen === 'prompts' && (
-          <div style={{ height: '100%', position: 'relative' }}>
+          <div className="app__sub-screen">
             <ManagePrompts onBack={() => setSubScreen(null)} />
           </div>
         )}
@@ -284,18 +279,11 @@ export function App() {
         {toast && (
           <div className="toast">
             <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                background: toast.amount > 0 ? 'var(--pos)' : 'var(--neg)',
-              }}
+              className="app__toast-dot"
+              style={{ background: toast.amount > 0 ? 'var(--pos)' : 'var(--neg)' }}
             />
-            <span style={{ fontFamily: 'var(--font-sans)' }}>Salvo</span>
-            <span
-              className="tabular"
-              style={{ opacity: 0.6, fontFamily: 'var(--font-mono)', fontSize: 12 }}
-            >
+            <span className="app__toast-label">Salvo</span>
+            <span className="tabular app__toast-amount">
               {toast.amount > 0 ? '+' : '\u2212'}
               {fmtBRL(Math.abs(toast.amount)).replace('\u2212', '')}
             </span>

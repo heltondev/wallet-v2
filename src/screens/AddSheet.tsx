@@ -5,6 +5,7 @@ import { FX } from '../data/constants';
 import { NumericKeypad } from '../components/NumericKeypad';
 import { aiExtractReceipt, aiLearnCategory, getUploadUrl, uploadFileToS3, updateTransaction } from '../lib/api';
 import type { Account, CurrencyCode, ExtractedTransaction, AiExtractResult } from '../types';
+import './AddSheet.scss';
 
 const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = { BRL: 'R$', USD: '$', EUR: '€' };
 const CURRENCY_FX: Record<CurrencyCode, number> = { BRL: 1, USD: FX, EUR: FX * 1.08 };
@@ -14,19 +15,6 @@ function dateToFields(dateStr: string) {
   const d = new Date(dateStr + 'T12:00:00');
   return { date: dateStr, day: String(d.getDate()), wd: PT_WEEKDAYS[d.getDay()] };
 }
-
-const fieldStyle: React.CSSProperties = {
-  padding: '10px 12px', background: 'var(--bg-2)', border: '1px solid var(--border-1)',
-  borderRadius: 8, color: 'var(--text-1)', fontFamily: 'var(--font-sans)',
-  fontSize: 14, outline: 'none', boxSizing: 'border-box', width: '100%',
-};
-
-const selectStyle: React.CSSProperties = {
-  ...fieldStyle,
-  appearance: 'none' as const, WebkitAppearance: 'none' as const,
-  backgroundImage: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\' viewBox=\'0 0 10 6\'><path fill=\'%2371717A\' d=\'M0 0h10L5 6z\'/></svg>")',
-  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
-};
 
 interface AddSheetSaveData {
   desc: string; cat: string; amount: number; currency: CurrencyCode;
@@ -141,7 +129,6 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
       const result = await aiExtractReceipt(payload, aiText);
 
       if (result.transactions.length === 1) {
-        // Single transaction — auto-fill the form directly
         const tx = result.transactions[0];
         if (tx.desc) { setDesc(tx.desc); setAiSuggestedDesc(tx.desc); }
         if (tx.cat) {
@@ -163,7 +150,6 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
         }
         setAiDone(true);
       } else if (result.transactions.length > 1) {
-        // Multiple transactions — enter review mode
         setExtractResult(result);
         setCheckedTx(result.transactions.map(() => true));
         setTxCategories(result.transactions.map(tx => tx.cat));
@@ -255,18 +241,14 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
   if (!open) return null;
 
   const hasAiContent = files.length > 0 || aiText.trim().length > 0;
+  const saveDisabled = numAmount <= 0;
+  const aiBtnDisabled = !hasAiContent || aiLoading;
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 90 }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', animation: 'fadeIn .2s ease' }} />
-      <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: 0,
-        background: 'var(--bg-1)', borderRadius: '24px 24px 0 0',
-        borderTop: '1px solid var(--border-1)', padding: '10px 16px 24px',
-        maxHeight: '94vh', overflowY: 'auto',
-        animation: 'sheetIn .25s cubic-bezier(0.32, 0.72, 0, 1)',
-      }} className="no-scrollbar">
-        <div style={{ width: 36, height: 4, background: 'var(--bg-4)', borderRadius: 2, margin: '0 auto 14px' }} />
+    <div className="add-sheet">
+      <div onClick={onClose} className="add-sheet__backdrop" />
+      <div className="add-sheet__panel no-scrollbar">
+        <div className="add-sheet__handle" />
 
         {/* Review Mode */}
         {reviewMode && extractResult && (
@@ -289,30 +271,23 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
         {!reviewMode && (
         <>
         {/* AI Section */}
-        <div style={{
-          border: '1px solid var(--border-1)', borderRadius: 12,
-          background: 'var(--bg-0)', marginBottom: 14, overflow: 'hidden',
-        }}>
+        <div className="add-sheet__ai-section">
           {/* AI Header — always visible */}
           <button
             onClick={() => setAiExpanded(!aiExpanded)}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-              padding: '12px 14px', background: 'none', border: 'none',
-              color: 'var(--text-1)', cursor: 'pointer', fontFamily: 'var(--font-sans)',
-            }}
+            className="add-sheet__ai-header"
           >
             <Icons.alert size={16} color="var(--pos)" />
-            <span style={{ flex: 1, textAlign: 'left', fontSize: 13, fontWeight: 600 }}>
+            <span className="add-sheet__ai-header-label">
               Preencher com AI
             </span>
-            {aiDone && <span style={{ fontSize: 11, color: 'var(--pos)', fontFamily: 'var(--font-mono)' }}>preenchido ✓</span>}
+            {aiDone && <span className="add-sheet__ai-done">preenchido ✓</span>}
             <Icons.chevD size={14} color="var(--text-3)" />
           </button>
 
           {/* AI Body — collapsable */}
           {aiExpanded && (
-            <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="add-sheet__ai-body">
 
               {/* Drop zone */}
               <div
@@ -320,42 +295,32 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 onClick={() => fileInputRef.current?.click()}
-                style={{
-                  border: '1.5px dashed var(--border-2)', borderRadius: 10,
-                  padding: files.length > 0 ? '10px' : '20px',
-                  textAlign: 'center', cursor: 'pointer',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                }}
+                className={`add-sheet__dropzone ${files.length > 0 ? 'add-sheet__dropzone--has-files' : 'add-sheet__dropzone--empty'}`}
               >
                 {files.length === 0 ? (
                   <>
                     <Icons.download size={20} color="var(--text-3)" />
-                    <span style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--font-sans)' }}>
+                    <span className="add-sheet__dropzone-label">
                       Arraste recibos, extratos ou fotos
                     </span>
-                    <span style={{ fontSize: 11, color: 'var(--text-4)', fontFamily: 'var(--font-mono)' }}>
+                    <span className="add-sheet__dropzone-formats">
                       PDF, JPG, PNG
                     </span>
                   </>
                 ) : (
-                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div className="add-sheet__file-list">
                     {files.map((f, i) => (
-                      <div key={i} style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '6px 10px', background: 'var(--bg-2)', borderRadius: 8,
-                      }}>
+                      <div key={i} className="add-sheet__file-item">
                         <Icons.check size={14} color="var(--pos)" />
-                        <span style={{ flex: 1, fontSize: 12, color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span className="add-sheet__file-name">
                           {f.name}
                         </span>
-                        <button onClick={(e) => { e.stopPropagation(); removeFile(i); }} style={{
-                          background: 'none', border: 'none', cursor: 'pointer', padding: 2,
-                        }}>
+                        <button onClick={(e) => { e.stopPropagation(); removeFile(i); }} className="add-sheet__file-remove">
                           <Icons.x size={14} color="var(--text-4)" />
                         </button>
                       </div>
                     ))}
-                    <span style={{ fontSize: 11, color: 'var(--text-4)', fontFamily: 'var(--font-mono)' }}>
+                    <span className="add-sheet__file-add-more">
                       + adicionar mais
                     </span>
                   </div>
@@ -367,7 +332,7 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
                 accept="image/*,application/pdf"
                 multiple
                 onChange={e => { if (e.target.files) handleFiles(e.target.files); }}
-                style={{ display: 'none' }}
+                className="add-sheet__hidden-input"
               />
 
               {/* AI text instructions */}
@@ -376,27 +341,17 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
                 value={aiText}
                 onChange={e => setAiText(e.target.value)}
                 rows={3}
-                style={{
-                  ...fieldStyle, resize: 'vertical', minHeight: 60,
-                  fontFamily: 'var(--font-sans)', fontSize: 13,
-                }}
+                className="add-sheet__ai-textarea"
               />
 
               {/* AI button */}
               <button
                 onClick={handleAiFill}
-                disabled={!hasAiContent || aiLoading}
-                style={{
-                  width: '100%', padding: '12px 0', borderRadius: 8, border: 'none',
-                  background: (!hasAiContent || aiLoading) ? 'var(--bg-3)' : 'var(--pos)',
-                  color: (!hasAiContent || aiLoading) ? 'var(--text-4)' : '#0A0A0A',
-                  fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 14,
-                  cursor: (!hasAiContent || aiLoading) ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}
+                disabled={aiBtnDisabled}
+                className={`add-sheet__ai-btn ${aiBtnDisabled ? 'add-sheet__ai-btn--disabled' : 'add-sheet__ai-btn--active'}`}
               >
                 {aiLoading ? (
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>Analisando...</span>
+                  <span className="add-sheet__ai-loading-text">Analisando...</span>
                 ) : (
                   <>
                     <Icons.alert size={16} />
@@ -409,18 +364,13 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
         </div>
 
         {/* Receipt attachment */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '10px 14px', marginBottom: 14,
-          border: '1px solid var(--border-1)', borderRadius: 12,
-          background: 'var(--bg-0)', cursor: 'pointer',
-        }} onClick={() => receiptInputRef.current?.click()}>
+        <div className="add-sheet__receipt" onClick={() => receiptInputRef.current?.click()}>
           <Icons.download size={16} color={receiptFile ? 'var(--pos)' : 'var(--text-3)'} />
-          <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: receiptFile ? 'var(--text-1)' : 'var(--text-3)', fontFamily: 'var(--font-sans)' }}>
+          <span className={`add-sheet__receipt-label ${receiptFile ? 'add-sheet__receipt-label--active' : 'add-sheet__receipt-label--empty'}`}>
             {receiptUploading ? 'Enviando...' : receiptFile ? receiptFile.name : 'Anexar comprovante'}
           </span>
           {receiptFile && (
-            <button onClick={(e) => { e.stopPropagation(); setReceiptFile(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+            <button onClick={(e) => { e.stopPropagation(); setReceiptFile(null); }} className="add-sheet__receipt-remove">
               <Icons.x size={14} color="var(--text-4)" />
             </button>
           )}
@@ -430,33 +380,30 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
           type="file"
           accept="image/*,application/pdf"
           onChange={e => { if (e.target.files?.[0]) setReceiptFile(e.target.files[0]); }}
-          style={{ display: 'none' }}
+          className="add-sheet__hidden-input"
         />
 
         {/* Amount display */}
-        <div style={{ textAlign: 'center', padding: '10px 0 12px' }}>
-          <div className="money" style={{
-            fontSize: 44, fontWeight: 600, letterSpacing: -2, lineHeight: 1,
-            color: valColor, display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: 6,
-          }}>
-            <span style={{ fontSize: 18, fontWeight: 500, color: 'var(--text-3)' }}>{symbol}</span>
+        <div className="add-sheet__amount-area">
+          <div className="money add-sheet__amount-display" style={{ color: valColor }}>
+            <span className="add-sheet__amount-symbol">{symbol}</span>
             <span>{amount}</span>
-            <span style={{ display: 'inline-block', width: 2, height: 28, background: valColor, marginLeft: 2, animation: 'blink 1s infinite' }} />
+            <span className="add-sheet__amount-cursor" style={{ background: valColor }} />
           </div>
-          <div className="money" style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)', marginTop: 4 }}>
+          <div className="money add-sheet__amount-secondary">
             ≈ {CURRENCY_SYMBOLS[secondaryCurrency]} {secondaryAmount.toFixed(2)}
           </div>
         </div>
 
         {/* Form fields */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 0 8px' }}>
+        <div className="add-sheet__form">
           <input type="text" placeholder="Descrição (opcional)" value={desc}
             onChange={e => setDesc(e.target.value)}
-            style={{ ...fieldStyle }} />
+            className="add-sheet__field" />
 
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="add-sheet__row">
             {/* Type dropdown */}
-            <select value={kind} onChange={e => setKind(e.target.value as 'out' | 'in')} style={{ ...selectStyle, flex: 0.5 }}>
+            <select value={kind} onChange={e => setKind(e.target.value as 'out' | 'in')} className="add-sheet__select add-sheet__type-select">
               <option value="out">Saída</option>
               <option value="in">Entrada</option>
             </select>
@@ -467,7 +414,7 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
               if (aiSuggestedCat && newCat !== aiSuggestedCat && (aiSuggestedDesc || desc)) {
                 aiLearnCategory(aiSuggestedDesc || desc, aiSuggestedCat, newCat).catch(() => {});
               }
-            }} style={{ ...selectStyle, flex: 1 }}>
+            }} className="add-sheet__select add-sheet__cat-select">
               {kind === 'in' ? (
                 <>
                   <option value="salario">Salário</option>
@@ -480,12 +427,12 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
             </select>
           </div>
 
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="add-sheet__row">
             <input type="date" value={selectedDate} max={new Date().toISOString().slice(0, 10)}
               onChange={e => setSelectedDate(e.target.value)}
-              style={{ ...fieldStyle, flex: 1, colorScheme: 'dark' }} />
+              className="add-sheet__field add-sheet__date-input" />
             <select value={currency} onChange={e => setCurrency(e.target.value as CurrencyCode)}
-              style={{ ...selectStyle, flex: 0.6 }}>
+              className="add-sheet__select add-sheet__currency-select">
               <option value="BRL">R$ BRL</option>
               <option value="USD">$ USD</option>
               <option value="EUR">€ EUR</option>
@@ -493,7 +440,7 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
           </div>
 
           {accounts.length > 0 && (
-            <select value={accountId} onChange={e => setAccountId(e.target.value)} style={selectStyle}>
+            <select value={accountId} onChange={e => setAccountId(e.target.value)} className="add-sheet__select">
               {accounts.map(acc => (
                 <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
               ))}
@@ -502,28 +449,20 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
         </div>
 
         {/* Keypad */}
-        <div style={{ padding: '2px 0' }}>
+        <div className="add-sheet__keypad">
           <NumericKeypad onPress={press} />
         </div>
 
         {/* Save */}
-        <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-          <button onClick={() => handleSave(true)} disabled={numAmount <= 0} style={{
-            flex: 1, padding: '14px 0', borderRadius: 8,
-            background: 'transparent', border: '1px solid var(--border-2)',
-            color: numAmount <= 0 ? 'var(--text-4)' : 'var(--text-2)',
-            fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 13,
-            cursor: numAmount <= 0 ? 'not-allowed' : 'pointer',
-          }}>+ Salvar e add outra</button>
-          <button onClick={() => handleSave(false)} disabled={numAmount <= 0} style={{
-            flex: 1.4, padding: '14px 0', borderRadius: 8,
-            background: numAmount <= 0 ? 'var(--bg-3)' : (positive ? 'var(--pos)' : 'var(--text-1)'),
-            color: numAmount <= 0 ? 'var(--text-4)' : (positive ? '#0A0A0A' : 'var(--bg-0)'),
-            border: 'none', fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 14,
-            cursor: numAmount <= 0 ? 'not-allowed' : 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          }}>
-            <Icons.check size={16} stroke={2.4} color={numAmount <= 0 ? 'var(--text-4)' : (positive ? '#0A0A0A' : 'var(--bg-0)')} />
+        <div className="add-sheet__actions">
+          <button onClick={() => handleSave(true)} disabled={saveDisabled}
+            className={`add-sheet__save-another ${saveDisabled ? 'add-sheet__save-another--disabled' : 'add-sheet__save-another--active'}`}>
+            + Salvar e add outra
+          </button>
+          <button onClick={() => handleSave(false)} disabled={saveDisabled}
+            className={`add-sheet__save-btn ${saveDisabled ? 'add-sheet__save-btn--disabled' : ''}`}
+            style={saveDisabled ? undefined : { background: positive ? 'var(--pos)' : 'var(--text-1)', color: positive ? '#0A0A0A' : 'var(--bg-0)' }}>
+            <Icons.check size={16} stroke={2.4} color={saveDisabled ? 'var(--text-4)' : (positive ? '#0A0A0A' : 'var(--bg-0)')} />
             Salvar
           </button>
         </div>
@@ -556,34 +495,29 @@ function ReviewPanel({
   result, checkedTx, txCategories, onToggle, onChangeCategory,
   onApprove, onCancel, checkedCount, saving, allCatKeys,
 }: ReviewPanelProps) {
+  const approveDisabled = checkedCount === 0 || saving;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div className="review-panel">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+      <div className="review-panel__header">
         <div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-1)', fontFamily: 'var(--font-sans)' }}>
+          <div className="review-panel__title">
             {result.transactions.length} transações encontradas
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
+          <div className="review-panel__subtitle">
             {result.document.type} — {result.document.language}
           </div>
         </div>
-        <button onClick={onCancel} style={{
-          background: 'none', border: 'none', cursor: 'pointer', padding: 4,
-          color: 'var(--text-3)', fontSize: 12, fontFamily: 'var(--font-sans)',
-        }}>
+        <button onClick={onCancel} className="review-panel__back-btn">
           Voltar
         </button>
       </div>
 
       {/* Warnings */}
       {result.warnings.length > 0 && (
-        <div style={{
-          padding: '8px 12px', background: 'rgba(250, 204, 21, 0.08)',
-          border: '1px solid rgba(250, 204, 21, 0.2)', borderRadius: 8,
-        }}>
+        <div className="review-panel__warnings">
           {result.warnings.map((w, i) => (
-            <div key={i} style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'var(--font-sans)', lineHeight: 1.4 }}>
+            <div key={i} className="review-panel__warning-item">
               {w}
             </div>
           ))}
@@ -591,7 +525,7 @@ function ReviewPanel({
       )}
 
       {/* Transaction list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div className="review-panel__tx-list">
         {result.transactions.map((tx, idx) => (
           <ReviewRow
             key={idx}
@@ -607,9 +541,9 @@ function ReviewPanel({
 
       {/* Suggestions */}
       {result.suggestions.length > 0 && (
-        <div style={{ padding: '8px 12px', background: 'var(--bg-0)', borderRadius: 8, border: '1px solid var(--border-1)' }}>
+        <div className="review-panel__suggestions">
           {result.suggestions.map((s, i) => (
-            <div key={i} style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-sans)', lineHeight: 1.4 }}>
+            <div key={i} className="review-panel__suggestion-item">
               {s}
             </div>
           ))}
@@ -617,28 +551,17 @@ function ReviewPanel({
       )}
 
       {/* Action buttons */}
-      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-        <button onClick={onCancel} style={{
-          flex: 1, padding: '14px 0', borderRadius: 8,
-          background: 'transparent', border: '1px solid var(--border-2)',
-          color: 'var(--text-2)', fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 13,
-          cursor: 'pointer',
-        }}>
+      <div className="review-panel__actions">
+        <button onClick={onCancel} className="review-panel__cancel-btn">
           Cancelar
         </button>
-        <button onClick={onApprove} disabled={checkedCount === 0 || saving} style={{
-          flex: 1.4, padding: '14px 0', borderRadius: 8,
-          background: (checkedCount === 0 || saving) ? 'var(--bg-3)' : 'var(--pos)',
-          color: (checkedCount === 0 || saving) ? 'var(--text-4)' : '#0A0A0A',
-          border: 'none', fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 14,
-          cursor: (checkedCount === 0 || saving) ? 'not-allowed' : 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-        }}>
+        <button onClick={onApprove} disabled={approveDisabled}
+          className={`review-panel__approve-btn ${approveDisabled ? 'review-panel__approve-btn--disabled' : 'review-panel__approve-btn--active'}`}>
           {saving ? (
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>Salvando...</span>
+            <span className="review-panel__saving-text">Salvando...</span>
           ) : (
             <>
-              <Icons.check size={16} stroke={2.4} color={(checkedCount === 0) ? 'var(--text-4)' : '#0A0A0A'} />
+              <Icons.check size={16} stroke={2.4} color={checkedCount === 0 ? 'var(--text-4)' : '#0A0A0A'} />
               Aprovar {checkedCount} transaç{checkedCount === 1 ? 'ão' : 'ões'}
             </>
           )}
@@ -670,51 +593,33 @@ function ReviewRow({ tx, checked, category, onToggle, onChangeCategory, allCatKe
   return (
     <div
       onClick={onToggle}
-      style={{
-        display: 'flex', alignItems: 'flex-start', gap: 10,
-        padding: '10px 12px', background: checked ? 'var(--bg-0)' : 'var(--bg-2)',
-        border: `1px solid ${checked ? 'var(--border-1)' : 'var(--border-0)'}`,
-        borderRadius: 10, cursor: 'pointer',
-        opacity: checked ? 1 : 0.5,
-        transition: 'opacity 0.15s, background 0.15s',
-      }}
+      className={`review-row ${checked ? 'review-row--checked' : 'review-row--unchecked'}`}
     >
       {/* Checkbox */}
-      <div style={{
-        width: 20, height: 20, borderRadius: 6, marginTop: 2, flexShrink: 0,
-        border: checked ? 'none' : '1.5px solid var(--border-2)',
-        background: checked ? 'var(--pos)' : 'transparent',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
+      <div className={`review-row__checkbox ${checked ? 'review-row__checkbox--checked' : 'review-row__checkbox--unchecked'}`}>
         {checked && <Icons.check size={12} stroke={2.5} color="#0A0A0A" />}
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-          <span style={{
-            fontSize: 13, fontWeight: 600, color: 'var(--text-1)', fontFamily: 'var(--font-sans)',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
+      <div className="review-row__content">
+        <div className="review-row__top-row">
+          <span className="review-row__desc">
             {tx.desc}
           </span>
-          <span className="money" style={{ fontSize: 14, fontWeight: 600, color: amtColor, flexShrink: 0 }}>
+          <span className="money review-row__amount" style={{ color: amtColor }}>
             {sym} {absAmt}
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+        <div className="review-row__meta">
           {/* Date */}
-          <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
+          <span className="review-row__date">
             {tx.date}
           </span>
 
           {/* Account */}
           {tx.account && (
-            <span style={{
-              fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--font-mono)',
-              background: 'var(--bg-2)', padding: '1px 6px', borderRadius: 4,
-            }}>
+            <span className="review-row__account-badge">
               {tx.account}
             </span>
           )}
@@ -725,13 +630,7 @@ function ReviewRow({ tx, checked, category, onToggle, onChangeCategory, allCatKe
               value={category}
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => { e.stopPropagation(); onChangeCategory(e.target.value); }}
-              style={{
-                fontSize: 10, fontFamily: 'var(--font-sans)', fontWeight: 600,
-                background: 'rgba(250, 204, 21, 0.12)', color: 'var(--text-2)',
-                border: '1px solid rgba(250, 204, 21, 0.3)', borderRadius: 4,
-                padding: '1px 4px', cursor: 'pointer',
-                appearance: 'none' as const, WebkitAppearance: 'none' as const,
-              }}
+              className="review-row__cat-select"
             >
               <option value={tx.cat}>{CATS[tx.cat]?.label ?? tx.cat}</option>
               {tx.catAlternatives
@@ -746,11 +645,9 @@ function ReviewRow({ tx, checked, category, onToggle, onChangeCategory, allCatKe
                 ))}
             </select>
           ) : (
-            <span style={{
-              fontSize: 10, fontFamily: 'var(--font-sans)', fontWeight: 600,
+            <span className="review-row__cat-badge" style={{
               background: catMeta?.color ? `${catMeta.color}22` : 'var(--bg-3)',
               color: catMeta?.color ?? 'var(--text-2)',
-              padding: '1px 6px', borderRadius: 4,
             }}>
               {catMeta?.label ?? category}
             </span>
@@ -758,7 +655,7 @@ function ReviewRow({ tx, checked, category, onToggle, onChangeCategory, allCatKe
 
           {/* Confidence indicator for low/medium */}
           {lowConfidence && (
-            <span style={{ fontSize: 9, color: 'rgba(250, 204, 21, 0.7)', fontFamily: 'var(--font-mono)' }}>
+            <span className="review-row__confidence">
               {tx.catConfidence}
             </span>
           )}
@@ -766,21 +663,14 @@ function ReviewRow({ tx, checked, category, onToggle, onChangeCategory, allCatKe
 
         {/* Notes preview */}
         {tx.notes && (
-          <div style={{
-            fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-sans)',
-            marginTop: 4, lineHeight: 1.3,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
+          <div className="review-row__notes">
             {tx.notes}
           </div>
         )}
 
         {/* Payment method */}
         {tx.payment?.method && (
-          <span style={{
-            fontSize: 10, color: 'var(--text-4)', fontFamily: 'var(--font-mono)',
-            marginTop: 2, display: 'inline-block',
-          }}>
+          <span className="review-row__payment">
             {tx.payment.method}{tx.payment.cardLast4 ? ` ****${tx.payment.cardLast4}` : ''}
             {tx.payment.installments ? ` ${tx.payment.installmentNumber}/${tx.payment.installments}x` : ''}
           </span>

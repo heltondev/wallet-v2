@@ -178,7 +178,7 @@ infra/                # AWS CDK stacks
 
 ## Hard Rules
 
-1. **NO inline styles in TSX** — all CSS in SCSS files with BEM naming
+1. **ABSOLUTELY NO inline styles or inline JS** — ALL CSS must be in SCSS files with BEM naming. Zero `style={{}}` props anywhere. Zero exceptions. Every component gets its own `.scss` file. This is the #1 rule.
 2. **Every visible string through `t()`** — i18n is mandatory, PT-BR default
 3. **Use ONLY defined CSS tokens** — verify a variable exists before using `var(--anything)`
 4. **Guard localStorage/sessionStorage in try/catch** — private mode throws

@@ -1,4 +1,5 @@
 import React from 'react';
+import './SegmentedToggle.scss';
 
 interface SegmentedOption {
   id: string;
@@ -14,19 +15,14 @@ interface SegmentedToggleProps {
 
 export const SegmentedToggle: React.FC<SegmentedToggleProps> = ({ value, options, onChange }) => {
   return (
-    <div style={{
-      display:'flex',background:'var(--bg-2)',padding:3,borderRadius:'var(--r-pill)',
-      gap:2,
-    }}>
+    <div className="segmented-toggle">
       {options.map(o=>(
-        <button key={o.id} onClick={()=>onChange&&onChange(o.id)} style={{
-          flex:1,padding:'9px 0',border:'none',
-          background: value===o.id ? 'var(--bg-0)' : 'transparent',
-          color: value===o.id ? (o.color||'var(--text-1)') : 'var(--text-3)',
-          fontSize:13,fontWeight:600,fontFamily:'var(--font-sans)',
-          borderRadius:'var(--r-pill)',cursor:'pointer',
-          boxShadow: value===o.id ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
-        }}>{o.label}</button>
+        <button
+          key={o.id}
+          onClick={()=>onChange&&onChange(o.id)}
+          className={`segmented-toggle__option ${value === o.id ? 'segmented-toggle__option--active' : ''}`}
+          style={value === o.id && o.color ? { color: o.color } : undefined}
+        >{o.label}</button>
       ))}
     </div>
   );

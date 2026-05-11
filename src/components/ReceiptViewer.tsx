@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Icons } from './icons/Icons';
 import { getReceiptUrl } from '../lib/api';
+import './ReceiptViewer.scss';
 
 interface ReceiptViewerProps {
   txId: string;
@@ -38,13 +39,7 @@ export function ReceiptViewer({ txId, receiptName }: ReceiptViewerProps) {
       <button
         onClick={handleView}
         disabled={loading}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '8px 12px', borderRadius: 8,
-          background: 'var(--bg-2)', border: '1px solid var(--border-1)',
-          color: 'var(--text-2)', cursor: loading ? 'not-allowed' : 'pointer',
-          fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 500,
-        }}
+        className={`receipt-viewer__btn ${loading ? 'receipt-viewer__btn--loading' : 'receipt-viewer__btn--ready'}`}
       >
         <Icons.download size={14} color="var(--text-3)" />
         {loading ? 'Carregando...' : 'Ver comprovante'}
@@ -53,26 +48,18 @@ export function ReceiptViewer({ txId, receiptName }: ReceiptViewerProps) {
       {showOverlay && imageUrl && (
         <div
           onClick={() => setShowOverlay(false)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 200,
-            background: 'rgba(0,0,0,0.85)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: 20,
-          }}
+          className="receipt-viewer__overlay"
         >
           <button
             onClick={() => setShowOverlay(false)}
-            style={{
-              position: 'absolute', top: 20, right: 20,
-              background: 'none', border: 'none', cursor: 'pointer',
-            }}
+            className="receipt-viewer__overlay-close"
           >
             <Icons.x size={24} color="#fff" />
           </button>
           <img
             src={imageUrl}
             alt={receiptName}
-            style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 8 }}
+            className="receipt-viewer__image"
             onClick={e => e.stopPropagation()}
           />
         </div>

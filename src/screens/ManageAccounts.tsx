@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { listAccounts, createAccount } from '../lib/api';
 import type { Account, CurrencyCode } from '../types';
+import './ManageAccounts.scss';
 
 interface ManageAccountsProps {
   onBack?: () => void;
@@ -56,71 +57,111 @@ export function ManageAccounts({ onBack }: ManageAccountsProps) {
     setAccounts(prev => prev.filter(a => a.id !== id));
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', boxSizing: 'border-box',
-    background: 'var(--bg-2)', border: '1px solid var(--border-2)',
-    borderRadius: 8, padding: '10px 12px', color: 'var(--text-1)',
-    fontFamily: 'var(--font-sans)', fontSize: 14, outline: 'none',
-  };
-
   return (
-    <div style={{ height: '100%', position: 'relative', background: 'var(--bg-0)' }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+    <div className="manage-accounts">
+      <div className="manage-accounts__status-bar">
         <IOSStatusBar />
       </div>
 
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 100, overflow: 'auto', paddingTop: 54, paddingBottom: 20 }} className="no-scrollbar">
+      <div className="manage-accounts__scroll no-scrollbar">
         {/* Header */}
-        <div style={{ padding: '8px 16px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="manage-accounts__header">
           {onBack && (
-            <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <button onClick={onBack} className="manage-accounts__back-btn">
               <Icons.chevL size={20} color="var(--text-2)" />
             </button>
           )}
-          <h1 style={{ fontSize: 24, fontWeight: 600, letterSpacing: -0.6, margin: 0, color: 'var(--text-1)' }}>
+          <h1 className="manage-accounts__title">
             Carteiras e contas
           </h1>
         </div>
 
+        {/* Add button + form — at top */}
+        {!showForm && (
+          <div className="manage-accounts__add-wrap">
+            <button
+              onClick={() => setShowForm(true)}
+              className="manage-accounts__add-btn"
+            >
+              <Icons.plus size={16} color="var(--text-2)" />
+              Adicionar conta
+            </button>
+          </div>
+        )}
+
+        {showForm && (
+          <div className="manage-accounts__form">
+            <div className="manage-accounts__form-title">Nova conta</div>
+            <input
+              type="text"
+              placeholder="Nome da conta"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="manage-accounts__input"
+            />
+            <input
+              type="text"
+              placeholder="Instituição (opcional)"
+              value={institution}
+              onChange={e => setInstitution(e.target.value)}
+              className="manage-accounts__input"
+            />
+            <div className="manage-accounts__currency-row">
+              {CURRENCIES.map(c => (
+                <button
+                  key={c}
+                  onClick={() => setCurrency(c)}
+                  className={`manage-accounts__currency-btn ${currency === c ? 'manage-accounts__currency-btn--active' : 'manage-accounts__currency-btn--inactive'}`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+            <div className="manage-accounts__form-actions">
+              <button
+                onClick={() => setShowForm(false)}
+                className="manage-accounts__cancel-btn"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || !name.trim()}
+                className={`manage-accounts__save-btn ${name.trim() ? 'manage-accounts__save-btn--active' : 'manage-accounts__save-btn--disabled'} ${saving ? 'manage-accounts__save-btn--saving' : ''}`}
+              >
+                {saving ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Account list */}
         {loading ? (
-          <div style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
+          <div className="manage-accounts__loading">
             Carregando...
           </div>
         ) : accounts.length === 0 && !showForm ? (
-          <div style={{ padding: '40px 16px', textAlign: 'center' }}>
+          <div className="manage-accounts__empty">
             <Icons.wallet size={36} color="var(--text-4)" />
-            <div style={{ marginTop: 12, color: 'var(--text-3)', fontSize: 14 }}>Nenhuma conta cadastrada</div>
+            <div className="manage-accounts__empty-text">Nenhuma conta cadastrada</div>
           </div>
         ) : (
-          <div style={{ margin: '0 16px', background: 'var(--bg-1)', border: '1px solid var(--border-1)', borderRadius: 'var(--r-card-sm)', overflow: 'hidden' }}>
-            {accounts.map((acc, i) => (
-              <div
-                key={acc.id}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
-                  borderBottom: i < accounts.length - 1 ? '1px solid var(--border-1)' : 'none',
-                }}
-              >
+          <div className="manage-accounts__list">
+            {accounts.map((acc) => (
+              <div key={acc.id} className="manage-accounts__item">
                 <Icons.wallet size={17} color="var(--text-2)" stroke={1.8} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14.5, fontWeight: 500, color: 'var(--text-1)' }}>{acc.name}</div>
+                <div className="manage-accounts__item-info">
+                  <div className="manage-accounts__item-name">{acc.name}</div>
                   {acc.institution && (
-                    <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>{acc.institution}</div>
+                    <div className="manage-accounts__item-institution">{acc.institution}</div>
                   )}
                 </div>
-                <span style={{
-                  fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)',
-                  padding: '3px 8px', borderRadius: 6,
-                  background: 'var(--bg-3)', color: 'var(--text-2)',
-                }}>
+                <span className="manage-accounts__item-currency">
                   {acc.currency}
                 </span>
                 <button
                   onClick={() => handleDelete(acc.id)}
-                  style={{
-                    background: 'none', border: 'none', cursor: 'pointer', padding: 4,
-                  }}
+                  className="manage-accounts__delete-btn"
                 >
                   <Icons.trash
                     size={16}
@@ -132,87 +173,6 @@ export function ManageAccounts({ onBack }: ManageAccountsProps) {
           </div>
         )}
 
-        {/* Add form */}
-        {showForm && (
-          <div style={{ margin: '18px 16px 0', background: 'var(--bg-1)', border: '1px solid var(--border-1)', borderRadius: 'var(--r-card-sm)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-2)' }}>Nova conta</div>
-            <input
-              type="text"
-              placeholder="Nome da conta"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="text"
-              placeholder="Instituição (opcional)"
-              value={institution}
-              onChange={e => setInstitution(e.target.value)}
-              style={inputStyle}
-            />
-            <div style={{ display: 'flex', gap: 8 }}>
-              {CURRENCIES.map(c => (
-                <button
-                  key={c}
-                  onClick={() => setCurrency(c)}
-                  style={{
-                    flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-mono)',
-                    background: currency === c ? 'var(--accent)' : 'var(--bg-3)',
-                    color: currency === c ? '#fff' : 'var(--text-2)',
-                    transition: 'background 0.15s',
-                  }}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={() => setShowForm(false)}
-                style={{
-                  flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid var(--border-2)',
-                  background: 'transparent', color: 'var(--text-2)', fontSize: 14, fontWeight: 500,
-                  cursor: 'pointer',
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving || !name.trim()}
-                style={{
-                  flex: 1, padding: '10px 0', borderRadius: 8, border: 'none',
-                  background: name.trim() ? 'var(--accent)' : 'var(--bg-3)',
-                  color: name.trim() ? '#fff' : 'var(--text-4)',
-                  fontSize: 14, fontWeight: 600, cursor: name.trim() ? 'pointer' : 'default',
-                  opacity: saving ? 0.6 : 1,
-                }}
-              >
-                {saving ? 'Salvando...' : 'Salvar'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Add button */}
-        {!showForm && (
-          <div style={{ margin: '18px 16px 0' }}>
-            <button
-              onClick={() => setShowForm(true)}
-              style={{
-                width: '100%', padding: '12px 0', borderRadius: 'var(--r-card-sm)',
-                border: '1px dashed var(--border-2)', background: 'transparent',
-                color: 'var(--text-2)', fontSize: 14, fontWeight: 500,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                cursor: 'pointer',
-              }}
-            >
-              <Icons.plus size={16} color="var(--text-2)" />
-              Adicionar conta
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

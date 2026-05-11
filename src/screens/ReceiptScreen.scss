@@ -1,0 +1,108 @@
+.receipt-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-0);
+
+  &__header {
+    padding: 8px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border-1);
+    background: var(--bg-1);
+  }
+
+  &__back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  &__title {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--text-1);
+  }
+
+  &__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__saved {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  &__saved-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background: var(--pos);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__saved-text {
+    text-align: center;
+  }
+
+  &__saved-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-1);
+    margin-bottom: 4px;
+  }
+
+  &__saved-desc {
+    font-size: 14px;
+    color: var(--text-3);
+  }
+
+  &__saved-amount {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-1);
+    margin-top: 8px;
+  }
+
+  &__saved-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  &__scan-again-btn {
+    padding: 12px 20px;
+    border-radius: var(--r-input);
+    background: transparent;
+    border: 1px solid var(--border-2);
+    color: var(--text-2);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  &__back-action-btn {
+    padding: 12px 20px;
+    border-radius: var(--r-input);
+    background: var(--text-1);
+    color: var(--bg-0);
+    border: none;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+}

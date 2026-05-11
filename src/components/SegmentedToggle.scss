@@ -1,0 +1,26 @@
+.segmented-toggle {
+  display: flex;
+  background: var(--bg-2);
+  padding: 3px;
+  border-radius: var(--r-pill);
+  gap: 2px;
+
+  &__option {
+    flex: 1;
+    padding: 9px 0;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    border-radius: var(--r-pill);
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-3);
+    box-shadow: none;
+
+    &--active {
+      background: var(--bg-0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+  }
+}

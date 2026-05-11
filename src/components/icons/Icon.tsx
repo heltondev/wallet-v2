@@ -1,4 +1,5 @@
 import React from 'react';
+import './Icon.scss';
 
 export interface IconProps {
   d?: string | string[];
@@ -26,7 +27,7 @@ export const Icon: React.FC<IconProps> = ({
     strokeWidth={stroke}
     strokeLinecap="round"
     strokeLinejoin="round"
-    style={{ flexShrink: 0 }}
+    className="icon"
   >
     {children ||
       (Array.isArray(d) ? (

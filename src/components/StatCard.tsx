@@ -1,3 +1,4 @@
+import './StatCard.scss';
 import { Icons } from './icons/Icons';
 
 interface StatCardProps {
@@ -14,16 +15,13 @@ export function StatCard({ label, value, sub, accent = 'neutral', icon }: StatCa
   };
   const Ic = icon ? Icons[icon] : undefined;
   return (
-    <div style={{
-      background:'var(--bg-1)',border:'1px solid var(--border-1)',
-      borderRadius:'var(--r-card-sm)',padding:'12px 14px 14px',
-    }}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
-        <span style={{fontSize:10.5,color:'var(--text-3)',fontFamily:'var(--font-mono)',textTransform:'uppercase',letterSpacing:0.8}}>{label}</span>
+    <div className="stat-card">
+      <div className="stat-card__header">
+        <span className="stat-card__label">{label}</span>
         {Ic && <Ic size={13} color={colors[accent]} stroke={2.2}/>}
       </div>
-      <div className="money" style={{fontSize:22,fontWeight:600,letterSpacing:-0.8,color:colors[accent],lineHeight:1.1}}>{value}</div>
-      {sub && <div className="money" style={{fontSize:11,color:'var(--text-3)',marginTop:4,fontFamily:'var(--font-mono)'}}>{sub}</div>}
+      <div className="money stat-card__value" style={{ color: colors[accent] }}>{value}</div>
+      {sub && <div className="money stat-card__sub">{sub}</div>}
     </div>
   );
 }

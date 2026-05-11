@@ -1,0 +1,277 @@
+.manage-categories {
+  height: 100%;
+  position: relative;
+  background: var(--bg-0);
+
+  &__status-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+  }
+
+  &__scroll {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 100px;
+    overflow: auto;
+    padding-top: 54px;
+    padding-bottom: 20px;
+  }
+
+  &__header {
+    padding: 8px 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.6px;
+    margin: 0;
+    color: var(--text-1);
+  }
+
+  // Section
+  &__section {
+    margin-bottom: 18px;
+  }
+
+  &__section-label {
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 0 16px 6px;
+  }
+
+  &__list {
+    margin: 0 16px;
+    background: var(--bg-1);
+    border: 1px solid var(--border-1);
+    border-radius: var(--r-card-sm);
+    overflow: hidden;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--border-1);
+    }
+  }
+
+  &__icon-box {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    opacity: 0.85;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__item-info {
+    flex: 1;
+  }
+
+  &__item-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-1);
+  }
+
+  &__item-slug {
+    font-size: 11px;
+    color: var(--text-4);
+    font-family: var(--font-mono);
+  }
+
+  &__delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  &__loading {
+    padding: 20px 16px;
+    text-align: center;
+    color: var(--text-3);
+    font-size: 13px;
+  }
+
+  &__empty {
+    padding: 20px 16px;
+    text-align: center;
+    color: var(--text-4);
+    font-size: 13px;
+  }
+
+  // Form
+  &__form {
+    margin: 0 16px 18px;
+    background: var(--bg-1);
+    border: 1px solid var(--border-1);
+    border-radius: var(--r-card-sm);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__form-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+
+  &__input {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text-1);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    outline: none;
+  }
+
+  &__slug-preview {
+    font-size: 12px;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+  }
+
+  &__picker-label {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-bottom: 6px;
+  }
+
+  &__color-grid {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  &__color-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+
+    &--selected {
+      outline: 2px solid var(--text-1);
+      outline-offset: 2px;
+    }
+  }
+
+  &__icon-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  &__icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &--selected {
+      background: var(--bg-3);
+      outline: 1px solid var(--border-2);
+    }
+
+    &--unselected {
+      background: transparent;
+    }
+  }
+
+  &__form-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__cancel-btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 8px;
+    border: 1px solid var(--border-2);
+    background: transparent;
+    color: var(--text-2);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  &__save-btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+
+    &--active {
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    &--disabled {
+      background: var(--bg-3);
+      color: var(--text-4);
+      cursor: default;
+    }
+
+    &--saving {
+      opacity: 0.6;
+    }
+  }
+
+  // Add button
+  &__add-wrap {
+    margin: 0 16px;
+  }
+
+  &__add-btn {
+    width: 100%;
+    padding: 12px 0;
+    border-radius: var(--r-card-sm);
+    border: 1px dashed var(--border-2);
+    background: transparent;
+    color: var(--text-2);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+}

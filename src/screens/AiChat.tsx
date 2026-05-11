@@ -3,6 +3,7 @@ import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { aiChat } from '../lib/api';
 import type { FabKind } from '../types';
+import './AiChat.scss';
 
 interface Message {
   id: number;
@@ -54,55 +55,34 @@ export function AiChat({ fabKind: _fabKind, onBack }: { fabKind: FabKind; onBack
     }
   };
 
+  const canSend = input.trim() && !typing;
+
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-0)' }}>
+    <div className="ai-chat">
       <IOSStatusBar />
 
       {/* Header */}
-      <div style={{
-        padding: '8px 16px 12px',
-        display: 'flex', alignItems: 'center', gap: 10,
-        borderBottom: '1px solid var(--border-1)',
-        background: 'var(--bg-1)',
-      }}>
+      <div className="ai-chat__header">
         {onBack && (
-          <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+          <button onClick={onBack} className="ai-chat__back-btn">
             <Icons.chevL size={20} color="var(--text-2)" />
           </button>
         )}
         <Icons.alert size={20} color="var(--pos)" />
-        <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 17, color: 'var(--text-1)' }}>
+        <span className="ai-chat__title">
           Assistente
         </span>
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} style={{
-        flex: 1, overflowY: 'auto', padding: '16px',
-        display: 'flex', flexDirection: 'column', gap: 10,
-      }}>
+      <div ref={scrollRef} className="ai-chat__messages">
         {messages.map(msg => (
-          <div key={msg.id} style={{
-            display: 'flex',
-            justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-          }}>
-            <div style={{
-              maxWidth: '80%',
-              padding: '12px 16px',
-              borderRadius: 16,
-              background: msg.role === 'user' ? 'var(--bg-2)' : 'var(--bg-1)',
-              border: msg.role === 'assistant' ? '1px solid var(--border-1)' : 'none',
-            }}>
-              <div style={{
-                fontFamily: 'var(--font-sans)', fontSize: 14,
-                color: 'var(--text-1)', lineHeight: 1.5,
-              }}>
+          <div key={msg.id} className={`ai-chat__msg-wrapper ai-chat__msg-wrapper--${msg.role}`}>
+            <div className={`ai-chat__msg-bubble ai-chat__msg-bubble--${msg.role}`}>
+              <div className="ai-chat__msg-text">
                 {msg.text}
               </div>
-              <div style={{
-                fontFamily: 'var(--font-mono)', fontSize: 11,
-                color: 'var(--text-4)', marginTop: 6, textAlign: 'right',
-              }}>
+              <div className="ai-chat__msg-time">
                 {msg.time}
               </div>
             </div>
@@ -110,18 +90,14 @@ export function AiChat({ fabKind: _fabKind, onBack }: { fabKind: FabKind; onBack
         ))}
 
         {typing && (
-          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <div style={{
-              padding: '12px 20px', borderRadius: 16,
-              background: 'var(--bg-1)', border: '1px solid var(--border-1)',
-              display: 'flex', gap: 4, alignItems: 'center',
-            }}>
+          <div className="ai-chat__typing">
+            <div className="ai-chat__typing-bubble">
               {[0, 1, 2].map(i => (
-                <span key={i} style={{
-                  width: 6, height: 6, borderRadius: 3,
-                  background: 'var(--text-3)',
-                  animation: `typingDot 1.2s ${i * 0.2}s infinite ease-in-out`,
-                }} />
+                <span
+                  key={i}
+                  className="ai-chat__typing-dot"
+                  style={{ animation: `typingDot 1.2s ${i * 0.2}s infinite ease-in-out` }}
+                />
               ))}
             </div>
           </div>
@@ -129,46 +105,22 @@ export function AiChat({ fabKind: _fabKind, onBack }: { fabKind: FabKind; onBack
       </div>
 
       {/* Input bar */}
-      <div style={{
-        padding: '10px 12px 28px',
-        background: 'var(--bg-1)',
-        borderTop: '1px solid var(--border-1)',
-        display: 'flex', gap: 8, alignItems: 'center',
-      }}>
+      <div className="ai-chat__input-bar">
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Pergunte sobre suas finanças..."
-          style={{
-            flex: 1, padding: '10px 14px',
-            borderRadius: 20, border: '1px solid var(--border-2)',
-            background: 'var(--bg-0)', color: 'var(--text-1)',
-            fontFamily: 'var(--font-sans)', fontSize: 14,
-            outline: 'none',
-          }}
+          className="ai-chat__input"
         />
         <button
           onClick={send}
-          disabled={!input.trim() || typing}
-          style={{
-            width: 38, height: 38, borderRadius: 19,
-            background: input.trim() && !typing ? 'var(--pos)' : 'var(--bg-3)',
-            border: 'none', cursor: input.trim() && !typing ? 'pointer' : 'not-allowed',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}
+          disabled={!canSend}
+          className={`ai-chat__send-btn ${canSend ? 'ai-chat__send-btn--active' : 'ai-chat__send-btn--disabled'}`}
         >
-          <Icons.arrowUp size={18} color={input.trim() && !typing ? 'var(--bg-0)' : 'var(--text-4)'} stroke={2.2} />
+          <Icons.arrowUp size={18} color={canSend ? 'var(--bg-0)' : 'var(--text-4)'} stroke={2.2} />
         </button>
       </div>
-
-      <style>{`
-        @keyframes typingDot {
-          0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
-          30% { opacity: 1; transform: translateY(-4px); }
-        }
-      `}</style>
     </div>
   );
 }

@@ -1,0 +1,50 @@
+.app {
+  &__stage-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+
+  &__loading {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__loading-text {
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  &__home-ind--dark {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  &__home-ind--light {
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  &__sub-screen {
+    height: 100%;
+    position: relative;
+  }
+
+  // Toast
+  &__toast-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+  }
+
+  &__toast-label {
+    font-family: var(--font-sans);
+  }
+
+  &__toast-amount {
+    opacity: 0.6;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+}

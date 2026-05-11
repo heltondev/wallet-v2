@@ -4,6 +4,7 @@ import { IOSStatusBar } from '../components/IOSStatusBar';
 import { aiInsights } from '../lib/api';
 import { currentMonthKey, monthLabelShort } from '../utils/dates';
 import type { FabKind } from '../types';
+import './AiInsights.scss';
 
 interface InsightsData {
   summary: string;
@@ -14,27 +15,17 @@ interface InsightsData {
 
 function SkeletonCard({ height = 80 }: { height?: number }) {
   return (
-    <div style={{
-      background: 'var(--bg-1)', borderRadius: 'var(--r-card, 16px)',
-      border: '1px solid var(--border-1)', padding: 18, height,
-      animation: 'skeletonPulse 1.5s infinite ease-in-out',
-    }}>
-      <div style={{ width: '40%', height: 12, borderRadius: 6, background: 'var(--bg-3)', marginBottom: 12 }} />
-      <div style={{ width: '90%', height: 10, borderRadius: 5, background: 'var(--bg-3)', marginBottom: 8 }} />
-      <div style={{ width: '70%', height: 10, borderRadius: 5, background: 'var(--bg-3)' }} />
+    <div className="ai-insights__skeleton" style={{ height }}>
+      <div className="ai-insights__skeleton-bar ai-insights__skeleton-bar--short" />
+      <div className="ai-insights__skeleton-bar ai-insights__skeleton-bar--long" />
+      <div className="ai-insights__skeleton-bar ai-insights__skeleton-bar--medium" />
     </div>
   );
 }
 
-function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div style={{
-      background: 'var(--bg-1)',
-      border: '1px solid var(--border-1)',
-      borderRadius: 'var(--r-card, 16px)',
-      padding: 18,
-      ...style,
-    }}>
+    <div className={`ai-insights__card ${className ?? ''}`}>
       {children}
     </div>
   );
@@ -42,12 +33,9 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
 
 function CardHeader({ icon, label, color }: { icon: React.ReactNode; label: string; color?: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+    <div className="ai-insights__card-header">
       {icon}
-      <span style={{
-        fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 14,
-        color: color ?? 'var(--text-1)', textTransform: 'uppercase', letterSpacing: 0.5,
-      }}>
+      <span className="ai-insights__card-label" style={{ color: color ?? 'var(--text-1)' }}>
         {label}
       </span>
     </div>
@@ -56,14 +44,11 @@ function CardHeader({ icon, label, color }: { icon: React.ReactNode; label: stri
 
 function BulletList({ items, color }: { items: string[]; color?: string }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div className="ai-insights__bullet-list">
       {items.map((item, i) => (
-        <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: 3, flexShrink: 0, marginTop: 6,
-            background: color ?? 'var(--text-3)',
-          }} />
-          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5 }}>
+        <div key={i} className="ai-insights__bullet-item">
+          <span className="ai-insights__bullet-dot" style={{ background: color ?? 'var(--text-3)' }} />
+          <span className="ai-insights__bullet-text">
             {item}
           </span>
         </div>
@@ -83,29 +68,24 @@ export function AiInsights({ fabKind: _fabKind, onBack }: { fabKind: FabKind; on
   const headerLabel = `Insights \u00b7 ${monthLabelShort(monthKey)}`;
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-0)' }}>
+    <div className="ai-insights">
       <IOSStatusBar />
 
       {/* Header */}
-      <div style={{
-        padding: '8px 16px 12px',
-        display: 'flex', alignItems: 'center', gap: 10,
-        borderBottom: '1px solid var(--border-1)',
-        background: 'var(--bg-1)',
-      }}>
+      <div className="ai-insights__header">
         {onBack && (
-          <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+          <button onClick={onBack} className="ai-insights__back-btn">
             <Icons.chevL size={20} color="var(--text-2)" />
           </button>
         )}
         <Icons.alert size={20} color="var(--pos)" />
-        <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 17, color: 'var(--text-1)' }}>
+        <span className="ai-insights__title">
           {headerLabel}
         </span>
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div className="ai-insights__content">
         {!data ? (
           <>
             <SkeletonCard height={100} />
@@ -121,10 +101,7 @@ export function AiInsights({ fabKind: _fabKind, onBack }: { fabKind: FabKind; on
                 icon={<Icons.trending size={18} color="var(--pos)" />}
                 label="Resumo"
               />
-              <p style={{
-                fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--text-1)',
-                lineHeight: 1.6, margin: 0,
-              }}>
+              <p className="ai-insights__summary">
                 {data.summary}
               </p>
             </Card>
@@ -139,10 +116,7 @@ export function AiInsights({ fabKind: _fabKind, onBack }: { fabKind: FabKind; on
             </Card>
 
             {/* Alerts */}
-            <Card style={{
-              background: 'color-mix(in oklch, var(--neg) 8%, var(--bg-1))',
-              borderColor: 'color-mix(in oklch, var(--neg) 25%, var(--border-1))',
-            }}>
+            <Card className="ai-insights__card--alerts">
               <CardHeader
                 icon={<Icons.alert size={18} color="var(--neg)" />}
                 label="Alertas"
@@ -152,10 +126,7 @@ export function AiInsights({ fabKind: _fabKind, onBack }: { fabKind: FabKind; on
             </Card>
 
             {/* Tips */}
-            <Card style={{
-              background: 'color-mix(in oklch, var(--pos) 8%, var(--bg-1))',
-              borderColor: 'color-mix(in oklch, var(--pos) 25%, var(--border-1))',
-            }}>
+            <Card className="ai-insights__card--tips">
               <CardHeader
                 icon={<Icons.trending size={18} color="var(--pos)" />}
                 label="Dicas"
@@ -166,13 +137,6 @@ export function AiInsights({ fabKind: _fabKind, onBack }: { fabKind: FabKind; on
           </>
         )}
       </div>
-
-      <style>{`
-        @keyframes skeletonPulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
     </div>
   );
 }

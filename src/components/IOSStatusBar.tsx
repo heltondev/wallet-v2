@@ -1,4 +1,5 @@
 import React from 'react';
+import './IOSStatusBar.scss';
 
 interface IOSStatusBarProps {
   dark?: boolean;
@@ -8,18 +9,11 @@ interface IOSStatusBarProps {
 export const IOSStatusBar: React.FC<IOSStatusBarProps> = ({ dark = false, time = '9:41' }) => {
   const c = dark ? '#fff' : '#000';
   return (
-    <div className="ios-status-bar" style={{
-      display: 'flex', gap: 154, alignItems: 'center', justifyContent: 'center',
-      padding: '21px 24px 19px', boxSizing: 'border-box',
-      position: 'relative', zIndex: 20, width: '100%',
-    }}>
-      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 1.5 }}>
-        <span style={{
-          fontFamily: '-apple-system, "SF Pro", system-ui', fontWeight: 590,
-          fontSize: 17, lineHeight: '22px', color: c,
-        }}>{time}</span>
+    <div className="ios-status-bar">
+      <div className="ios-status-bar__section ios-status-bar__time-section">
+        <span className="ios-status-bar__time" style={{ color: c }}>{time}</span>
       </div>
-      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, paddingTop: 1, paddingRight: 1 }}>
+      <div className="ios-status-bar__section ios-status-bar__icons-section">
         <svg width="19" height="12" viewBox="0 0 19 12">
           <rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7" fill={c}/>
           <rect x="4.8" y="5" width="3.2" height="7" rx="0.7" fill={c}/>
