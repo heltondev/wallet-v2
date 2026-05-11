@@ -19,8 +19,8 @@ import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL } from './utils/formatters';
 import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
-import { listTransactions, createTransaction, listAccounts, getSettings, generateRecurring, listWorkspaces } from './lib/api';
-import type { Transaction, Account, Workspace, TabId, FabKind, ToastData, CurrencyCode } from './types';
+import { listTransactions, createTransaction, listAccounts, getSettings, generateRecurring, listWorkspaces, listRecurring } from './lib/api';
+import type { Transaction, Account, Workspace, RecurringTransaction, TabId, FabKind, ToastData, CurrencyCode } from './types';
 import './App.scss';
 
 
@@ -58,6 +58,7 @@ export function App() {
   const [sheet, setSheet] = useState(false);
   const [tx, setTx] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [recurringItems, setRecurringItems] = useState<RecurringTransaction[]>([]);
   const [toast, setToast] = useState<ToastData | null>(null);
   const [subScreen, setSubScreen] = useState<string | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -100,9 +101,12 @@ export function App() {
 
   const loadData = async () => {
     try {
-      const [txData, accData, settingsData, wsData] = await Promise.all([listTransactions(), listAccounts(), getSettings(), listWorkspaces()]);
+      const [txData, accData, settingsData, wsData, recData] = await Promise.all([
+        listTransactions(), listAccounts(), getSettings(), listWorkspaces(), listRecurring(),
+      ]);
       setTx(txData as unknown as Transaction[]);
       setAccounts(accData as unknown as Account[]);
+      setRecurringItems(recData as unknown as RecurringTransaction[]);
       if (settingsData.theme) setTheme(settingsData.theme as 'dark' | 'light');
       if (settingsData.currency) setCurrency(settingsData.currency as 'BRL' | 'USD');
       if (settingsData.monthlyBudget) setMonthlyBudget(settingsData.monthlyBudget as number);
@@ -230,7 +234,7 @@ export function App() {
           />
         )}
         {tab === 'forecast' && (
-          <PrevisaoA tx={filteredTx} currency={activeCurrency} workspaceId={activeWorkspace} />
+          <PrevisaoA tx={filteredTx} recurring={recurringItems} currency={activeCurrency} monthlyBudget={activeBudget} workspaceId={activeWorkspace} />
         )}
         {tab === 'cats' && (
           <CategoriasScreen tx={filteredTx} currency={activeCurrency} workspaceId={activeWorkspace} />

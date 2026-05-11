@@ -81,11 +81,69 @@
 		line-height: 1;
 	}
 
-	&__balance-note {
+	&__balance-sub {
 		font-size: 12px;
 		color: var(--text-3);
-		margin-top: 8px;
-		line-height: 1.45;
+		font-family: var(--font-mono);
+		margin-top: 6px;
+	}
+
+	&__empty-card {
+		margin: 0 16px;
+		padding: 24px 20px;
+		background: var(--bg-1);
+		border: 1px solid var(--border-1);
+		border-radius: var(--r-card);
+	}
+
+	&__empty-title {
+		font-size: 18px;
+		font-weight: 600;
+		color: var(--text-1);
+		margin-bottom: 8px;
+	}
+
+	&__empty-text {
+		font-size: 13px;
+		color: var(--text-3);
+		line-height: 1.5;
+	}
+
+	// Recurring list
+	&__recurring-list {
+		margin: 4px 16px 14px;
+		background: var(--bg-1);
+		border: 1px solid var(--border-1);
+		border-radius: var(--r-card-sm);
+	}
+
+	&__recurring-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 14px;
+
+		&:not(:last-child) {
+			border-bottom: 1px solid var(--border-1);
+		}
+	}
+
+	&__recurring-desc {
+		flex: 1;
+		font-size: 13.5px;
+		color: var(--text-1);
+		font-weight: 500;
+	}
+
+	&__recurring-amount {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-1);
+		white-space: nowrap;
+
+		&--pos {
+			color: var(--pos);
+		}
 	}
 
 	// Categories section
