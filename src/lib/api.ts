@@ -26,6 +26,9 @@ export const createTransaction = (data: Record<string, unknown>) =>
 export const listTransactions = (month?: string) =>
   apiFetch<Record<string, unknown>[]>(month ? `/transactions?month=${month}` : '/transactions');
 
+export const updateTransaction = (id: string, month: string, data: Record<string, unknown>) =>
+  apiFetch<Record<string, unknown>>(`/transactions/${id}?month=${month}`, { method: 'PUT', body: JSON.stringify({ month, ...data }) });
+
 export const deleteTransaction = (id: string) =>
   apiFetch<void>(`/transactions/${id}`, { method: 'DELETE' });
 
@@ -66,6 +69,17 @@ export const aiInsights = (month: string) =>
 
 export const aiChat = (message: string) =>
   apiFetch<{ reply: string }>('/ai/chat', { method: 'POST', body: JSON.stringify({ message }) });
+
+// Receipts
+export const getUploadUrl = (txId: string, fileName: string, contentType: string) =>
+  apiFetch<{ uploadUrl: string; key: string }>('/receipts/upload-url', { method: 'POST', body: JSON.stringify({ txId, fileName, contentType }) });
+
+export const getReceiptUrl = (txId: string) =>
+  apiFetch<{ downloadUrl: string; fileName: string; contentType: string }>(`/receipts/${txId}`);
+
+export const uploadFileToS3 = async (url: string, file: File) => {
+  await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+};
 
 // Admin
 export const getAdminCosts = () =>

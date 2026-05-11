@@ -3,7 +3,7 @@ import { Icons } from '../components/icons/Icons';
 import { CATS } from '../data/categories';
 import { FX } from '../data/constants';
 import { NumericKeypad } from '../components/NumericKeypad';
-import { aiExtractReceipt } from '../lib/api';
+import { aiExtractReceipt, getUploadUrl, uploadFileToS3, updateTransaction } from '../lib/api';
 import type { Account, CurrencyCode } from '../types';
 
 const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = { BRL: 'R$', USD: '$', EUR: '€' };
@@ -34,7 +34,7 @@ interface AddSheetSaveData {
 }
 
 interface AddSheetProps {
-  open: boolean; onClose: () => void; onSave: (data: AddSheetSaveData) => void; accounts: Account[];
+  open: boolean; onClose: () => void; onSave: (data: AddSheetSaveData) => Promise<string | undefined>; accounts: Account[];
 }
 
 export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
@@ -55,6 +55,11 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
+  // Receipt attachment state
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptUploading, setReceiptUploading] = useState(false);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
+
   const selectedAccount = accounts.find(a => a.id === accountId);
   const allCatKeys = Object.keys(CATS).filter(k => k !== 'salario' && k !== 'freelance');
 
@@ -63,6 +68,7 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
     setAccountId(accounts[0]?.id ?? ''); setCurrency(accounts[0]?.currency ?? 'BRL');
     setSelectedDate(new Date().toISOString().slice(0, 10));
     setFiles([]); setAiText(''); setAiExpanded(false); setAiLoading(false); setAiDone(false);
+    setReceiptFile(null); setReceiptUploading(false);
   };
 
   useEffect(() => { if (open) reset(); }, [open]);
@@ -160,16 +166,30 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
   const secondaryCurrency: CurrencyCode = currency === 'BRL' ? 'USD' : 'BRL';
   const secondaryAmount = currency === 'BRL' ? numAmount / FX : numAmount * fxRate;
 
-  const handleSave = (andAnother: boolean) => {
+  const handleSave = async (andAnother: boolean) => {
     if (numAmount <= 0) return;
     const signedAmount = positive ? numAmount : -numAmount;
     const finalCat = positive ? 'salario' : cat;
-    onSave({
+    const txId = await onSave({
       desc: desc || (positive ? 'Entrada' : CATS[finalCat]?.label ?? finalCat),
       cat: finalCat, amount: signedAmount, currency, fxRate,
       account: selectedAccount?.name ?? accounts[0]?.name ?? 'Cash',
       ...dateToFields(selectedDate),
     });
+    // Upload receipt if attached
+    if (txId && receiptFile) {
+      setReceiptUploading(true);
+      try {
+        const { uploadUrl, key } = await getUploadUrl(txId, receiptFile.name, receiptFile.type);
+        await uploadFileToS3(uploadUrl, receiptFile);
+        const month = selectedDate.slice(0, 7);
+        await updateTransaction(txId, month, { receiptKey: key, receiptName: receiptFile.name });
+      } catch {
+        // Receipt upload failed but transaction was saved
+      } finally {
+        setReceiptUploading(false);
+      }
+    }
     if (andAnother) reset(); else onClose();
   };
 
@@ -308,6 +328,31 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
             </div>
           )}
         </div>
+
+        {/* Receipt attachment */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 14px', marginBottom: 14,
+          border: '1px solid var(--border-1)', borderRadius: 12,
+          background: 'var(--bg-0)', cursor: 'pointer',
+        }} onClick={() => receiptInputRef.current?.click()}>
+          <Icons.download size={16} color={receiptFile ? 'var(--pos)' : 'var(--text-3)'} />
+          <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: receiptFile ? 'var(--text-1)' : 'var(--text-3)', fontFamily: 'var(--font-sans)' }}>
+            {receiptUploading ? 'Enviando...' : receiptFile ? receiptFile.name : 'Anexar comprovante'}
+          </span>
+          {receiptFile && (
+            <button onClick={(e) => { e.stopPropagation(); setReceiptFile(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+              <Icons.x size={14} color="var(--text-4)" />
+            </button>
+          )}
+        </div>
+        <input
+          ref={receiptInputRef}
+          type="file"
+          accept="image/*,application/pdf"
+          onChange={e => { if (e.target.files?.[0]) setReceiptFile(e.target.files[0]); }}
+          style={{ display: 'none' }}
+        />
 
         {/* Amount display */}
         <div style={{ textAlign: 'center', padding: '10px 0 12px' }}>

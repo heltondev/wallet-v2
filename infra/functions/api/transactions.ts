@@ -35,6 +35,8 @@ async function createTransaction(event: APIGatewayProxyEvent, userId: string): P
     createdAt: now.toISOString(),
   };
   if (fxRate != null) item.fxRate = fxRate;
+  if (body.receiptKey) item.receiptKey = body.receiptKey;
+  if (body.receiptName) item.receiptName = body.receiptName;
 
   await putItem(item);
   return created(event, item);
@@ -71,7 +73,7 @@ async function updateTransaction(event: APIGatewayProxyEvent, userId: string): P
   const existing = await getItem(`USER#${userId}`, sk);
   if (!existing) return notFound(event, 'Transaction not found');
 
-  const { day, desc, cat, amount, currency, account, fxRate } = body;
+  const { day, desc, cat, amount, currency, account, fxRate, receiptKey, receiptName } = body;
   const attrs: Record<string, unknown> = {};
   if (day !== undefined) attrs.day = day;
   if (desc !== undefined) attrs.desc = desc;
@@ -80,6 +82,8 @@ async function updateTransaction(event: APIGatewayProxyEvent, userId: string): P
   if (currency !== undefined) attrs.currency = currency;
   if (account !== undefined) attrs.account = account;
   if (fxRate !== undefined) attrs.fxRate = fxRate;
+  if (receiptKey !== undefined) attrs.receiptKey = receiptKey;
+  if (receiptName !== undefined) attrs.receiptName = receiptName;
   attrs.updatedAt = new Date().toISOString();
 
   await updateItem(`USER#${userId}`, sk, attrs);

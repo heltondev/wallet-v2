@@ -1,4 +1,4 @@
-import { Duration, Stack, StackProps } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import {
   AuthorizationType,
   CognitoUserPoolsAuthorizer,
@@ -12,12 +12,14 @@ import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { BlockPublicAccess, Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-import { name } from './naming';
+import { bucketName, name } from './naming';
 import * as path from 'path';
 
 interface ApiStackProps extends StackProps {
   env_name: string;
+  accountId: string;
   table: Table;
   userPool: UserPool;
   allowedOrigins: string[];
@@ -27,7 +29,22 @@ export class ApiStack extends Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const { env_name, table, userPool, allowedOrigins } = props;
+    const { env_name, accountId, table, userPool, allowedOrigins } = props;
+
+    // Receipts S3 bucket
+    const receiptsBucket = new Bucket(this, 'ReceiptsBucket', {
+      bucketName: bucketName(env_name, 'receipts', accountId),
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: RemovalPolicy.RETAIN,
+      cors: [
+        {
+          allowedMethods: [HttpMethods.PUT, HttpMethods.GET],
+          allowedOrigins: allowedOrigins,
+          allowedHeaders: ['*'],
+          maxAge: 3600,
+        },
+      ],
+    });
 
     const api = new RestApi(this, 'Api', {
       restApiName: name(env_name, 'api', 'main'),
@@ -77,6 +94,7 @@ export class ApiStack extends Stack {
 
     // Transactions
     const transactionsFn = buildHandler('TransactionsFn', 'transactions', 'functions/api/transactions.ts');
+    transactionsFn.addEnvironment('RECEIPTS_BUCKET', receiptsBucket.bucketName);
     const transactions = api.root.addResource('transactions');
     transactions.addMethod('POST', new LambdaIntegration(transactionsFn), authOptions);
     transactions.addMethod('GET', new LambdaIntegration(transactionsFn), authOptions);
@@ -84,6 +102,14 @@ export class ApiStack extends Stack {
     transactionById.addMethod('GET', new LambdaIntegration(transactionsFn), authOptions);
     transactionById.addMethod('PUT', new LambdaIntegration(transactionsFn), authOptions);
     transactionById.addMethod('DELETE', new LambdaIntegration(transactionsFn), authOptions);
+
+    // Receipts
+    const receiptsFn = buildHandler('ReceiptsFn', 'receipts', 'functions/api/receipts.ts');
+    receiptsFn.addEnvironment('RECEIPTS_BUCKET', receiptsBucket.bucketName);
+    receiptsBucket.grantReadWrite(receiptsFn);
+    const receipts = api.root.addResource('receipts');
+    receipts.addResource('upload-url').addMethod('POST', new LambdaIntegration(receiptsFn), authOptions);
+    receipts.addResource('{txId}').addMethod('GET', new LambdaIntegration(receiptsFn), authOptions);
 
     // Accounts
     const accountsFn = buildHandler('AccountsFn', 'accounts', 'functions/api/accounts.ts');

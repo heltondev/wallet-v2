@@ -1,6 +1,7 @@
 import { CATS } from '../data/categories';
 import { fmtAmount, convertAmount } from '../utils/formatters';
 import { CategoryIcon } from './CategoryIcon';
+import { Icons } from './icons/Icons';
 import type { Transaction, CurrencyCode } from '../types';
 
 interface TransactionRowProps {
@@ -35,8 +36,10 @@ export function TransactionRow({ tx, compact = false, onClick, displayCurrency =
           fontSize:14.5,fontWeight:600,
           color: positive?'var(--pos)':'var(--text-1)',
           letterSpacing:-0.2,
+          display:'flex',alignItems:'center',justifyContent:'flex-end',gap:4,
         }}>
-          {positive?'+':'\u2212'}{fmtAmount(Math.abs(tx.amount), tx.currency).replace('\u2212','')}
+          {tx.receiptKey && <Icons.download size={12} color="var(--text-4)" />}
+          <span>{positive?'+':'\u2212'}{fmtAmount(Math.abs(tx.amount), tx.currency).replace('\u2212','')}</span>
         </div>
         {showConversion && convertedAmount !== null && (
           <div className="money" style={{fontSize:11,color:'var(--text-4)',marginTop:1,fontFamily:'var(--font-mono)'}}>

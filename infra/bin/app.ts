@@ -35,6 +35,7 @@ auth.addDependency(database);
 const api = new ApiStack(app, `wallet-${env_name}-api`, {
   env,
   env_name,
+  accountId: account || '',
   table: database.table,
   userPool: auth.userPool,
   allowedOrigins: [`https://${DOMAIN_NAME}`, 'http://localhost:5173'],

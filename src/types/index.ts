@@ -12,6 +12,8 @@ export interface Transaction {
   fxRate: number;
   account: string;
   amount_usd?: number;
+  receiptKey?: string;
+  receiptName?: string;
 }
 
 export interface Account {

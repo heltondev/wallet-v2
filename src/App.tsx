@@ -114,17 +114,19 @@ export function App() {
     root.style.setProperty('--pos-bg', `color-mix(in oklch, ${accent} 18%, transparent)`);
   }, [accent]);
 
-  const onSave = async (data: { desc: string; cat: string; amount: number; currency: CurrencyCode; fxRate: number; account: string; date?: string; day?: string; wd?: string }) => {
+  const onSave = async (data: { desc: string; cat: string; amount: number; currency: CurrencyCode; fxRate: number; account: string; date?: string; day?: string; wd?: string }): Promise<string | undefined> => {
     try {
       const fields = data.date ? data : { ...txDateFields(), ...data };
-      await createTransaction(fields);
+      const result = await createTransaction(fields);
       showToast(data.desc, data.amount);
       // Re-fetch to get server-assigned id
       const txData = await listTransactions();
       setTx(txData as unknown as Transaction[]);
+      return result.id as string;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao salvar';
       showToast(msg, 0);
+      return undefined;
     }
   };
 
