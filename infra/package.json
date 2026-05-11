@@ -6,9 +6,9 @@
     "build": "tsc",
     "cdk": "cdk",
     "synth": "cdk synth",
-    "deploy": "cdk deploy --all --profile personal",
-    "diff": "cdk diff --profile personal",
-    "destroy": "cdk destroy --all --profile personal"
+    "deploy": "cdk deploy --all --profile default",
+    "diff": "cdk diff --profile default",
+    "destroy": "cdk destroy --all --profile default"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.1032.0",

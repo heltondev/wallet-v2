@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { aiChat } from '../utils/api';

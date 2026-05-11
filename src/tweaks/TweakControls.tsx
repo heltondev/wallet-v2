@@ -1,4 +1,4 @@
-import { useState, useRef, type ReactNode } from 'react';
+import React, { useState, useRef, type ReactNode } from 'react';
 import './tweaks.css';
 
 /* ── Layout helpers ──────────────────────────────────────────── */

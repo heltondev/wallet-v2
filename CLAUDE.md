@@ -123,14 +123,14 @@ Track and display AWS infrastructure costs:
 ### Frontend
 ```bash
 npm run build
-aws s3 sync dist/ s3://<bucket-name> --delete --profile personal
-aws cloudfront create-invalidation --distribution-id <id> --paths "/*" --profile personal
+aws s3 sync dist/ s3://<bucket-name> --delete --profile default
+aws cloudfront create-invalidation --distribution-id <id> --paths "/*" --profile default
 ```
 
 ### Backend (CDK)
 ```bash
 cd infra
-cdk deploy --profile personal
+cdk deploy --profile default
 ```
 
 ### Smart Deploy Script
@@ -186,7 +186,7 @@ infra/                # AWS CDK stacks
 6. **Never catch errors silently** — recover, re-throw, or surface to user
 7. **Every list MUST have search/filter** — as lists grow, this becomes mandatory
 8. **Tabular numerals everywhere** — `font-variant-numeric: tabular-nums` on all monetary values
-9. **AWS profile:** Always use `--profile personal` for all AWS CLI and CDK commands
+9. **AWS profile:** Always use `--profile default` for all AWS CLI and CDK commands
 10. **No `.env.production` files** — they override VITE defaults in CI. Use CI environment variables
 11. **Amount formatting:** BRL with `pt-BR` locale, 2 decimal places. USD secondary with conversion at FX rate
 12. **Never use `t` as a loop variable** — conflicts with `useTranslation()` hook's `t` function
@@ -209,4 +209,4 @@ infra/                # AWS CDK stacks
 
 ## AWS Profile
 
-**ALWAYS** use `--profile personal` for all AWS CLI and CDK commands. Never use the default profile or WineCommerce profile. This is a personal project.
+**ALWAYS** use `--profile default` for all AWS CLI and CDK commands. Never use the default profile or WineCommerce profile. This is a personal project.

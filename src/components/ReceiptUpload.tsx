@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Icons } from './icons/Icons';
 import { CATS } from '../data/categories';
 import { fmtAmount } from '../utils/formatters';

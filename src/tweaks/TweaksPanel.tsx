@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, type ReactNode } from 'react';
+import React, { useRef, useCallback, useEffect, type ReactNode } from 'react';
 import './tweaks.css';
 
 interface TweaksPanelProps {

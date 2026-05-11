@@ -8,6 +8,7 @@ import { AjustesScreen } from './screens/AjustesScreen';
 import { AiChat } from './screens/AiChat';
 import { AiInsights } from './screens/AiInsights';
 import { AdminCosts } from './screens/AdminCosts';
+import { ReceiptScreen } from './screens/ReceiptScreen';
 import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL } from './utils/formatters';
@@ -148,6 +149,24 @@ export function App() {
         {subScreen === 'admin-costs' && (
           <div style={{ height: '100%', position: 'relative' }}>
             <AdminCosts fabKind={fab} onBack={() => setSubScreen(null)} />
+          </div>
+        )}
+        {subScreen === 'ai-receipt' && (
+          <div style={{ height: '100%', position: 'relative' }}>
+            <ReceiptScreen fabKind={fab} onBack={() => setSubScreen(null)} onSave={(data) => {
+              const newId = Math.max(...tx.map((item) => item.id)) + 1;
+              setTx([{
+                id: newId, day: '14', wd: 'qua',
+                desc: data.desc ?? 'Recibo',
+                cat: data.cat ?? 'outros',
+                amount: data.amount ?? 0,
+                currency: data.currency ?? 'BRL',
+                fxRate: data.fxRate ?? 1,
+                account: data.account ?? 'Itaú · Débito',
+              }, ...tx]);
+              setToast({ desc: data.desc ?? 'Recibo', amount: data.amount ?? 0 });
+              setTimeout(() => setToast(null), 2200);
+            }} />
           </div>
         )}
 

@@ -1,3 +1,4 @@
+import type { ReactNode, ComponentType } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { BottomTabBar } from '../components/BottomTabBar';
@@ -13,7 +14,7 @@ interface RowProps {
 
 interface SectionProps {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 interface AjustesScreenProps {
@@ -23,7 +24,7 @@ interface AjustesScreenProps {
 
 export function AjustesScreen({ fabKind = 'circle', onNavigate }: AjustesScreenProps) {
   const Row = ({ label, detail, icon, last, danger }: RowProps) => {
-    const Ic = icon ? (Icons as Record<string, React.ComponentType<{ size?: number; color?: string; stroke?: number }>>)[icon] : null;
+    const Ic = icon ? (Icons as Record<string, ComponentType<{ size?: number; color?: string; stroke?: number }>>)[icon] : null;
     return (
       <div style={{display:'flex',alignItems:'center',gap:12,padding:'14px 16px',borderBottom: last?'none':'1px solid var(--border-1)'}}>
         {Ic && <Ic size={17} color={danger?'var(--neg)':'var(--text-2)'} stroke={1.8}/>}
