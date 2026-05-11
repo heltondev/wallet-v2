@@ -166,10 +166,15 @@ export class ApiStack extends Stack {
 
     // Workspaces
     const workspacesFn = buildHandler('WorkspacesFn', 'workspaces', 'functions/api/workspaces.ts');
-    const workspaces = api.root.addResource('workspaces');
+    const corsOptions = {
+      allowOrigins: allowedOrigins,
+      allowMethods: Cors.ALL_METHODS,
+      allowHeaders: ['Content-Type', 'Authorization'],
+    };
+    const workspaces = api.root.addResource('workspaces', { defaultCorsPreflightOptions: corsOptions });
     workspaces.addMethod('POST', new LambdaIntegration(workspacesFn), authOptions);
     workspaces.addMethod('GET', new LambdaIntegration(workspacesFn), authOptions);
-    const workspaceById = workspaces.addResource('{id}');
+    const workspaceById = workspaces.addResource('{id}', { defaultCorsPreflightOptions: corsOptions });
     workspaceById.addMethod('PUT', new LambdaIntegration(workspacesFn), authOptions);
     workspaceById.addMethod('DELETE', new LambdaIntegration(workspacesFn), authOptions);
 

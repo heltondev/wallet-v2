@@ -612,13 +612,26 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
                 />
               </div>
               <div className="manage-recurring__field">
-                <label className="manage-recurring__label">Fim (opcional)</label>
-                <input
-                  type="date"
-                  value={form.endDate}
-                  onChange={e => setField('endDate', e.target.value)}
-                  className="manage-recurring__input"
-                />
+                <label className="manage-recurring__label">Duração</label>
+                <select
+                  value={form.endDate ? 'fixed' : 'forever'}
+                  onChange={e => {
+                    if (e.target.value === 'forever') setField('endDate', '');
+                    else setField('endDate', new Date().toISOString().slice(0, 10));
+                  }}
+                  className="manage-recurring__select"
+                >
+                  <option value="forever">Indeterminado</option>
+                  <option value="fixed">Prazo final</option>
+                </select>
+                {form.endDate && (
+                  <input
+                    type="date"
+                    value={form.endDate}
+                    onChange={e => setField('endDate', e.target.value)}
+                    className="manage-recurring__input manage-recurring__input--date-below"
+                  />
+                )}
               </div>
             </div>
 

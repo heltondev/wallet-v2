@@ -218,6 +218,10 @@
 
 	&__input {
 		@include input;
+
+		&--date-below {
+			margin-top: 8px;
+		}
 	}
 
 	&__select {
