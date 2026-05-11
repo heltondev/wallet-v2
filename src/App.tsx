@@ -5,6 +5,8 @@ import { AddSheet } from './screens/AddSheet';
 import { PrevisaoA } from './screens/PrevisaoA';
 import { CategoriasScreen } from './screens/CategoriasScreen';
 import { AjustesScreen } from './screens/AjustesScreen';
+import { AiChat } from './screens/AiChat';
+import { AiInsights } from './screens/AiInsights';
 import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL } from './utils/formatters';
@@ -46,6 +48,7 @@ export function App() {
   const [accounts] = useState(INITIAL_ACCOUNTS);
   const [toast, setToast] = useState<ToastData | null>(null);
   const [tweaksOpen, setTweaksOpen] = useState(false);
+  const [subScreen, setSubScreen] = useState<string | null>(null);
 
   // Apply theme attribute
   useEffect(() => {
@@ -120,15 +123,25 @@ export function App() {
             />
           </div>
         )}
-        {tab === 'settings' && (
+        {tab === 'settings' && !subScreen && (
           <div style={{ height: '100%', position: 'relative' }}>
-            <AjustesScreen fabKind={fab} />
+            <AjustesScreen fabKind={fab} onNavigate={(s) => setSubScreen(s)} />
             <TabIntercept
               active="settings"
               fabKind={fab}
-              onChange={(id) => setTab(id as TabId)}
+              onChange={(id) => { setSubScreen(null); setTab(id as TabId); }}
               onAdd={() => setSheet(true)}
             />
+          </div>
+        )}
+        {subScreen === 'ai-chat' && (
+          <div style={{ height: '100%', position: 'relative' }}>
+            <AiChat fabKind={fab} onBack={() => setSubScreen(null)} />
+          </div>
+        )}
+        {subScreen === 'ai-insights' && (
+          <div style={{ height: '100%', position: 'relative' }}>
+            <AiInsights fabKind={fab} onBack={() => setSubScreen(null)} />
           </div>
         )}
 

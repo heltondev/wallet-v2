@@ -1,4 +1,3 @@
-import React from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { BottomTabBar } from '../components/BottomTabBar';
@@ -19,9 +18,10 @@ interface SectionProps {
 
 interface AjustesScreenProps {
   fabKind?: FabKind;
+  onNavigate?: (screen: string) => void;
 }
 
-export function AjustesScreen({ fabKind = 'circle' }: AjustesScreenProps) {
+export function AjustesScreen({ fabKind = 'circle', onNavigate }: AjustesScreenProps) {
   const Row = ({ label, detail, icon, last, danger }: RowProps) => {
     const Ic = icon ? (Icons as Record<string, React.ComponentType<{ size?: number; color?: string; stroke?: number }>>)[icon] : null;
     return (
@@ -67,6 +67,17 @@ export function AjustesScreen({ fabKind = 'circle' }: AjustesScreenProps) {
         <Section title="DADOS">
           <Row label="Exportar (CSV / OFX)" icon="download"/>
           <Row label="Backup automático" detail="Ativo" icon="cloud" last/>
+        </Section>
+        <Section title="INTELIGÊNCIA ARTIFICIAL">
+          <div onClick={() => onNavigate?.('ai-chat')} style={{cursor:'pointer'}}>
+            <Row label="Assistente financeiro" detail="Chat" icon="alert"/>
+          </div>
+          <div onClick={() => onNavigate?.('ai-insights')} style={{cursor:'pointer'}}>
+            <Row label="Insights do mês" icon="trending"/>
+          </div>
+          <div onClick={() => onNavigate?.('ai-receipt')} style={{cursor:'pointer'}}>
+            <Row label="Escanear recibo" icon="search" last/>
+          </div>
         </Section>
         <Section title="SUPORTE">
           <Row label="Sobre" last/>
