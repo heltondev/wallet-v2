@@ -125,9 +125,19 @@ body {
     display: none !important;
   }
 
-  /* Extra bottom padding for safe area + tab bar */
-  .no-scrollbar {
-    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
+  /* Let content scroll past the fixed tab bar */
+  .phone-surface {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+  }
+
+  .phone-surface > div[style] {
+    height: auto !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    overflow: visible !important;
   }
 }
 
