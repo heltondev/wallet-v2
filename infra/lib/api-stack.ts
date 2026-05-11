@@ -169,6 +169,13 @@ export class ApiStack extends Stack {
         resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/wallet/*`],
       }),
     );
+    aiFn.addToRolePolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: ['lambda:InvokeFunction'],
+        resources: [aiFn.functionArn],
+      }),
+    );
     const ai = api.root.addResource('ai');
     ai.addResource('categorize').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
     const aiIntegration = new LambdaIntegration(aiFn, { timeout: Duration.seconds(29) });
@@ -178,6 +185,8 @@ export class ApiStack extends Stack {
     ai.addResource('chat').addMethod('POST', aiIntegration, authOptions);
     ai.addResource('learn-category').addMethod('POST', aiIntegration, authOptions);
     ai.addResource('extract-recurring').addMethod('POST', aiIntegration, authOptions);
+    const aiJobs = ai.addResource('jobs');
+    aiJobs.addResource('{jobId}').addMethod('GET', new LambdaIntegration(aiFn), authOptions);
 
     // Recurring
     const recurringFn = buildHandler('RecurringFn', 'recurring', 'functions/api/recurring.ts');

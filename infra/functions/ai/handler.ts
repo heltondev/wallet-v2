@@ -1,8 +1,9 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { extractAuth } from '../shared/auth';
 import { getItem, putItem, queryItems, updateItem } from '../shared/dynamo';
-import { ok, badRequest, serverError, tooManyRequests } from '../shared/response';
+import { ok, badRequest, notFound, serverError, tooManyRequests } from '../shared/response';
 
 async function loadPrompt(feature: string): Promise<string> {
   const item = await getItem('GLOBAL', `PROMPT#${feature}`);
@@ -315,43 +316,106 @@ function buildExtractPrompt(
 
 async function extractReceipt(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
   const body = JSON.parse(event.body ?? '{}');
-  const { files, text } = body as {
+  const { files, text, jobId: existingJobId } = body as {
     files?: { base64: string; mimeType: string }[];
     text?: string;
+    jobId?: string;
   };
+
+  // Async worker invocation — do the actual work
+  if (existingJobId) {
+    return processExtractReceipt(event, userId, existingJobId, files, text);
+  }
 
   if ((!files || files.length === 0) && !text?.trim()) {
     return badRequest(event, 'At least one file or text is required');
   }
 
-  const [basePrompt, userContext] = await Promise.all([
-    loadPrompt('extract-receipt'),
-    loadUserContext(userId),
-  ]);
+  const jobId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-  const systemPrompt = buildExtractPrompt(basePrompt, userContext);
-
-  // Build user content array — PDFs as file, images as image_url
-  const userContent: ContentPart[] = [];
-
-  if (text?.trim()) {
-    userContent.push({ type: 'text', text: text.trim() });
-  } else {
-    userContent.push({ type: 'text', text: 'Extract all transactions from the provided document(s).' });
-  }
-
-  if (files) {
-    userContent.push(...buildFileContent(files));
-  }
-
-  const model = 'gpt-4o';
-  const result = await callOpenAi(systemPrompt, userContent, model, {
-    responseFormat: 'json',
-    maxTokens: 8000,
+  await putItem({
+    PK: 'GLOBAL',
+    SK: `AI_JOB#${jobId}`,
+    jobId,
+    userId,
+    status: 'processing',
+    feature: 'extract-receipt',
+    createdAt: new Date().toISOString(),
   });
 
-  await logUsage('extract-receipt', model, result.promptTokens, result.completionTokens);
-  return ok(event, JSON.parse(result.content));
+  const lambda = new LambdaClient({});
+  await lambda.send(new InvokeCommand({
+    FunctionName: process.env.AWS_LAMBDA_FUNCTION_NAME!,
+    InvocationType: 'Event',
+    Payload: new TextEncoder().encode(JSON.stringify({
+      ...event,
+      body: JSON.stringify({ ...body, jobId }),
+    })),
+  }));
+
+  return ok(event, { jobId, status: 'processing' });
+}
+
+async function processExtractReceipt(
+  event: APIGatewayProxyEvent,
+  userId: string,
+  jobId: string,
+  files?: { base64: string; mimeType: string }[],
+  text?: string,
+): Promise<APIGatewayProxyResult> {
+  try {
+    const [basePrompt, userContext] = await Promise.all([
+      loadPrompt('extract-receipt'),
+      loadUserContext(userId),
+    ]);
+
+    const systemPrompt = buildExtractPrompt(basePrompt, userContext);
+
+    const userContent: ContentPart[] = [];
+    if (text?.trim()) {
+      userContent.push({ type: 'text', text: text.trim() });
+    } else {
+      userContent.push({ type: 'text', text: 'Extract all transactions from the provided document(s).' });
+    }
+    if (files) {
+      userContent.push(...buildFileContent(files));
+    }
+
+    const model = 'gpt-4o';
+    const result = await callOpenAi(systemPrompt, userContent, model, {
+      responseFormat: 'json',
+      maxTokens: 8000,
+    });
+
+    await logUsage('extract-receipt', model, result.promptTokens, result.completionTokens);
+
+    const parsed = JSON.parse(result.content);
+    await putItem({
+      PK: 'GLOBAL',
+      SK: `AI_JOB#${jobId}`,
+      jobId,
+      userId,
+      status: 'completed',
+      feature: 'extract-receipt',
+      result: parsed,
+      completedAt: new Date().toISOString(),
+    });
+
+    return ok(event, { jobId, status: 'completed' });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    await putItem({
+      PK: 'GLOBAL',
+      SK: `AI_JOB#${jobId}`,
+      jobId,
+      userId,
+      status: 'failed',
+      feature: 'extract-receipt',
+      error: message,
+      completedAt: new Date().toISOString(),
+    });
+    return serverError(event, message);
+  }
 }
 
 function buildInsightsPrompt(
@@ -486,42 +550,116 @@ async function chat(event: APIGatewayProxyEvent, userId: string): Promise<APIGat
 
 async function extractRecurring(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
   const body = JSON.parse(event.body ?? '{}');
-  const { files, text } = body as {
+  const { files, text, jobId: existingJobId } = body as {
     files?: { base64: string; mimeType: string }[];
     text?: string;
+    jobId?: string;
   };
+
+  // Async worker invocation — do the actual work
+  if (existingJobId) {
+    return processExtractRecurring(event, userId, existingJobId, files, text);
+  }
 
   if ((!files || files.length === 0) && !text?.trim()) {
     return badRequest(event, 'At least one file or text is required');
   }
 
-  const [basePrompt, userContext] = await Promise.all([
-    loadPrompt('extract-recurring'),
-    loadUserContext(userId),
-  ]);
+  const jobId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-  const systemPrompt = buildExtractPrompt(basePrompt, userContext);
-
-  const userContent: ContentPart[] = [];
-
-  if (text?.trim()) {
-    userContent.push({ type: 'text', text: text.trim() });
-  } else {
-    userContent.push({ type: 'text', text: 'Identify all recurring transactions/subscriptions from the provided document(s). Cross-reference ALL documents to find patterns across months.' });
-  }
-
-  if (files) {
-    userContent.push(...buildFileContent(files));
-  }
-
-  const model = 'gpt-4o';
-  const result = await callOpenAi(systemPrompt, userContent, model, {
-    responseFormat: 'json',
-    maxTokens: 16000,
+  await putItem({
+    PK: 'GLOBAL',
+    SK: `AI_JOB#${jobId}`,
+    jobId,
+    userId,
+    status: 'processing',
+    feature: 'extract-recurring',
+    createdAt: new Date().toISOString(),
   });
 
-  await logUsage('extract-recurring', model, result.promptTokens, result.completionTokens);
-  return ok(event, JSON.parse(result.content));
+  const lambda = new LambdaClient({});
+  await lambda.send(new InvokeCommand({
+    FunctionName: process.env.AWS_LAMBDA_FUNCTION_NAME!,
+    InvocationType: 'Event',
+    Payload: new TextEncoder().encode(JSON.stringify({
+      ...event,
+      body: JSON.stringify({ ...body, jobId }),
+    })),
+  }));
+
+  return ok(event, { jobId, status: 'processing' });
+}
+
+async function processExtractRecurring(
+  event: APIGatewayProxyEvent,
+  userId: string,
+  jobId: string,
+  files?: { base64: string; mimeType: string }[],
+  text?: string,
+): Promise<APIGatewayProxyResult> {
+  try {
+    const [basePrompt, userContext] = await Promise.all([
+      loadPrompt('extract-recurring'),
+      loadUserContext(userId),
+    ]);
+
+    const systemPrompt = buildExtractPrompt(basePrompt, userContext);
+
+    const userContent: ContentPart[] = [];
+    if (text?.trim()) {
+      userContent.push({ type: 'text', text: text.trim() });
+    } else {
+      userContent.push({ type: 'text', text: 'Identify all recurring transactions/subscriptions from the provided document(s). Cross-reference ALL documents to find patterns across months.' });
+    }
+    if (files) {
+      userContent.push(...buildFileContent(files));
+    }
+
+    const model = 'gpt-4o';
+    const result = await callOpenAi(systemPrompt, userContent, model, {
+      responseFormat: 'json',
+      maxTokens: 16000,
+    });
+
+    await logUsage('extract-recurring', model, result.promptTokens, result.completionTokens);
+
+    const parsed = JSON.parse(result.content);
+    await putItem({
+      PK: 'GLOBAL',
+      SK: `AI_JOB#${jobId}`,
+      jobId,
+      userId,
+      status: 'completed',
+      feature: 'extract-recurring',
+      result: parsed,
+      completedAt: new Date().toISOString(),
+    });
+
+    return ok(event, { jobId, status: 'completed' });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    await putItem({
+      PK: 'GLOBAL',
+      SK: `AI_JOB#${jobId}`,
+      jobId,
+      userId,
+      status: 'failed',
+      feature: 'extract-recurring',
+      error: message,
+      completedAt: new Date().toISOString(),
+    });
+    return serverError(event, message);
+  }
+}
+
+async function getJobStatus(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  const jobId = event.pathParameters?.jobId;
+  if (!jobId) return badRequest(event, 'Missing jobId');
+
+  const item = await getItem('GLOBAL', `AI_JOB#${jobId}`);
+  if (!item) return notFound(event, 'Job not found');
+
+  return ok(event, item);
 }
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
@@ -529,10 +667,13 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const auth = extractAuth(event);
     if (!auth) return serverError(event, 'Unable to extract auth context');
 
+    const resource = event.resource;
+
+    // Job status polling — no budget check needed
+    if (resource === '/ai/jobs/{jobId}') return getJobStatus(event);
+
     const withinBudget = await checkBudget();
     if (!withinBudget) return tooManyRequests(event, 'Monthly AI budget exceeded');
-
-    const resource = event.resource;
 
     if (resource === '/ai/categorize') return categorize(event, auth.userId);
     if (resource === '/ai/extract-receipt') return extractReceipt(event, auth.userId);

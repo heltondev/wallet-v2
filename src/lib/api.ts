@@ -73,14 +73,24 @@ export const aiCategorize = (data: { desc: string; amount: number; currency: str
 export const aiLearnCategory = (merchant: string, suggestedCategory: string, correctedCategory: string) =>
   apiFetch<void>('/ai/learn-category', { method: 'POST', body: JSON.stringify({ merchant, suggestedCategory, correctedCategory }) });
 
-export const aiExtractReceipt = (
+export const aiExtractReceipt = async (
   files: { base64: string; mimeType: string }[],
   text: string,
-) =>
-  apiFetch<import('../types').AiExtractResult>('/ai/extract-receipt', {
+): Promise<import('../types').AiExtractResult> => {
+  const { jobId } = await apiFetch<{ jobId: string }>('/ai/extract-receipt', {
     method: 'POST',
     body: JSON.stringify({ files, text }),
   });
+
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 5000));
+    const job = await apiFetch<{ status: string; result?: import('../types').AiExtractResult; error?: string }>(`/ai/jobs/${jobId}`);
+    if (job.status === 'completed' && job.result) return job.result;
+    if (job.status === 'failed') throw new Error(job.error ?? 'AI processing failed');
+  }
+
+  throw new Error('AI processing timed out');
+};
 
 export const aiInsights = (month: string) =>
   apiFetch<{ summary: string; patterns: string[]; alerts: string[]; tips: string[] }>('/ai/insights', { method: 'POST', body: JSON.stringify({ month }) });
@@ -88,14 +98,24 @@ export const aiInsights = (month: string) =>
 export const aiChat = (message: string) =>
   apiFetch<{ reply: string }>('/ai/chat', { method: 'POST', body: JSON.stringify({ message }) });
 
-export const aiExtractRecurring = (
+export const aiExtractRecurring = async (
   files: { base64: string; mimeType: string }[],
   text: string,
-) =>
-  apiFetch<import('../types').AiExtractRecurringResult>('/ai/extract-recurring', {
+): Promise<import('../types').AiExtractRecurringResult> => {
+  const { jobId } = await apiFetch<{ jobId: string }>('/ai/extract-recurring', {
     method: 'POST',
     body: JSON.stringify({ files, text }),
   });
+
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 5000));
+    const job = await apiFetch<{ status: string; result?: import('../types').AiExtractRecurringResult; error?: string }>(`/ai/jobs/${jobId}`);
+    if (job.status === 'completed' && job.result) return job.result;
+    if (job.status === 'failed') throw new Error(job.error ?? 'AI processing failed');
+  }
+
+  throw new Error('AI processing timed out');
+};
 
 // Recurring
 export const listRecurring = () =>

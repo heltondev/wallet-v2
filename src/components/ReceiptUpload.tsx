@@ -119,7 +119,7 @@ export function ReceiptUpload({ onExtracted, onClose }: ReceiptUploadProps) {
             )}
             <div className="receipt-upload__spinner" />
             <span className="receipt-upload__loading-text">
-              Analisando documento...
+              Analisando documento... (pode levar até 2 minutos)
             </span>
           </div>
         )}

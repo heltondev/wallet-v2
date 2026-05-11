@@ -474,7 +474,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
                   className={`manage-recurring__ai-btn ${(aiLoading || (aiFiles.length === 0 && !aiText.trim())) ? 'manage-recurring__ai-btn--disabled' : 'manage-recurring__ai-btn--active'}`}
                 >
                   {aiLoading ? (
-                    <span className="manage-recurring__ai-loading-text">Analisando...</span>
+                    <span className="manage-recurring__ai-loading-text">Analisando documentos... (pode levar até 2 minutos)</span>
                   ) : (
                     <>
                       <Icons.alert size={16} />

@@ -356,7 +356,7 @@ export function AddSheet({ open, onClose, onSave, accounts, activeWorkspace = nu
                 className={`add-sheet__ai-btn ${aiBtnDisabled ? 'add-sheet__ai-btn--disabled' : 'add-sheet__ai-btn--active'}`}
               >
                 {aiLoading ? (
-                  <span className="add-sheet__ai-loading-text">Analisando...</span>
+                  <span className="add-sheet__ai-loading-text">Analisando documentos... (pode levar até 2 minutos)</span>
                 ) : (
                   <>
                     <Icons.alert size={16} />
