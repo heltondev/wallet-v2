@@ -70,3 +70,13 @@ export const aiChat = (message: string) =>
 // Admin
 export const getAdminCosts = () =>
   apiFetch<Record<string, unknown>>('/admin/costs');
+
+// Admin - Prompts
+export const listPrompts = () =>
+  apiFetch<Record<string, unknown>[]>('/admin/prompts');
+
+export const getPrompt = (feature: string) =>
+  apiFetch<Record<string, unknown>>(`/admin/prompts/${feature}`);
+
+export const updatePrompt = (feature: string, content: string) =>
+  apiFetch<Record<string, unknown>>(`/admin/prompts/${feature}`, { method: 'PUT', body: JSON.stringify({ content }) });

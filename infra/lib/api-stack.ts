@@ -137,5 +137,13 @@ export class ApiStack extends Stack {
     );
     const admin = api.root.addResource('admin');
     admin.addResource('costs').addMethod('GET', new LambdaIntegration(costsFn), authOptions);
+
+    // Admin - Prompts
+    const promptsFn = buildHandler('PromptsFn', 'prompts', 'functions/api/prompts.ts');
+    const prompts = admin.addResource('prompts');
+    prompts.addMethod('GET', new LambdaIntegration(promptsFn), authOptions);
+    const promptByFeature = prompts.addResource('{feature}');
+    promptByFeature.addMethod('GET', new LambdaIntegration(promptsFn), authOptions);
+    promptByFeature.addMethod('PUT', new LambdaIntegration(promptsFn), authOptions);
   }
 }

@@ -237,7 +237,10 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
         </Section>
 
         <Section title="ADMIN">
-          <Row label="Custos de infraestrutura" icon="trending" last onClick={() => onNavigate?.('admin-costs')} />
+          <Row label="Custos de infraestrutura" icon="trending" onClick={() => onNavigate?.('admin-costs')} />
+          {userEmail === 'holiver.usa@gmail.com' && (
+            <Row label="Prompts de AI" icon="alert" last onClick={() => onNavigate?.('prompts')} />
+          )}
         </Section>
 
         <Section title="SUPORTE">

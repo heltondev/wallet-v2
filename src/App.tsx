@@ -12,6 +12,7 @@ import { ReceiptScreen } from './screens/ReceiptScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { ManageAccounts } from './screens/ManageAccounts';
 import { ManageCategories } from './screens/ManageCategories';
+import { ManagePrompts } from './screens/ManagePrompts';
 import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL } from './utils/formatters';
@@ -255,6 +256,11 @@ export function App() {
         {subScreen === 'categories' && (
           <div style={{ height: '100%', position: 'relative' }}>
             <ManageCategories onBack={() => setSubScreen(null)} />
+          </div>
+        )}
+        {subScreen === 'prompts' && (
+          <div style={{ height: '100%', position: 'relative' }}>
+            <ManagePrompts onBack={() => setSubScreen(null)} />
           </div>
         )}
 

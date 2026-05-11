@@ -1,7 +1,35 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { extractAuth } from '../shared/auth';
-import { putItem, queryItems } from '../shared/dynamo';
+import { getItem, putItem, queryItems } from '../shared/dynamo';
 import { ok, badRequest, serverError, tooManyRequests } from '../shared/response';
+
+const DEFAULT_PROMPTS: Record<string, string> = {
+  'extract-receipt': `You are a financial document analyzer. Extract transaction information from the provided document (receipt, bank statement, invoice).
+
+Return a JSON object with these fields:
+- desc: merchant/payee name
+- amount: negative for expenses, positive for income (number)
+- currency: "BRL" or "USD" or "EUR"
+- cat: category slug (mercado, restaurante, transporte, casa, saude, lazer, trabalho, assinaturas, educacao, salario, freelance, outros)
+- date: YYYY-MM-DD format
+
+If the document contains multiple transactions, return the primary/largest one.
+If information is unclear, make your best guess based on context.`,
+  'categorize': 'You are a transaction categorizer. Given a transaction description and amount, respond with JSON containing "category" (a slug like "food", "transport", "housing", "entertainment", "health", "shopping", "income", "utilities", "education", "other") and "confidence" (0-1).',
+  'insights': 'You are a personal finance analyst. Analyze the user\'s monthly transactions and provide JSON with: "summary" (string, 2-3 sentences), "patterns" (array of strings), "alerts" (array of strings for concerning spending), "tips" (array of strings for saving money).',
+  'forecast': 'You are a financial forecasting assistant. Based on 3 months of transaction history, predict the next month. Respond with JSON: "projectedBalance" (number), "byCategory" (array of {category, projected, trend}), "confidence" (0-1).',
+  'chat': 'You are a helpful financial assistant. You help users understand their spending, budgeting, and financial health. Be concise and practical.',
+};
+
+async function loadPrompt(feature: string): Promise<string> {
+  try {
+    const item = await getItem('GLOBAL', `PROMPT#${feature}`);
+    if (item?.content) return item.content as string;
+  } catch {
+    // fall through to default
+  }
+  return DEFAULT_PROMPTS[feature] ?? '';
+}
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
 const MONTHLY_BUDGET_USD = parseFloat(process.env.AI_MONTHLY_BUDGET ?? '5');
@@ -95,8 +123,9 @@ async function categorize(event: APIGatewayProxyEvent): Promise<APIGatewayProxyR
   if (!desc) return badRequest(event, 'Missing required field: desc');
 
   const model = 'gpt-4o-mini';
+  const systemPrompt = await loadPrompt('categorize');
   const result = await callOpenAi(
-    'You are a transaction categorizer. Given a transaction description and amount, respond with JSON containing "category" (a slug like "food", "transport", "housing", "entertainment", "health", "shopping", "income", "utilities", "education", "other") and "confidence" (0-1).',
+    systemPrompt,
     `Description: ${desc}, Amount: ${amount ?? 'unknown'}`,
     model,
     { responseFormat: 'json' },
@@ -112,8 +141,9 @@ async function extractReceipt(event: APIGatewayProxyEvent): Promise<APIGatewayPr
   if (!file || !mimeType) return badRequest(event, 'Missing required fields: file, mimeType');
 
   const model = 'gpt-4o';
+  const systemPrompt = await loadPrompt('extract-receipt');
   const result = await callOpenAi(
-    'You are a receipt OCR assistant. Extract the following from the receipt image: amount (number), currency (string), date (YYYY-MM-DD), merchant (string), items (array of {name, amount}). Respond with JSON only.',
+    systemPrompt,
     [
       { type: 'text', text: 'Extract transaction data from this receipt.' },
       { type: 'image_url', image_url: { url: `data:${mimeType};base64,${file}` } },
@@ -134,8 +164,9 @@ async function insights(event: APIGatewayProxyEvent, userId: string): Promise<AP
   const transactions = await queryItems(`USER#${userId}`, `TX#${month}`);
 
   const model = 'gpt-4o-mini';
+  const systemPrompt = await loadPrompt('insights');
   const result = await callOpenAi(
-    'You are a personal finance analyst. Analyze the user\'s monthly transactions and provide JSON with: "summary" (string, 2-3 sentences), "patterns" (array of strings), "alerts" (array of strings for concerning spending), "tips" (array of strings for saving money).',
+    systemPrompt,
     `Transactions for ${month}: ${JSON.stringify(transactions)}`,
     model,
     { responseFormat: 'json' },
@@ -164,8 +195,9 @@ async function forecast(event: APIGatewayProxyEvent, userId: string): Promise<AP
   const historyData = months.map((mo, i) => ({ month: mo, transactions: history[i] }));
 
   const model = 'gpt-4o';
+  const systemPrompt = await loadPrompt('forecast');
   const result = await callOpenAi(
-    'You are a financial forecasting assistant. Based on 3 months of transaction history, predict the next month. Respond with JSON: "projectedBalance" (number), "byCategory" (array of {category, projected, trend}), "confidence" (0-1).',
+    systemPrompt,
     `Forecast for ${month}. History: ${JSON.stringify(historyData)}`,
     model,
     { responseFormat: 'json' },
@@ -180,7 +212,8 @@ async function chat(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult>
   const { message, context } = body;
   if (!message) return badRequest(event, 'Missing required field: message');
 
-  const systemPrompt = `You are a helpful financial assistant. You help users understand their spending, budgeting, and financial health. Be concise and practical.${context ? ` Context: ${context}` : ''}`;
+  const basePrompt = await loadPrompt('chat');
+  const systemPrompt = `${basePrompt}${context ? ` Context: ${context}` : ''}`;
 
   const model = 'gpt-4o-mini';
   const result = await callOpenAi(systemPrompt, message, model);
