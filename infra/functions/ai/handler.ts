@@ -98,19 +98,24 @@ async function checkBudget(): Promise<boolean> {
   return totalCost < MONTHLY_BUDGET_USD;
 }
 
-async function loadCategoryLearning(): Promise<Record<string, unknown>[]> {
+interface UserContext {
+  accounts: Record<string, unknown>[];
+  categories: Record<string, unknown>[];
+  recentTransactions: Record<string, unknown>[];
+  settings: Record<string, unknown>;
+}
+
+type CatLearning = Record<string, unknown>;
+
+async function loadCategoryLearning(): Promise<CatLearning[]> {
   return queryItems('GLOBAL', 'CAT_LEARN#');
 }
 
-function buildCategorizePrompt(
+function buildPromptWithContext(
   basePrompt: string,
-  ctx: {
-    accounts: Record<string, unknown>[];
-    categories: Record<string, unknown>[];
-    recentTransactions: Record<string, unknown>[];
-    settings: Record<string, unknown>;
-  },
-  learning: Record<string, unknown>[],
+  ctx: UserContext,
+  learning: CatLearning[],
+  extra?: Record<string, string>,
 ): string {
   const accountList = ctx.accounts
     .map((a) => `${a.name} (${a.institution}, ${a.currency})`)
@@ -128,11 +133,33 @@ function buildCategorizePrompt(
     ? learning.map((l) => `"${l.merchant}" → ${l.category} (corrected ${l.count}x)`).join('\n')
     : 'No corrections yet';
 
-  return basePrompt
+  const currency = (ctx.settings.currency as string) ?? 'BRL';
+  const budget = (ctx.settings.monthlyBudget as string) ?? 'Not set';
+  const settingsText = `Currency: ${currency}, Budget: ${budget}`;
+
+  let result = basePrompt
     .replace(/{accounts}/g, accountList)
     .replace(/{categories}/g, categoryList)
     .replace(/{recentTransactions}/g, recentTxSummary)
-    .replace(/{categoryLearning}/g, learningText);
+    .replace(/{categoryLearning}/g, learningText)
+    .replace(/{settings}/g, settingsText)
+    .replace(/{monthlyBudget}/g, budget);
+
+  if (extra) {
+    for (const [key, value] of Object.entries(extra)) {
+      result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+    }
+  }
+
+  return result;
+}
+
+function buildCategorizePrompt(
+  basePrompt: string,
+  ctx: UserContext,
+  learning: CatLearning[],
+): string {
+  return buildPromptWithContext(basePrompt, ctx, learning);
 }
 
 async function categorize(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
@@ -231,34 +258,21 @@ async function loadUserContext(userId: string): Promise<{
 
 function buildExtractPrompt(
   basePrompt: string,
-  ctx: {
-    accounts: Record<string, unknown>[];
-    categories: Record<string, unknown>[];
-    recentTransactions: Record<string, unknown>[];
-    settings: Record<string, unknown>;
-  },
+  ctx: UserContext,
 ): string {
+  const currency = (ctx.settings.currency as string) ?? 'BRL';
   const accountList = ctx.accounts
     .map((a) => `${a.name} (${a.institution}, ${a.currency})`)
     .join(', ') || 'No accounts registered';
-
   const categoryList = ctx.categories
     .map((c) => c.slug ?? c.name)
     .join(', ') || 'mercado, restaurante, transporte, casa, saude, lazer, trabalho, assinaturas, educacao, salario, freelance, outros';
 
-  const recentTxSummary = ctx.recentTransactions
-    .map((t) => `${t.date}: ${t.desc} ${t.amount} ${t.currency} [${t.cat}]`)
-    .join('\n') || 'No recent transactions';
-
-  const currency = (ctx.settings.currency as string) ?? 'BRL';
-
-  return basePrompt
-    .replace(/{accounts}/g, accountList)
-    .replace(/{accountList}/g, accountList)
-    .replace(/{categories}/g, categoryList)
-    .replace(/{categoryList}/g, categoryList)
-    .replace(/{recentTransactions}/g, recentTxSummary)
-    .replace(/{settings\.currency}/g, currency);
+  return buildPromptWithContext(basePrompt, ctx, [], {
+    'accountList': accountList,
+    'categoryList': categoryList,
+    'settings\\.currency': currency,
+  });
 }
 
 async function extractReceipt(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
@@ -307,24 +321,71 @@ async function extractReceipt(event: APIGatewayProxyEvent, userId: string): Prom
   return ok(event, JSON.parse(result.content));
 }
 
+function buildInsightsPrompt(
+  basePrompt: string,
+  ctx: UserContext,
+  learning: CatLearning[],
+  currentMonthTx: Record<string, unknown>[],
+  previousMonthTx: Record<string, unknown>[],
+): string {
+  const formatTx = (txs: Record<string, unknown>[]) =>
+    txs.map((t) => `${t.date}: ${t.desc} ${t.amount} ${t.currency} [${t.cat}]`).join('\n') || 'No transactions';
+
+  return buildPromptWithContext(basePrompt, ctx, learning, {
+    currentMonthTransactions: formatTx(currentMonthTx),
+    previousMonthTransactions: formatTx(previousMonthTx),
+  });
+}
+
 async function insights(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
   const body = JSON.parse(event.body ?? '{}');
   const { month } = body;
   if (!month) return badRequest(event, 'Missing required field: month');
 
-  const transactions = await queryItems(`USER#${userId}`, `TX#${month}`);
+  const [y, m] = month.split('-').map(Number);
+  const prevDate = new Date(y, m - 2, 1);
+  const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+
+  const [basePrompt, userContext, learning, currentMonthTx, previousMonthTx] = await Promise.all([
+    loadPrompt('insights'),
+    loadUserContext(userId),
+    loadCategoryLearning(),
+    queryItems(`USER#${userId}`, `TX#${month}`),
+    queryItems(`USER#${userId}`, `TX#${prevMonth}`),
+  ]);
+
+  const systemPrompt = buildInsightsPrompt(basePrompt, userContext, learning, currentMonthTx, previousMonthTx);
 
   const model = 'gpt-4o-mini';
-  const systemPrompt = await loadPrompt('insights');
   const result = await callOpenAi(
     systemPrompt,
-    `Transactions for ${month}: ${JSON.stringify(transactions)}`,
+    `Analyze spending for ${month} and compare with ${prevMonth}.`,
     model,
     { responseFormat: 'json' },
   );
 
   await logUsage('insights', model, result.promptTokens, result.completionTokens);
   return ok(event, JSON.parse(result.content));
+}
+
+function buildForecastPrompt(
+  basePrompt: string,
+  ctx: UserContext,
+  learning: CatLearning[],
+  historyData: { month: string; transactions: Record<string, unknown>[] }[],
+): string {
+  const historyText = historyData
+    .map((h) => {
+      const txLines = h.transactions
+        .map((t) => `  ${t.date}: ${t.desc} ${t.amount} ${t.currency} [${t.cat}]`)
+        .join('\n') || '  No transactions';
+      return `${h.month}:\n${txLines}`;
+    })
+    .join('\n\n');
+
+  return buildPromptWithContext(basePrompt, ctx, learning, {
+    history: historyText,
+  });
 }
 
 async function forecast(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
@@ -339,17 +400,21 @@ async function forecast(event: APIGatewayProxyEvent, userId: string): Promise<AP
     months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
   }
 
-  const history = await Promise.all(
-    months.map((mo) => queryItems(`USER#${userId}`, `TX#${mo}`)),
-  );
+  const [basePrompt, userContext, learning, historyArrays] = await Promise.all([
+    loadPrompt('forecast'),
+    loadUserContext(userId),
+    loadCategoryLearning(),
+    Promise.all(months.map((mo) => queryItems(`USER#${userId}`, `TX#${mo}`))),
+  ]);
 
-  const historyData = months.map((mo, i) => ({ month: mo, transactions: history[i] }));
+  const historyData = months.map((mo, i) => ({ month: mo, transactions: historyArrays[i] }));
+
+  const systemPrompt = buildForecastPrompt(basePrompt, userContext, learning, historyData);
 
   const model = 'gpt-4o';
-  const systemPrompt = await loadPrompt('forecast');
   const result = await callOpenAi(
     systemPrompt,
-    `Forecast for ${month}. History: ${JSON.stringify(historyData)}`,
+    `Forecast spending for ${month} based on the historical data provided.`,
     model,
     { responseFormat: 'json' },
   );
@@ -358,13 +423,26 @@ async function forecast(event: APIGatewayProxyEvent, userId: string): Promise<AP
   return ok(event, JSON.parse(result.content));
 }
 
-async function chat(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+function buildChatPrompt(
+  basePrompt: string,
+  ctx: UserContext,
+  learning: CatLearning[],
+): string {
+  return buildPromptWithContext(basePrompt, ctx, learning);
+}
+
+async function chat(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
   const body = JSON.parse(event.body ?? '{}');
-  const { message, context } = body;
+  const { message } = body;
   if (!message) return badRequest(event, 'Missing required field: message');
 
-  const basePrompt = await loadPrompt('chat');
-  const systemPrompt = `${basePrompt}${context ? ` Context: ${context}` : ''}`;
+  const [basePrompt, userContext, learning] = await Promise.all([
+    loadPrompt('chat'),
+    loadUserContext(userId),
+    loadCategoryLearning(),
+  ]);
+
+  const systemPrompt = buildChatPrompt(basePrompt, userContext, learning);
 
   const model = 'gpt-4o-mini';
   const result = await callOpenAi(systemPrompt, message, model);
@@ -387,7 +465,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (resource === '/ai/extract-receipt') return extractReceipt(event, auth.userId);
     if (resource === '/ai/insights') return insights(event, auth.userId);
     if (resource === '/ai/forecast') return forecast(event, auth.userId);
-    if (resource === '/ai/chat') return chat(event);
+    if (resource === '/ai/chat') return chat(event, auth.userId);
     if (resource === '/ai/learn-category') return learnCategory(event);
 
     return badRequest(event, 'Unknown AI endpoint');
