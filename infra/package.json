@@ -1,0 +1,28 @@
+{
+  "name": "wallet-v2-infra",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "cdk": "cdk",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --all --profile personal",
+    "diff": "cdk diff --profile personal",
+    "destroy": "cdk destroy --all --profile personal"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.1032.0",
+    "@aws-sdk/client-cost-explorer": "^3.1038.0",
+    "@aws-sdk/client-dynamodb": "^3.1032.0",
+    "@aws-sdk/lib-dynamodb": "^3.1032.0",
+    "aws-cdk-lib": "^2.250.0",
+    "constructs": "^10.6.0",
+    "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "aws-cdk": "^2.1118.2",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.7.2"
+  }
+}

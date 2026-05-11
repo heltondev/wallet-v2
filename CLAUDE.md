@@ -156,6 +156,7 @@ Release flow: develop → main (via PR) → tag → GitHub Actions deploy.
 - **Commits:** Conventional commits (`feat:`, `fix:`, `refactor:`, `chore:`)
 - **PRs:** Against `develop` branch, squash merge
 - **"Ship"** — When the user says "ship", it means: commit all changes, push to remote, and deploy (frontend to S3+CloudFront, backend via CDK). Execute all three steps without asking.
+- **"Sync"** — When the user says "sync", it means: push develop to main and sync them. Checkout main, merge develop (fast-forward), push main, checkout develop back. Execute without asking.
 
 ## File Structure
 
