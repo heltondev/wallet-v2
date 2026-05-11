@@ -26,6 +26,7 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
   const [categoryCount, setCategoryCount] = useState(0);
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
+  const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
     getSession().then(session => {
@@ -222,7 +223,31 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
         </Section>
 
         <Section title="SUPORTE">
-          <Row label="Sobre" />
+          <Row label="Sobre" icon="alert" onClick={() => setShowAbout(!showAbout)} />
+          {showAbout && (
+            <div className="settings-screen__about">
+              <div className="settings-screen__about-row">
+                <span className="settings-screen__about-label">Versão</span>
+                <span className="settings-screen__about-value">0.1.0</span>
+              </div>
+              <div className="settings-screen__about-row">
+                <span className="settings-screen__about-label">Stack</span>
+                <span className="settings-screen__about-value">React · TypeScript · Vite</span>
+              </div>
+              <div className="settings-screen__about-row">
+                <span className="settings-screen__about-label">Backend</span>
+                <span className="settings-screen__about-value">AWS Lambda · DynamoDB</span>
+              </div>
+              <div className="settings-screen__about-row">
+                <span className="settings-screen__about-label">AI</span>
+                <span className="settings-screen__about-value">OpenAI GPT-4o</span>
+              </div>
+              <div className="settings-screen__about-row">
+                <span className="settings-screen__about-label">Auth</span>
+                <span className="settings-screen__about-value">Cognito · Google OAuth</span>
+              </div>
+            </div>
+          )}
           <Row label="Sair" icon="x" danger last onClick={() => { signOut(); onSignOut?.(); }} />
         </Section>
       </div>
