@@ -83,14 +83,6 @@ body {
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* Desktop: tab bar stays absolute inside phone shell */
-@media (min-width: 501px) {
-  .bottom-tab-bar {
-    position: absolute !important;
-    padding-bottom: 24px !important;
-  }
-}
-
 /* Mobile: remove phone shell, go fullscreen */
 @media (max-width: 500px) {
   body {
@@ -125,20 +117,6 @@ body {
     display: none !important;
   }
 
-  /* Let content scroll past the fixed tab bar */
-  .phone-surface {
-    overflow: visible !important;
-    height: auto !important;
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
-  }
-
-  .phone-surface > div[style] {
-    height: auto !important;
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
-    overflow: visible !important;
-  }
 }
 
 .toast {
