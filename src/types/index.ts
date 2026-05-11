@@ -2,6 +2,7 @@ export type CurrencyCode = 'BRL' | 'USD' | 'EUR';
 
 export interface Transaction {
   id: number;
+  date: string; // ISO date string e.g. '2026-05-11'
   day: string;
   wd: string;
   desc: string;

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Icons } from './icons/Icons';
 import { CATS } from '../data/categories';
 import { fmtAmount } from '../utils/formatters';
-import { aiExtractReceipt } from '../utils/api';
+import { aiExtractReceipt } from '../lib/api';
 import type { Transaction, CurrencyCode } from '../types';
 
 type Stage = 'upload' | 'loading' | 'review';
