@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { extractAuth } from '../shared/auth';
-import { getItem, putItem, queryItems } from '../shared/dynamo';
+import { getItem, putItem, queryItems, updateItem } from '../shared/dynamo';
 import { ok, badRequest, serverError, tooManyRequests } from '../shared/response';
 
 async function loadPrompt(feature: string): Promise<string> {
@@ -98,22 +98,102 @@ async function checkBudget(): Promise<boolean> {
   return totalCost < MONTHLY_BUDGET_USD;
 }
 
-async function categorize(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+async function loadCategoryLearning(): Promise<Record<string, unknown>[]> {
+  return queryItems('GLOBAL', 'CAT_LEARN#');
+}
+
+function buildCategorizePrompt(
+  basePrompt: string,
+  ctx: {
+    accounts: Record<string, unknown>[];
+    categories: Record<string, unknown>[];
+    recentTransactions: Record<string, unknown>[];
+    settings: Record<string, unknown>;
+  },
+  learning: Record<string, unknown>[],
+): string {
+  const accountList = ctx.accounts
+    .map((a) => `${a.name} (${a.institution}, ${a.currency})`)
+    .join(', ') || 'No accounts registered';
+
+  const categoryList = ctx.categories
+    .map((c) => c.slug ?? c.name)
+    .join(', ') || 'mercado, restaurante, transporte, casa, saude, lazer, trabalho, assinaturas, educacao, salario, freelance, outros';
+
+  const recentTxSummary = ctx.recentTransactions
+    .map((t) => `${t.date}: ${t.desc} ${t.amount} ${t.currency} [${t.cat}]`)
+    .join('\n') || 'No recent transactions';
+
+  const learningText = learning.length > 0
+    ? learning.map((l) => `"${l.merchant}" → ${l.category} (corrected ${l.count}x)`).join('\n')
+    : 'No corrections yet';
+
+  return basePrompt
+    .replace(/{accounts}/g, accountList)
+    .replace(/{categories}/g, categoryList)
+    .replace(/{recentTransactions}/g, recentTxSummary)
+    .replace(/{categoryLearning}/g, learningText);
+}
+
+async function categorize(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
   const body = JSON.parse(event.body ?? '{}');
-  const { desc, amount } = body;
+  const { desc, amount, currency, account } = body;
   if (!desc) return badRequest(event, 'Missing required field: desc');
 
+  const [basePrompt, userContext, learning] = await Promise.all([
+    loadPrompt('categorize'),
+    loadUserContext(userId),
+    loadCategoryLearning(),
+  ]);
+
+  const systemPrompt = buildCategorizePrompt(basePrompt, userContext, learning);
+
   const model = 'gpt-4o-mini';
-  const systemPrompt = await loadPrompt('categorize');
-  const result = await callOpenAi(
-    systemPrompt,
-    `Description: ${desc}, Amount: ${amount ?? 'unknown'}`,
-    model,
-    { responseFormat: 'json' },
-  );
+  const userMessage = `Description: ${desc}, Amount: ${amount ?? 'unknown'}, Currency: ${currency ?? 'unknown'}, Account: ${account ?? 'unknown'}`;
+  const result = await callOpenAi(systemPrompt, userMessage, model, { responseFormat: 'json' });
 
   await logUsage('categorize', model, result.promptTokens, result.completionTokens);
   return ok(event, JSON.parse(result.content));
+}
+
+function normalizeToSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+async function learnCategory(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  const body = JSON.parse(event.body ?? '{}');
+  const { merchant, suggestedCategory, correctedCategory } = body;
+  if (!merchant || !correctedCategory) return badRequest(event, 'Missing required fields: merchant, correctedCategory');
+
+  const slug = normalizeToSlug(merchant);
+  const sk = `CAT_LEARN#${slug}`;
+  const existing = await getItem('GLOBAL', sk);
+
+  if (existing) {
+    await updateItem('GLOBAL', sk, {
+      category: correctedCategory,
+      suggestedCategory: suggestedCategory ?? existing.suggestedCategory,
+      count: ((existing.count as number) ?? 0) + 1,
+      lastUsed: new Date().toISOString().slice(0, 10),
+    });
+  } else {
+    await putItem({
+      PK: 'GLOBAL',
+      SK: sk,
+      merchant,
+      category: correctedCategory,
+      suggestedCategory: suggestedCategory ?? '',
+      count: 1,
+      lastUsed: new Date().toISOString().slice(0, 10),
+    });
+  }
+
+  return ok(event, { saved: true });
 }
 
 async function loadUserContext(userId: string): Promise<{
@@ -303,11 +383,12 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     const resource = event.resource;
 
-    if (resource === '/ai/categorize') return categorize(event);
+    if (resource === '/ai/categorize') return categorize(event, auth.userId);
     if (resource === '/ai/extract-receipt') return extractReceipt(event, auth.userId);
     if (resource === '/ai/insights') return insights(event, auth.userId);
     if (resource === '/ai/forecast') return forecast(event, auth.userId);
     if (resource === '/ai/chat') return chat(event);
+    if (resource === '/ai/learn-category') return learnCategory(event);
 
     return badRequest(event, 'Unknown AI endpoint');
   } catch (err) {

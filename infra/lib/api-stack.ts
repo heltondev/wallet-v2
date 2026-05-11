@@ -151,6 +151,7 @@ export class ApiStack extends Stack {
     ai.addResource('insights').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
     ai.addResource('forecast').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
     ai.addResource('chat').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
+    ai.addResource('learn-category').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
 
     // Admin - Costs
     const costsFn = buildHandler('CostsFn', 'costs', 'functions/api/costs.ts');

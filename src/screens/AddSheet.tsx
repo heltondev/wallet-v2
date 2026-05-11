@@ -3,7 +3,7 @@ import { Icons } from '../components/icons/Icons';
 import { CATS } from '../data/categories';
 import { FX } from '../data/constants';
 import { NumericKeypad } from '../components/NumericKeypad';
-import { aiExtractReceipt, getUploadUrl, uploadFileToS3, updateTransaction } from '../lib/api';
+import { aiExtractReceipt, aiLearnCategory, getUploadUrl, uploadFileToS3, updateTransaction } from '../lib/api';
 import type { Account, CurrencyCode, ExtractedTransaction, AiExtractResult } from '../types';
 
 const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = { BRL: 'R$', USD: '$', EUR: '€' };
@@ -62,6 +62,10 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
   const [txCategories, setTxCategories] = useState<string[]>([]);
   const [savingReview, setSavingReview] = useState(false);
 
+  // AI-suggested category tracking (for learning)
+  const [aiSuggestedCat, setAiSuggestedCat] = useState<string | null>(null);
+  const [aiSuggestedDesc, setAiSuggestedDesc] = useState<string | null>(null);
+
   // Receipt attachment state
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptUploading, setReceiptUploading] = useState(false);
@@ -75,6 +79,7 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
     setAccountId(accounts[0]?.id ?? ''); setCurrency(accounts[0]?.currency ?? 'BRL');
     setSelectedDate(new Date().toISOString().slice(0, 10));
     setFiles([]); setAiText(''); setAiExpanded(false); setAiLoading(false); setAiDone(false);
+    setAiSuggestedCat(null); setAiSuggestedDesc(null);
     setReceiptFile(null); setReceiptUploading(false);
     setReviewMode(false); setExtractResult(null); setCheckedTx([]); setTxCategories([]); setSavingReview(false);
   };
@@ -138,8 +143,12 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
       if (result.transactions.length === 1) {
         // Single transaction — auto-fill the form directly
         const tx = result.transactions[0];
-        if (tx.desc) setDesc(tx.desc);
-        if (tx.cat) setCat(allCatKeys.includes(tx.cat) ? tx.cat : 'outros');
+        if (tx.desc) { setDesc(tx.desc); setAiSuggestedDesc(tx.desc); }
+        if (tx.cat) {
+          const resolvedCat = allCatKeys.includes(tx.cat) ? tx.cat : 'outros';
+          setCat(resolvedCat);
+          setAiSuggestedCat(resolvedCat);
+        }
         if (tx.amount != null) {
           setKind(tx.amount >= 0 ? 'in' : 'out');
           setAmount(Math.abs(tx.amount).toFixed(2).replace('.', ','));
@@ -452,7 +461,13 @@ export function AddSheet({ open, onClose, onSave, accounts }: AddSheetProps) {
               <option value="in">Entrada</option>
             </select>
             {/* Category dropdown */}
-            <select value={cat} onChange={e => setCat(e.target.value)} style={{ ...selectStyle, flex: 1 }}>
+            <select value={cat} onChange={e => {
+              const newCat = e.target.value;
+              setCat(newCat);
+              if (aiSuggestedCat && newCat !== aiSuggestedCat && (aiSuggestedDesc || desc)) {
+                aiLearnCategory(aiSuggestedDesc || desc, aiSuggestedCat, newCat).catch(() => {});
+              }
+            }} style={{ ...selectStyle, flex: 1 }}>
               {kind === 'in' ? (
                 <>
                   <option value="salario">Salário</option>

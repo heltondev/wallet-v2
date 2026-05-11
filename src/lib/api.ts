@@ -58,8 +58,11 @@ export const updateSettings = (data: Record<string, unknown>) =>
   apiFetch<Record<string, unknown>>('/settings', { method: 'PUT', body: JSON.stringify(data) });
 
 // AI
-export const aiCategorize = (desc: string, amount: number) =>
-  apiFetch<{ category: string; confidence: number }>('/ai/categorize', { method: 'POST', body: JSON.stringify({ desc, amount }) });
+export const aiCategorize = (data: { desc: string; amount: number; currency: string; account: string }) =>
+  apiFetch<{ category: string; confidence: number; alternatives: string[]; reasoning: string }>('/ai/categorize', { method: 'POST', body: JSON.stringify(data) });
+
+export const aiLearnCategory = (merchant: string, suggestedCategory: string, correctedCategory: string) =>
+  apiFetch<void>('/ai/learn-category', { method: 'POST', body: JSON.stringify({ merchant, suggestedCategory, correctedCategory }) });
 
 export const aiExtractReceipt = (
   files: { base64: string; mimeType: string }[],
