@@ -451,6 +451,51 @@ async function chat(event: APIGatewayProxyEvent, userId: string): Promise<APIGat
   return ok(event, { reply: result.content });
 }
 
+async function extractRecurring(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
+  const body = JSON.parse(event.body ?? '{}');
+  const { files, text } = body as {
+    files?: { base64: string; mimeType: string }[];
+    text?: string;
+  };
+
+  if ((!files || files.length === 0) && !text?.trim()) {
+    return badRequest(event, 'At least one file or text is required');
+  }
+
+  const [basePrompt, userContext] = await Promise.all([
+    loadPrompt('extract-recurring'),
+    loadUserContext(userId),
+  ]);
+
+  const systemPrompt = buildExtractPrompt(basePrompt, userContext);
+
+  const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [];
+
+  if (text?.trim()) {
+    userContent.push({ type: 'text', text: text.trim() });
+  } else {
+    userContent.push({ type: 'text', text: 'Identify all recurring transactions/subscriptions from the provided document(s).' });
+  }
+
+  if (files) {
+    for (const file of files) {
+      userContent.push({
+        type: 'image_url',
+        image_url: { url: `data:${file.mimeType};base64,${file.base64}` },
+      });
+    }
+  }
+
+  const model = 'gpt-4o';
+  const result = await callOpenAi(systemPrompt, userContent, model, {
+    responseFormat: 'json',
+    maxTokens: 8000,
+  });
+
+  await logUsage('extract-recurring', model, result.promptTokens, result.completionTokens);
+  return ok(event, JSON.parse(result.content));
+}
+
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
     const auth = extractAuth(event);
@@ -463,6 +508,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     if (resource === '/ai/categorize') return categorize(event, auth.userId);
     if (resource === '/ai/extract-receipt') return extractReceipt(event, auth.userId);
+    if (resource === '/ai/extract-recurring') return extractRecurring(event, auth.userId);
     if (resource === '/ai/insights') return insights(event, auth.userId);
     if (resource === '/ai/forecast') return forecast(event, auth.userId);
     if (resource === '/ai/chat') return chat(event, auth.userId);

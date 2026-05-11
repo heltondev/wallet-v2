@@ -152,6 +152,17 @@ export class ApiStack extends Stack {
     ai.addResource('forecast').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
     ai.addResource('chat').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
     ai.addResource('learn-category').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
+    ai.addResource('extract-recurring').addMethod('POST', new LambdaIntegration(aiFn), authOptions);
+
+    // Recurring
+    const recurringFn = buildHandler('RecurringFn', 'recurring', 'functions/api/recurring.ts');
+    const recurring = api.root.addResource('recurring');
+    recurring.addMethod('POST', new LambdaIntegration(recurringFn), authOptions);
+    recurring.addMethod('GET', new LambdaIntegration(recurringFn), authOptions);
+    const recurringById = recurring.addResource('{id}');
+    recurringById.addMethod('PUT', new LambdaIntegration(recurringFn), authOptions);
+    recurringById.addMethod('DELETE', new LambdaIntegration(recurringFn), authOptions);
+    recurring.addResource('generate').addMethod('POST', new LambdaIntegration(recurringFn), authOptions);
 
     // Admin - Costs
     const costsFn = buildHandler('CostsFn', 'costs', 'functions/api/costs.ts');

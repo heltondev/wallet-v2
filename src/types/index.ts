@@ -14,6 +14,8 @@ export interface Transaction {
   amount_usd?: number;
   receiptKey?: string;
   receiptName?: string;
+  recurringId?: string;
+  isRecurringOverride?: boolean;
 }
 
 export interface Account {
@@ -79,6 +81,29 @@ export interface ExtractedTransaction {
   flags: string[];
 }
 
+export type RecurringFrequency = 'monthly' | 'weekly' | 'biweekly' | 'yearly' | 'custom';
+
+export interface RecurringTransaction {
+  id: string;
+  desc: string;
+  amount: number;
+  currency: CurrencyCode;
+  cat: string;
+  account: string;
+  frequency: RecurringFrequency;
+  customDays: number | null;
+  dayOfMonth: number | null;
+  dayOfWeek: number | null;
+  startDate: string;
+  endDate: string | null;
+  active: boolean;
+  fxRate: number;
+  notes: string | null;
+  lastGenerated: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AiExtractResult {
   transactions: ExtractedTransaction[];
   document: {
@@ -90,6 +115,32 @@ export interface AiExtractResult {
     dueDate: string | null;
     quality: string;
     pageCount: number;
+  };
+  warnings: string[];
+  suggestions: string[];
+}
+
+export interface ExtractedRecurring {
+  desc: string;
+  amount: number;
+  currency: CurrencyCode;
+  cat: string;
+  frequency: RecurringFrequency;
+  dayOfMonth: number | null;
+  dayOfWeek: number | null;
+  customDays: number | null;
+  account: string | null;
+  notes: string | null;
+}
+
+export interface AiExtractRecurringResult {
+  recurring: ExtractedRecurring[];
+  document: {
+    type: string;
+    subType: string;
+    language: string;
+    country: string;
+    quality: string;
   };
   warnings: string[];
   suggestions: string[];

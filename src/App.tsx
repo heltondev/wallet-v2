@@ -13,11 +13,12 @@ import { LoginScreen } from './screens/LoginScreen';
 import { ManageAccounts } from './screens/ManageAccounts';
 import { ManageCategories } from './screens/ManageCategories';
 import { ManagePrompts } from './screens/ManagePrompts';
+import { ManageRecurring } from './screens/ManageRecurring';
 import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL } from './utils/formatters';
 import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
-import { listTransactions, createTransaction, listAccounts, getSettings } from './lib/api';
+import { listTransactions, createTransaction, listAccounts, getSettings, generateRecurring } from './lib/api';
 import type { Transaction, Account, TabId, FabKind, ToastData, CurrencyCode } from './types';
 import './App.scss';
 
@@ -78,10 +79,20 @@ export function App() {
     }
   }, []);
 
-  // Load data from API after auth
+  // Load data from API after auth, then generate pending recurring transactions
   useEffect(() => {
     if (!authed) return;
-    loadData();
+    loadData().then(async () => {
+      try {
+        const result = await generateRecurring();
+        if (result.generated.length > 0) {
+          const txData = await listTransactions();
+          setTx(txData as unknown as Transaction[]);
+        }
+      } catch {
+        // Recurring generation failed — non-blocking
+      }
+    });
   }, [authed]);
 
   const loadData = async () => {
@@ -258,6 +269,11 @@ export function App() {
         {subScreen === 'prompts' && (
           <div className="app__sub-screen">
             <ManagePrompts onBack={() => setSubScreen(null)} />
+          </div>
+        )}
+        {subScreen === 'recurring' && (
+          <div className="app__sub-screen">
+            <ManageRecurring onBack={() => setSubScreen(null)} />
           </div>
         )}
 

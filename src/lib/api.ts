@@ -88,6 +88,31 @@ export const aiInsights = (month: string) =>
 export const aiChat = (message: string) =>
   apiFetch<{ reply: string }>('/ai/chat', { method: 'POST', body: JSON.stringify({ message }) });
 
+export const aiExtractRecurring = (
+  files: { base64: string; mimeType: string }[],
+  text: string,
+) =>
+  apiFetch<import('../types').AiExtractRecurringResult>('/ai/extract-recurring', {
+    method: 'POST',
+    body: JSON.stringify({ files, text }),
+  });
+
+// Recurring
+export const listRecurring = () =>
+  apiFetch<Record<string, unknown>[]>('/recurring');
+
+export const createRecurring = (data: Record<string, unknown>) =>
+  apiFetch<Record<string, unknown>>('/recurring', { method: 'POST', body: JSON.stringify(data) });
+
+export const updateRecurring = (id: string, data: Record<string, unknown>) =>
+  apiFetch<Record<string, unknown>>(`/recurring/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+
+export const deleteRecurring = (id: string) =>
+  apiFetch<void>(`/recurring/${id}`, { method: 'DELETE' });
+
+export const generateRecurring = () =>
+  apiFetch<{ generated: Record<string, unknown>[] }>('/recurring/generate', { method: 'POST' });
+
 // Receipts
 export const getUploadUrl = (txId: string, fileName: string, contentType: string) =>
   apiFetch<{ uploadUrl: string; key: string }>('/receipts/upload-url', { method: 'POST', body: JSON.stringify({ txId, fileName, contentType }) });

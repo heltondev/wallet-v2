@@ -1,68 +1,69 @@
 @use '../styles/variables' as *;
+@use '../styles/mixins' as *;
 
 .empty-forecast {
-  height: 100%;
-  position: relative;
+	height: 100%;
+	position: relative;
 
-  &__status-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-  }
+	&__status-bar {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 10;
+	}
 
-  &__scroll {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: $screen-scroll-bottom;
-    overflow: auto;
-    padding-top: $screen-padding-top;
-    padding-bottom: $screen-padding-bottom;
-  }
+	&__scroll {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: $screen-scroll-bottom;
+		overflow: auto;
+		padding: $s-4-raw;
+		@include viewport-height(75px);
+	}
 
-  &__header {
-    padding: 8px 16px 14px;
-  }
+	&__header {
+		padding: 8px 16px 14px;
+	}
 
-  &__label {
-    font-size: 11px;
-    color: var(--text-3);
-    font-family: var(--font-mono);
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-  }
+	&__label {
+		font-size: 11px;
+		color: var(--text-3);
+		font-family: var(--font-mono);
+		letter-spacing: 1.2px;
+		text-transform: uppercase;
+	}
 
-  &__title {
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: -0.6px;
-    margin: 0;
-    color: var(--text-1);
-  }
+	&__title {
+		font-size: 26px;
+		font-weight: 600;
+		letter-spacing: -0.6px;
+		margin: 0;
+		color: var(--text-1);
+	}
 
-  &__card {
-    margin: 0 16px 14px;
-    padding: 24px 20px;
-    background: var(--bg-1);
-    border: 1px solid var(--border-1);
-    border-radius: var(--r-card);
-  }
+	&__card {
+		margin: 0 16px 14px;
+		padding: 24px 20px;
+		background: var(--bg-1);
+		border: 1px solid var(--border-1);
+		border-radius: var(--r-card);
+	}
 
-  &__card-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 14px 0 6px;
-    color: var(--text-1);
-    letter-spacing: -0.3px;
-  }
+	&__card-title {
+		font-size: 18px;
+		font-weight: 600;
+		margin: 14px 0 6px;
+		color: var(--text-1);
+		letter-spacing: -0.3px;
+	}
 
-  &__card-desc {
-    font-size: 13px;
-    color: var(--text-3);
-    line-height: 1.5;
-    margin: 0;
-  }
+	&__card-desc {
+		font-size: 13px;
+		color: var(--text-3);
+		line-height: 1.5;
+		margin: 0;
+	}
 }

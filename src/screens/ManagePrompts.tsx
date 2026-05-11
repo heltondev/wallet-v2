@@ -10,6 +10,7 @@ interface ManagePromptsProps {
 
 const FEATURES = [
   { key: 'extract-receipt', label: 'Extrair recibo' },
+  { key: 'extract-recurring', label: 'Extrair recorrentes' },
   { key: 'categorize', label: 'Categorizar' },
   { key: 'insights', label: 'Insights' },
   { key: 'forecast', label: 'Previsão' },

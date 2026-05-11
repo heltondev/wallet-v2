@@ -1,181 +1,182 @@
 @use '../styles/variables' as *;
+@use '../styles/mixins' as *;
 
 .forecast-screen {
-  height: 100%;
-  position: relative;
+	height: 100%;
+	position: relative;
 
-  &__status-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-  }
+	&__status-bar {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 10;
+	}
 
-  &__scroll {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: $screen-scroll-bottom;
-    overflow: auto;
-    padding-top: $screen-padding-top;
-    padding-bottom: $screen-padding-bottom;
-  }
+	&__scroll {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: $screen-scroll-bottom;
+		overflow: auto;
+		padding: $s-4-raw;
+		@include viewport-height(75px);
+	}
 
-  &__header {
-    padding: 8px 16px 16px;
-  }
+	&__header {
+		padding: 8px 16px 16px;
+	}
 
-  &__label {
-    font-size: 11px;
-    color: var(--text-3);
-    font-family: var(--font-mono);
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
+	&__label {
+		font-size: 11px;
+		color: var(--text-3);
+		font-family: var(--font-mono);
+		letter-spacing: 1.2px;
+		text-transform: uppercase;
+		margin-bottom: 4px;
+	}
 
-  &__title {
-    font-size: 28px;
-    font-weight: 600;
-    letter-spacing: -0.8px;
-    margin: 0;
-    color: var(--text-1);
-  }
+	&__title {
+		font-size: 28px;
+		font-weight: 600;
+		letter-spacing: -0.8px;
+		margin: 0;
+		color: var(--text-1);
+	}
 
-  // Balance card
-  &__balance-card {
-    margin: 0 16px 14px;
-    background: var(--bg-1);
-    border: 1px solid var(--border-1);
-    border-radius: var(--r-card);
-    padding: 18px 18px 20px;
-  }
+	// Balance card
+	&__balance-card {
+		margin: 0 16px 14px;
+		background: var(--bg-1);
+		border: 1px solid var(--border-1);
+		border-radius: var(--r-card);
+		padding: 18px 18px 20px;
+	}
 
-  &__balance-label {
-    font-size: 11px;
-    color: var(--text-3);
-    font-family: var(--font-mono);
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
+	&__balance-label {
+		font-size: 11px;
+		color: var(--text-3);
+		font-family: var(--font-mono);
+		letter-spacing: 0.8px;
+		text-transform: uppercase;
+		margin-bottom: 4px;
+	}
 
-  &__balance-value {
-    font-size: 42px;
-    font-weight: 600;
-    letter-spacing: -1.8px;
-    line-height: 1;
-  }
+	&__balance-value {
+		font-size: 42px;
+		font-weight: 600;
+		letter-spacing: -1.8px;
+		line-height: 1;
+	}
 
-  &__balance-note {
-    font-size: 12px;
-    color: var(--text-3);
-    margin-top: 8px;
-    line-height: 1.45;
-  }
+	&__balance-note {
+		font-size: 12px;
+		color: var(--text-3);
+		margin-top: 8px;
+		line-height: 1.45;
+	}
 
-  // Categories section
-  &__section-header {
-    padding: 4px 16px 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
+	// Categories section
+	&__section-header {
+		padding: 4px 16px 6px;
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+	}
 
-  &__section-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-2);
-    margin: 0;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    font-family: var(--font-mono);
-  }
+	&__section-title {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-2);
+		margin: 0;
+		letter-spacing: 0.5px;
+		text-transform: uppercase;
+		font-family: var(--font-mono);
+	}
 
-  &__section-count {
-    font-size: 11px;
-    color: var(--text-3);
-    font-family: var(--font-mono);
-  }
+	&__section-count {
+		font-size: 11px;
+		color: var(--text-3);
+		font-family: var(--font-mono);
+	}
 
-  &__cat-list {
-    margin: 4px 16px 14px;
-    background: var(--bg-1);
-    border: 1px solid var(--border-1);
-    border-radius: var(--r-card-sm);
-  }
+	&__cat-list {
+		margin: 4px 16px 14px;
+		background: var(--bg-1);
+		border: 1px solid var(--border-1);
+		border-radius: var(--r-card-sm);
+	}
 
-  &__cat-empty {
-    padding: 20px 14px;
-    text-align: center;
-    color: var(--text-3);
-    font-size: 13px;
-    font-family: var(--font-mono);
-  }
+	&__cat-empty {
+		padding: 20px 14px;
+		text-align: center;
+		color: var(--text-3);
+		font-size: 13px;
+		font-family: var(--font-mono);
+	}
 
-  &__cat-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
+	&__cat-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 14px;
 
-    &:not(:last-child) {
-      border-bottom: 1px solid var(--border-1);
-    }
-  }
+		&:not(:last-child) {
+			border-bottom: 1px solid var(--border-1);
+		}
+	}
 
-  &__cat-name {
-    flex: 1;
-    font-size: 13.5px;
-    color: var(--text-1);
-    font-weight: 500;
-  }
+	&__cat-name {
+		flex: 1;
+		font-size: 13.5px;
+		color: var(--text-1);
+		font-weight: 500;
+	}
 
-  &__cat-amount {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-1);
-    min-width: 80px;
-    text-align: right;
-  }
+	&__cat-amount {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-1);
+		min-width: 80px;
+		text-align: right;
+	}
 
-  // Summary
-  &__summary-card {
-    margin: 0 16px 14px;
-    padding: 18px;
-    background: var(--bg-1);
-    border: 1px solid var(--border-1);
-    border-radius: var(--r-card);
-  }
+	// Summary
+	&__summary-card {
+		margin: 0 16px 14px;
+		padding: 18px;
+		background: var(--bg-1);
+		border: 1px solid var(--border-1);
+		border-radius: var(--r-card);
+	}
 
-  &__summary-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
+	&__summary-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 14px;
+	}
 
-  &__summary-label {
-    font-size: 11px;
-    color: var(--text-3);
-    font-family: var(--font-mono);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
+	&__summary-label {
+		font-size: 11px;
+		color: var(--text-3);
+		font-family: var(--font-mono);
+		letter-spacing: 0.5px;
+		text-transform: uppercase;
+		margin-bottom: 4px;
+	}
 
-  &__summary-value {
-    font-size: 20px;
-    font-weight: 600;
-    letter-spacing: -0.5px;
+	&__summary-value {
+		font-size: 20px;
+		font-weight: 600;
+		letter-spacing: -0.5px;
 
-    &--pos {
-      color: var(--pos);
-    }
+		&--pos {
+			color: var(--pos);
+		}
 
-    &--neg {
-      color: var(--neg);
-    }
-  }
+		&--neg {
+			color: var(--neg);
+		}
+	}
 }

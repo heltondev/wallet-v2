@@ -21,8 +21,7 @@
 		right: 0;
 		bottom: $screen-scroll-bottom;
 		overflow: auto;
-		padding-top: $screen-padding-bottom;
-		padding-bottom: $screen-padding-bottom;
+		padding: $s-4-raw;
 		@include viewport-height(75px);
 	}
 

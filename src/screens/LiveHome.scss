@@ -1,78 +1,79 @@
 @use '../styles/variables' as *;
+@use '../styles/mixins' as *;
 
 .live-home {
-  height: 100%;
-  position: relative;
+	height: 100%;
+	position: relative;
 
-  &__status-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-  }
+	&__status-bar {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 10;
+	}
 
-  &__scroll {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: $screen-scroll-bottom;
-    overflow: auto;
-    padding-top: $screen-padding-top;
-    padding-bottom: $screen-padding-bottom;
-  }
+	&__scroll {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: $screen-scroll-bottom;
+		overflow: auto;
+		padding: $s-4-raw;
+		@include viewport-height(75px);
+	}
 
-  &__balance-wrap {
-    padding: 4px 16px 14px;
-  }
+	&__balance-wrap {
+		padding: 4px 16px 14px;
+	}
 
-  &__balance-anim {
-    animation: countup 0.3s ease;
-  }
+	&__balance-anim {
+		animation: countup 0.3s ease;
+	}
 
-  &__budget-wrap {
-    padding: 0 16px 14px;
-  }
+	&__budget-wrap {
+		padding: 0 16px 14px;
+	}
 
-  &__stats-grid {
-    padding: 0 16px 18px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
+	&__stats-grid {
+		padding: 0 16px 18px;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 10px;
+	}
 
-  &__section-header {
-    padding: 0 16px 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
+	&__section-header {
+		padding: 0 16px 8px;
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+	}
 
-  &__section-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-2);
-    margin: 0;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    font-family: var(--font-mono);
-  }
+	&__section-title {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-2);
+		margin: 0;
+		letter-spacing: 0.5px;
+		text-transform: uppercase;
+		font-family: var(--font-mono);
+	}
 
-  &__see-all {
-    background: none;
-    border: none;
-    color: var(--text-3);
-    font-size: 12px;
-    font-family: var(--font-mono);
-    cursor: pointer;
-  }
+	&__see-all {
+		background: none;
+		border: none;
+		color: var(--text-3);
+		font-size: 12px;
+		font-family: var(--font-mono);
+		cursor: pointer;
+	}
 
-  &__tx-list {
-    padding: 0 16px;
-  }
+	&__tx-list {
+		padding: 0 16px;
+	}
 
-  &__tx-item {
-    border-bottom: 1px solid var(--border-1);
-  }
+	&__tx-item {
+		border-bottom: 1px solid var(--border-1);
+	}
 }

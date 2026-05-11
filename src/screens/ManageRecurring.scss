@@ -1,0 +1,614 @@
+@use '../styles/variables' as *;
+@use '../styles/mixins' as *;
+
+.manage-recurring {
+	height: 100%;
+	position: relative;
+	background: var(--bg-0);
+
+	&__status-bar {
+		@include status-bar-wrapper;
+	}
+
+	&__scroll {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: $screen-scroll-bottom;
+		overflow: auto;
+		padding: $s-4-raw;
+		@include viewport-height(75px);
+	}
+
+	&__header {
+		@include screen-header;
+	}
+
+	&__back-btn {
+		@include btn-icon;
+	}
+
+	&__title {
+		@include heading-1;
+	}
+
+	&__loading {
+		padding: 40px $s-4-raw;
+		text-align: center;
+		color: $text-3;
+		font-size: $fs-small;
+	}
+
+	&__empty {
+		padding: 40px $s-4-raw;
+		text-align: center;
+	}
+
+	&__empty-text {
+		margin-top: $s-3-raw;
+		color: $text-3;
+		font-size: $fs-body;
+	}
+
+	// Add button
+	&__add-wrap {
+		margin: 18px $s-4-raw 0;
+	}
+
+	&__add-btn {
+		width: 100%;
+		padding: 12px 0;
+		border-radius: $r-card-sm;
+		border: 1px dashed $border-2;
+		background: transparent;
+		color: $text-2;
+		font-size: $fs-body;
+		font-weight: $fw-medium;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: $s-2-raw;
+		cursor: pointer;
+	}
+
+	// List
+	&__list {
+		margin: 18px $s-4-raw 0;
+		@include card-sm;
+	}
+
+	&__item {
+		display: flex;
+		align-items: center;
+		gap: $s-3-raw;
+		padding: 14px $s-4-raw;
+
+		&:not(:last-child) {
+			border-bottom: 1px solid $border-1;
+		}
+
+		&--inactive {
+			opacity: 0.45;
+		}
+	}
+
+	&__cat-icon {
+		width: 30px;
+		height: 30px;
+		border-radius: 8px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	&__item-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__item-desc {
+		font-size: $fs-body;
+		font-weight: $fw-medium;
+		color: $text-1;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__item-meta {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin-top: 2px;
+	}
+
+	&__item-freq {
+		font-size: $fs-caption;
+		font-weight: $fw-semibold;
+		font-family: $font-mono;
+		padding: 2px 6px;
+		border-radius: 4px;
+		background: $bg-3;
+		color: $text-2;
+	}
+
+	&__item-day {
+		font-size: $fs-caption;
+		color: $text-3;
+	}
+
+	&__item-amount {
+		font-size: $fs-small;
+		font-weight: $fw-semibold;
+		font-family: $font-mono;
+		color: $text-1;
+		white-space: nowrap;
+		@include money;
+
+		&--income {
+			color: $pos;
+		}
+	}
+
+	&__item-actions {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		flex-shrink: 0;
+	}
+
+	&__icon-btn {
+		@include btn-icon;
+	}
+
+	// Toggle (small, for list items)
+	&__toggle-sm {
+		width: 34px;
+		height: 20px;
+		border-radius: 10px;
+		border: none;
+		cursor: pointer;
+		position: relative;
+		transition: background 0.2s;
+
+		&--on {
+			background: $pos;
+		}
+
+		&--off {
+			background: $bg-3;
+		}
+	}
+
+	&__toggle-sm-knob {
+		position: absolute;
+		top: 3px;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: #fff;
+		transition: left 0.2s;
+
+		.manage-recurring__toggle-sm--on & {
+			left: 17px;
+		}
+
+		.manage-recurring__toggle-sm--off & {
+			left: 3px;
+		}
+	}
+
+	// Form
+	&__form {
+		margin: 18px $s-4-raw 0;
+		@include card-sm;
+		padding: $s-4-raw;
+		display: flex;
+		flex-direction: column;
+		gap: $s-3-raw;
+	}
+
+	&__form-title {
+		font-size: $fs-small;
+		font-weight: $fw-semibold;
+		color: $text-2;
+	}
+
+	&__input {
+		@include input;
+	}
+
+	&__select {
+		@include select;
+	}
+
+	&__textarea {
+		@include input;
+		resize: vertical;
+		min-height: 48px;
+	}
+
+	&__row-2col {
+		display: flex;
+		gap: $s-2-raw;
+
+		> * {
+			flex: 1;
+		}
+	}
+
+	&__field {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	&__label {
+		font-size: $fs-caption;
+		color: $text-3;
+		font-weight: $fw-medium;
+	}
+
+	// Toggle (form)
+	&__toggle-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 4px 0;
+	}
+
+	&__toggle-label {
+		font-size: $fs-body;
+		font-weight: $fw-medium;
+		color: $text-1;
+	}
+
+	&__toggle {
+		width: 44px;
+		height: 26px;
+		border-radius: 13px;
+		border: none;
+		cursor: pointer;
+		position: relative;
+		transition: background 0.2s;
+
+		&--on {
+			background: $pos;
+		}
+
+		&--off {
+			background: $bg-3;
+		}
+	}
+
+	&__toggle-knob {
+		position: absolute;
+		top: 3px;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: #fff;
+		transition: left 0.2s;
+
+		.manage-recurring__toggle--on & {
+			left: 21px;
+		}
+
+		.manage-recurring__toggle--off & {
+			left: 3px;
+		}
+	}
+
+	&__form-actions {
+		display: flex;
+		gap: $s-2-raw;
+	}
+
+	&__cancel-btn {
+		flex: 1;
+		padding: 10px 0;
+		border-radius: $r-input;
+		border: 1px solid $border-2;
+		background: transparent;
+		color: $text-2;
+		font-family: $font-sans;
+		font-size: $fs-body;
+		font-weight: $fw-medium;
+		cursor: pointer;
+	}
+
+	&__save-btn {
+		flex: 1;
+		padding: 10px 0;
+		border-radius: $r-input;
+		border: none;
+		font-size: $fs-body;
+		font-weight: $fw-semibold;
+		font-family: $font-sans;
+
+		&--active {
+			background: $pos;
+			color: #0a0a0a;
+			cursor: pointer;
+		}
+
+		&--disabled {
+			background: $bg-3;
+			color: $text-4;
+			cursor: default;
+		}
+	}
+
+	// AI Section
+	&__ai-section {
+		margin: 18px $s-4-raw 0;
+		@include card-sm;
+		overflow: hidden;
+	}
+
+	&__ai-header {
+		display: flex;
+		align-items: center;
+		gap: $s-2-raw;
+		width: 100%;
+		padding: 12px $s-4-raw;
+		border: none;
+		background: transparent;
+		cursor: pointer;
+		font-family: $font-sans;
+	}
+
+	&__ai-header-label {
+		flex: 1;
+		text-align: left;
+		font-size: $fs-body;
+		font-weight: $fw-medium;
+		color: $text-1;
+	}
+
+	&__ai-done {
+		font-size: $fs-caption;
+		font-weight: $fw-semibold;
+		color: $pos;
+		padding: 2px 6px;
+		border-radius: 4px;
+		background: rgba($pos, 0.15);
+	}
+
+	&__ai-body {
+		padding: 0 $s-4-raw $s-4-raw;
+		display: flex;
+		flex-direction: column;
+		gap: $s-3-raw;
+	}
+
+	&__ai-dropzone {
+		border-radius: $r-input;
+		cursor: pointer;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		transition: border-color 0.2s;
+
+		&--empty {
+			border: 2px dashed $border-2;
+			padding: 20px;
+		}
+
+		&--has-files {
+			border: 1px solid $border-1;
+			padding: $s-3-raw;
+			align-items: stretch;
+		}
+	}
+
+	&__ai-dropzone-label {
+		font-size: $fs-small;
+		color: $text-3;
+	}
+
+	&__ai-dropzone-formats {
+		font-size: $fs-caption;
+		color: $text-4;
+	}
+
+	&__ai-file-list {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	&__ai-file-item {
+		display: flex;
+		align-items: center;
+		gap: $s-2-raw;
+	}
+
+	&__ai-file-name {
+		flex: 1;
+		font-size: $fs-small;
+		color: $text-2;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__ai-file-remove {
+		@include btn-icon;
+		padding: 2px;
+	}
+
+	&__ai-file-add-more {
+		font-size: $fs-caption;
+		color: $pos;
+		margin-top: 4px;
+	}
+
+	&__ai-hidden-input {
+		display: none;
+	}
+
+	&__ai-textarea {
+		@include input;
+		resize: vertical;
+		min-height: 48px;
+		font-size: $fs-small;
+	}
+
+	&__ai-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: $s-2-raw;
+		padding: 10px 0;
+		border-radius: $r-input;
+		border: none;
+		font-size: $fs-body;
+		font-weight: $fw-semibold;
+		font-family: $font-sans;
+
+		&--active {
+			background: $pos;
+			color: #0a0a0a;
+			cursor: pointer;
+		}
+
+		&--disabled {
+			background: $bg-3;
+			color: $text-4;
+			cursor: default;
+		}
+	}
+
+	&__ai-loading-text {
+		color: $text-3;
+		font-size: $fs-body;
+	}
+
+	// AI Review
+	&__ai-review {
+		margin: 18px $s-4-raw 0;
+		@include card-sm;
+		padding: $s-4-raw;
+	}
+
+	&__ai-review-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: $s-3-raw;
+	}
+
+	&__ai-review-title {
+		font-size: $fs-small;
+		font-weight: $fw-semibold;
+		color: $text-1;
+	}
+
+	&__ai-review-back {
+		padding: 4px 10px;
+		border-radius: $r-input;
+		border: 1px solid $border-2;
+		background: transparent;
+		color: $text-2;
+		font-size: $fs-caption;
+		font-family: $font-sans;
+		cursor: pointer;
+	}
+
+	&__ai-review-list {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		margin-bottom: $s-3-raw;
+	}
+
+	&__ai-review-item {
+		display: flex;
+		align-items: center;
+		gap: $s-3-raw;
+		padding: 12px 0;
+		cursor: pointer;
+		border-bottom: 1px solid $border-1;
+
+		&--unchecked {
+			opacity: 0.45;
+		}
+	}
+
+	&__ai-review-checkbox {
+		width: 20px;
+		height: 20px;
+		border-radius: 6px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+
+		&--checked {
+			background: $pos;
+		}
+
+		&--unchecked {
+			background: $bg-3;
+		}
+	}
+
+	&__ai-review-info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__ai-review-desc {
+		font-size: $fs-body;
+		font-weight: $fw-medium;
+		color: $text-1;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__ai-review-meta {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin-top: 2px;
+	}
+
+	&__ai-review-freq {
+		font-size: $fs-caption;
+		font-weight: $fw-semibold;
+		font-family: $font-mono;
+		padding: 2px 6px;
+		border-radius: 4px;
+		background: $bg-3;
+		color: $text-2;
+	}
+
+	&__ai-review-day {
+		font-size: $fs-caption;
+		color: $text-3;
+	}
+
+	&__ai-review-amount {
+		font-size: $fs-small;
+		font-weight: $fw-semibold;
+		font-family: $font-mono;
+		color: $text-1;
+		white-space: nowrap;
+		@include money;
+
+		&--income {
+			color: $pos;
+		}
+	}
+
+	&__ai-review-actions {
+		display: flex;
+		gap: $s-2-raw;
+	}
+}

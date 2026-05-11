@@ -1,117 +1,118 @@
 @use '../styles/variables' as *;
+@use '../styles/mixins' as *;
 
 .categories-screen {
-  height: 100%;
-  position: relative;
+	height: 100%;
+	position: relative;
 
-  &__status-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-  }
+	&__status-bar {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 10;
+	}
 
-  &__scroll {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: $screen-scroll-bottom;
-    overflow: auto;
-    padding-top: $screen-padding-top;
-    padding-bottom: $screen-padding-bottom;
-  }
+	&__scroll {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: $screen-scroll-bottom;
+		overflow: auto;
+		padding: $s-4-raw;
+		@include viewport-height(75px);
+	}
 
-  &__header {
-    padding: 8px 16px 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-  }
+	&__header {
+		padding: 8px 16px 6px;
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-end;
+	}
 
-  &__title {
-    font-size: 24px;
-    font-weight: 600;
-    letter-spacing: -0.6px;
-    margin: 0;
-    color: var(--text-1);
-  }
+	&__title {
+		font-size: 24px;
+		font-weight: 600;
+		letter-spacing: -0.6px;
+		margin: 0;
+		color: var(--text-1);
+	}
 
-  &__month {
-    font-size: 11px;
-    color: var(--text-3);
-    font-family: var(--font-mono);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
+	&__month {
+		font-size: 11px;
+		color: var(--text-3);
+		font-family: var(--font-mono);
+		letter-spacing: 0.5px;
+		text-transform: uppercase;
+	}
 
-  &__grid {
-    padding: 12px 16px 8px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
+	&__grid {
+		padding: 12px 16px 8px;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 10px;
+	}
 
-  &__card {
-    background: var(--bg-1);
-    border: 1px solid var(--border-1);
-    border-radius: var(--r-card-sm);
-    padding: 14px;
-  }
+	&__card {
+		background: var(--bg-1);
+		border: 1px solid var(--border-1);
+		border-radius: var(--r-card-sm);
+		padding: 14px;
+	}
 
-  &__card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
-  }
+	&__card-top {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		margin-bottom: 8px;
+	}
 
-  &__card-label {
-    font-size: 13.5px;
-    font-weight: 500;
-    color: var(--text-1);
-    margin-bottom: 6px;
-  }
+	&__card-label {
+		font-size: 13.5px;
+		font-weight: 500;
+		color: var(--text-1);
+		margin-bottom: 6px;
+	}
 
-  &__card-amount {
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: -0.4px;
-    color: var(--text-1);
-  }
+	&__card-amount {
+		font-size: 17px;
+		font-weight: 600;
+		letter-spacing: -0.4px;
+		color: var(--text-1);
+	}
 
-  &__card-budget {
-    font-size: 11px;
-    color: var(--text-3);
-    font-family: var(--font-mono);
-    margin-top: 1px;
-  }
+	&__card-budget {
+		font-size: 11px;
+		color: var(--text-3);
+		font-family: var(--font-mono);
+		margin-top: 1px;
+	}
 
-  &__empty {
-    grid-column: 1 / -1;
-    padding: 30px 0;
-    text-align: center;
-    color: var(--text-3);
-    font-size: 13px;
-    font-family: var(--font-mono);
-  }
+	&__empty {
+		grid-column: 1 / -1;
+		padding: 30px 0;
+		text-align: center;
+		color: var(--text-3);
+		font-size: 13px;
+		font-family: var(--font-mono);
+	}
 
-  &__add-btn {
-    background: transparent;
-    border: 1.5px dashed var(--border-2);
-    border-radius: var(--r-card-sm);
-    padding: 14px;
-    min-height: 130px;
-    color: var(--text-3);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-weight: 500;
-  }
+	&__add-btn {
+		background: transparent;
+		border: 1.5px dashed var(--border-2);
+		border-radius: var(--r-card-sm);
+		padding: 14px;
+		min-height: 130px;
+		color: var(--text-3);
+		cursor: pointer;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		font-family: var(--font-sans);
+		font-size: 13px;
+		font-weight: 500;
+	}
 }
