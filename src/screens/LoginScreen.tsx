@@ -33,7 +33,7 @@ export function LoginScreen({ onAuthenticated: _onAuthenticated }: LoginScreenPr
         </div>
 
         <p className="login__invite">
-          Acesso por convite
+          Powered by AI
         </p>
       </div>
     </div>
