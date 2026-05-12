@@ -75,7 +75,7 @@ export function LiveHome({ tx, recurring, currency, monthlyBudget, onTabChange, 
           </div>
         </div>
         <div className="live-home__budget-wrap">
-          <BudgetBar spent={txStats.outs} budget={monthlyBudget} label="Orçamento mensal" />
+          <BudgetBar spent={txStats.outs} budget={monthlyBudget} label="Orçamento mensal" currency={currency} />
         </div>
         <div className="live-home__stats-grid">
           <StatCard label="Entradas" value={fmtAmount(txStats.ins, currency, { decimals: 0 })} sub="realizadas" accent="pos" icon="arrowDown" />
