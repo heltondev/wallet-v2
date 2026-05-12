@@ -27,9 +27,8 @@
   &__top-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    position: relative;
-    padding-bottom: 10px;
+    justify-content: space-between;
+    margin-bottom: 14px;
   }
 
   &__handle {
@@ -40,13 +39,10 @@
   }
 
   &__close-btn {
-    position: absolute;
-    right: 0;
-    top: 0;
     background: none;
     border: none;
     cursor: pointer;
-    padding: 6px 0;
+    padding: 6px 12px;
     font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 500;
