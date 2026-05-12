@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { CATS } from '../data/categories';
 import { fmtAmount, convertAmount } from '../utils/formatters';
+import { monthlyAmount } from '../utils/recurring';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { CategoryIcon } from '../components/CategoryIcon';
 import { nextMonthLabel, currentMonth, currentYear } from '../utils/dates';
@@ -24,7 +25,8 @@ export function PrevisaoA({ tx, recurring, currency, monthlyBudget, workspaceId 
     let income = 0;
     let expenses = 0;
     for (const r of activeRecurring) {
-      const converted = convertAmount(r.amount, r.currency, currency);
+      const monthly = monthlyAmount(r.amount, r.frequency, r.customDays);
+      const converted = convertAmount(monthly, r.currency, currency);
       if (converted > 0) income += converted;
       else expenses += Math.abs(converted);
     }
@@ -123,7 +125,8 @@ export function PrevisaoA({ tx, recurring, currency, monthlyBudget, workspaceId 
                 </div>
                 <div className="forecast-screen__recurring-list">
                   {activeRecurring.map(r => {
-                    const converted = convertAmount(r.amount, r.currency, currency);
+                    const monthly = monthlyAmount(r.amount, r.frequency, r.customDays);
+                    const converted = convertAmount(monthly, r.currency, currency);
                     return (
                       <div key={r.id} className="forecast-screen__recurring-row">
                         <CategoryIcon cat={r.cat} size={28} radius={8} />

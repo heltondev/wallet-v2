@@ -5,6 +5,7 @@ import { BalanceCard } from '../components/BalanceCard';
 import { BudgetBar } from '../components/BudgetBar';
 import { StatCard } from '../components/StatCard';
 import { fmtAmount, convertAmount } from '../utils/formatters';
+import { monthlyAmount } from '../utils/recurring';
 import { currentMonth, currentYear, currentMonthKey, monthLabel, daysRemainingInMonth } from '../utils/dates';
 import { WorkspaceSelector } from '../components/WorkspaceSelector';
 import type { Transaction, RecurringTransaction, Workspace, TabId, CurrencyCode } from '../types';
@@ -45,7 +46,8 @@ export function LiveHome({ tx, recurring, currency, monthlyBudget, onTabChange, 
     let income = 0;
     let expenses = 0;
     for (const r of activeRecurring) {
-      const converted = convertAmount(r.amount, r.currency, currency, fxRates);
+      const monthly = monthlyAmount(r.amount, r.frequency, r.customDays);
+      const converted = convertAmount(monthly, r.currency, currency, fxRates);
       if (converted > 0) income += converted;
       else expenses += Math.abs(converted);
     }
