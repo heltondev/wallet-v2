@@ -2,347 +2,340 @@
 @use '../styles/mixins' as *;
 
 .live-home {
-  height: 100%;
-  position: relative;
+	height: 100%;
+	position: relative;
 
-  &__status-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-  }
+	&__status-bar {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 10;
+	}
 
-  &__scroll {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: $screen-scroll-bottom;
-    overflow: auto;
-    padding: $s-4-raw;
-    @include viewport-height(75px);
-  }
+	&__scroll {
+		@include screen-scroll;
+	}
 
-  // ─── Summary card ──────────────────────────────────────────
-  &__summary-card {
-    margin: 0 16px 18px;
-    @include card;
-  }
+	// ─── Summary card ──────────────────────────────────────────
+	&__summary-card {
+		margin: 0 16px 18px;
+		@include card;
+	}
 
-  &__summary-month {
-    font-size: $fs-h2;
-    font-weight: $fw-semibold;
-    color: $text-1;
-    letter-spacing: -0.3px;
-    margin-bottom: 16px;
-  }
+	&__summary-month {
+		font-size: $fs-h2;
+		font-weight: $fw-semibold;
+		color: $text-1;
+		letter-spacing: -0.3px;
+		margin-bottom: 16px;
+	}
 
-  &__summary-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 0;
-  }
+	&__summary-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 0;
+	}
 
-  &__summary-block {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    text-align: center;
-  }
+	&__summary-block {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		text-align: center;
+	}
 
-  &__summary-divider {
-    width: 1px;
-    height: 40px;
-    background: $border-1;
-    flex-shrink: 0;
-  }
+	&__summary-divider {
+		width: 1px;
+		height: 40px;
+		background: $border-1;
+		flex-shrink: 0;
+	}
 
-  &__summary-label {
-    font-size: $fs-caption;
-    color: $text-3;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+	&__summary-label {
+		font-size: $fs-caption;
+		color: $text-3;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
 
-  &__summary-value {
-    font-family: $font-mono;
-    font-size: $fs-h3;
-    font-weight: $fw-semibold;
-    color: $text-1;
-    font-variant-numeric: tabular-nums;
+	&__summary-value {
+		font-family: $font-mono;
+		font-size: $fs-h3;
+		font-weight: $fw-semibold;
+		color: $text-1;
+		font-variant-numeric: tabular-nums;
 
-    &--pending {
-      color: $warn;
-    }
+		&--pending {
+			color: $warn;
+		}
 
-    &--paid {
-      color: $pos;
-    }
-  }
+		&--paid {
+			color: $pos;
+		}
+	}
 
-  &__summary-progress {
-    height: 4px;
-    background: $bg-3;
-    border-radius: $r-pill;
-    margin-top: 16px;
-    overflow: hidden;
-  }
+	&__summary-progress {
+		height: 4px;
+		background: $bg-3;
+		border-radius: $r-pill;
+		margin-top: 16px;
+		overflow: hidden;
+	}
 
-  &__summary-progress-fill {
-    height: 100%;
-    background: $pos;
-    border-radius: $r-pill;
-    transition: width 0.3s ease;
-  }
+	&__summary-progress-fill {
+		height: 100%;
+		background: $pos;
+		border-radius: $r-pill;
+		transition: width 0.3s ease;
+	}
 
-  &__summary-progress-label {
-    font-size: $fs-caption;
-    color: $text-3;
-    margin-top: 6px;
-    text-align: center;
-  }
+	&__summary-progress-label {
+		font-size: $fs-caption;
+		color: $text-3;
+		margin-top: 6px;
+		text-align: center;
+	}
 
-  // ─── Bills section ─────────────────────────────────────────
-  &__bills-section {
-    margin: 0 16px 18px;
-    background: $bg-1;
-    border: 1px solid $border-1;
-    border-radius: $r-card;
-    overflow: hidden;
-  }
+	// ─── Bills section ─────────────────────────────────────────
+	&__bills-section {
+		margin: 0 16px 18px;
+		background: $bg-1;
+		border: 1px solid $border-1;
+		border-radius: $r-card;
+		overflow: hidden;
+	}
 
-  &__bills-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 16px 10px;
-  }
+	&__bills-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 14px 16px 10px;
+	}
 
-  &__bills-title {
-    font-size: $fs-h3;
-    font-weight: $fw-semibold;
-    color: $text-1;
-    letter-spacing: -0.2px;
-  }
+	&__bills-title {
+		font-size: $fs-h3;
+		font-weight: $fw-semibold;
+		color: $text-1;
+		letter-spacing: -0.2px;
+	}
 
-  &__bills-badge {
-    font-size: $fs-caption;
-    font-weight: $fw-semibold;
-    color: $warn;
-    background: color-mix(in oklch, var(--warn) 15%, transparent);
-    padding: 2px 8px;
-    border-radius: $r-pill;
-  }
+	&__bills-badge {
+		font-size: $fs-caption;
+		font-weight: $fw-semibold;
+		color: $warn;
+		background: color-mix(in oklch, var(--warn) 15%, transparent);
+		padding: 2px 8px;
+		border-radius: $r-pill;
+	}
 
-  &__bills-group {
-    // grouping wrapper
-  }
+	&__bills-group {
+		// grouping wrapper
+	}
 
-  &__bill-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 16px;
-    border-left: 3px solid transparent;
-    transition: background 0.15s ease;
+	&__bill-item {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 16px;
+		border-left: 3px solid transparent;
+		transition: background 0.15s ease;
 
-    &--pending {
-      border-left-color: $warn;
-    }
+		&--pending {
+			border-left-color: $warn;
+		}
 
-    &--overdue {
-      border-left-color: $neg;
-      background: color-mix(in oklch, var(--neg) 5%, transparent);
-    }
+		&--overdue {
+			border-left-color: $neg;
+			background: color-mix(in oklch, var(--neg) 5%, transparent);
+		}
 
-    &--paid {
-      border-left-color: $pos;
-      opacity: 0.7;
-    }
-  }
+		&--paid {
+			border-left-color: $pos;
+			opacity: 0.7;
+		}
+	}
 
-  &__bill-icon {
-    flex-shrink: 0;
-  }
+	&__bill-icon {
+		flex-shrink: 0;
+	}
 
-  &__bill-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
+	&__bill-info {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
 
-  &__bill-desc {
-    font-size: $fs-body;
-    font-weight: $fw-medium;
-    color: $text-1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+	&__bill-desc {
+		font-size: $fs-body;
+		font-weight: $fw-medium;
+		color: $text-1;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 
-  &__bill-meta {
-    font-size: $fs-caption;
-    color: $text-3;
-  }
+	&__bill-meta {
+		font-size: $fs-caption;
+		color: $text-3;
+	}
 
-  &__bill-amount {
-    font-family: $font-mono;
-    font-size: $fs-small;
-    font-variant-numeric: tabular-nums;
-    color: $text-2;
-    white-space: nowrap;
-  }
+	&__bill-amount {
+		font-family: $font-mono;
+		font-size: $fs-small;
+		font-variant-numeric: tabular-nums;
+		color: $text-2;
+		white-space: nowrap;
+	}
 
-  &__bill-pay-btn {
-    flex-shrink: 0;
-    padding: 4px 12px;
-    border-radius: $r-input;
-    border: 1px solid $pos;
-    background: transparent;
-    color: $pos;
-    font-family: $font-sans;
-    font-size: $fs-caption;
-    font-weight: $fw-semibold;
-    cursor: pointer;
-    transition: background 0.15s ease;
+	&__bill-pay-btn {
+		flex-shrink: 0;
+		padding: 4px 12px;
+		border-radius: $r-input;
+		border: 1px solid $pos;
+		background: transparent;
+		color: $pos;
+		font-family: $font-sans;
+		font-size: $fs-caption;
+		font-weight: $fw-semibold;
+		cursor: pointer;
+		transition: background 0.15s ease;
 
-    &:active {
-      background: color-mix(in oklch, var(--pos) 15%, transparent);
-    }
-  }
+		&:active {
+			background: color-mix(in oklch, var(--pos) 15%, transparent);
+		}
+	}
 
-  &__bill-check {
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: color-mix(in oklch, var(--pos) 18%, transparent);
-    color: $pos;
-    font-size: 12px;
-    font-weight: $fw-bold;
-  }
+	&__bill-check {
+		flex-shrink: 0;
+		width: 24px;
+		height: 24px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		background: color-mix(in oklch, var(--pos) 18%, transparent);
+		color: $pos;
+		font-size: 12px;
+		font-weight: $fw-bold;
+	}
 
-  &__bill-undo-btn {
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: color-mix(in oklch, var(--neg) 12%, transparent);
-    border: none;
-    cursor: pointer;
-    padding: 0;
+	&__bill-undo-btn {
+		flex-shrink: 0;
+		width: 24px;
+		height: 24px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		background: color-mix(in oklch, var(--neg) 12%, transparent);
+		border: none;
+		cursor: pointer;
+		padding: 0;
 
-    &:active {
-      background: color-mix(in oklch, var(--neg) 25%, transparent);
-    }
-  }
+		&:active {
+			background: color-mix(in oklch, var(--neg) 25%, transparent);
+		}
+	}
 
-  &__bills-divider {
-    height: 1px;
-    margin: 4px 16px;
-    background: $border-1;
-  }
+	&__bills-divider {
+		height: 1px;
+		margin: 4px 16px;
+		background: $border-1;
+	}
 
-  // ─── Verify button ─────────────────────────────────────────
-  &__verify-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: calc(100% - 32px);
-    margin: 0 16px 18px;
-    padding: 14px 0;
-    border-radius: $r-card-sm;
-    border: 1px dashed $pos;
-    background: color-mix(in oklch, var(--pos) 6%, transparent);
-    color: $pos;
-    font-family: $font-sans;
-    font-size: $fs-body;
-    font-weight: $fw-semibold;
-    cursor: pointer;
-    transition: background 0.15s ease;
+	// ─── Verify button ─────────────────────────────────────────
+	&__verify-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+		width: calc(100% - 32px);
+		margin: 0 16px 18px;
+		padding: 14px 0;
+		border-radius: $r-card-sm;
+		border: 1px dashed $pos;
+		background: color-mix(in oklch, var(--pos) 6%, transparent);
+		color: $pos;
+		font-family: $font-sans;
+		font-size: $fs-body;
+		font-weight: $fw-semibold;
+		cursor: pointer;
+		transition: background 0.15s ease;
 
-    &:active {
-      background: color-mix(in oklch, var(--pos) 12%, transparent);
-    }
-  }
+		&:active {
+			background: color-mix(in oklch, var(--pos) 12%, transparent);
+		}
+	}
 
-  // ─── Quick stats ───────────────────────────────────────────
-  &__quick-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 0 16px 18px;
-  }
+	// ─── Quick stats ───────────────────────────────────────────
+	&__quick-stats {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 10px;
+		padding: 0 16px 18px;
+	}
 
-  &__stat-card {
-    @include card;
-    padding: 14px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+	&__stat-card {
+		@include card;
+		padding: 14px;
+		cursor: pointer;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
 
-  &__stat-label {
-    font-size: $fs-caption;
-    color: $text-3;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+	&__stat-label {
+		font-size: $fs-caption;
+		color: $text-3;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
 
-  &__stat-value {
-    font-family: $font-mono;
-    font-size: $fs-h3;
-    font-weight: $fw-semibold;
-    font-variant-numeric: tabular-nums;
-    color: $text-1;
+	&__stat-value {
+		font-family: $font-mono;
+		font-size: $fs-h3;
+		font-weight: $fw-semibold;
+		font-variant-numeric: tabular-nums;
+		color: $text-1;
 
-    &--pos {
-      color: $pos;
-    }
+		&--pos {
+			color: $pos;
+		}
 
-    &--neg {
-      color: $text-1;
-    }
-  }
+		&--neg {
+			color: $text-1;
+		}
+	}
 
-  &__stat-sub {
-    font-size: $fs-caption;
-    color: $text-4;
-  }
+	&__stat-sub {
+		font-size: $fs-caption;
+		color: $text-4;
+	}
 
-  // ─── Quick links ───────────────────────────────────────────
-  &__quick-links {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 0 16px 24px;
-  }
+	// ─── Quick links ───────────────────────────────────────────
+	&__quick-links {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding: 0 16px 24px;
+	}
 
-  &__quick-link {
-    background: none;
-    border: none;
-    padding: 0;
-    color: $text-3;
-    font-family: $font-sans;
-    font-size: $fs-small;
-    font-weight: $fw-medium;
-    cursor: pointer;
-    text-align: left;
+	&__quick-link {
+		background: none;
+		border: none;
+		padding: 0;
+		color: $text-3;
+		font-family: $font-sans;
+		font-size: $fs-small;
+		font-weight: $fw-medium;
+		cursor: pointer;
+		text-align: left;
 
-    &:active {
-      color: $pos;
-    }
-  }
+		&:active {
+			color: $pos;
+		}
+	}
 }

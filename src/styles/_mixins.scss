@@ -61,8 +61,14 @@
 	right: 0;
 	bottom: $screen-scroll-bottom;
 	overflow: auto;
-	padding-top: $screen-padding-top;
-	padding-bottom: $screen-padding-bottom;
+	padding: 0 $s-4-raw;
+	margin-top: 3.5rem;
+	@include viewport-height(75px);
+
+	@media (max-width: $bp-mobile) {
+		padding: $s-4-raw;
+		margin-top: 0;
+	}
 }
 
 @mixin screen-header {

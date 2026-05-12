@@ -10,8 +10,6 @@
 
   &__scroll {
     @include screen-scroll;
-    padding-left: $s-4-raw;
-    padding-right: $s-4-raw;
   }
 
   &__header {

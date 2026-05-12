@@ -11,14 +11,7 @@
 	}
 
 	&__scroll {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: $screen-scroll-bottom;
-		overflow: auto;
-		padding: $s-4-raw;
-		@include viewport-height(75px);
+		@include screen-scroll;
 	}
 
 	&__header {
