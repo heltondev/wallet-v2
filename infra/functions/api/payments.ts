@@ -45,8 +45,15 @@ async function listPayments(event: APIGatewayProxyEvent, userId: string): Promis
   const prefix = month ? `PAYMENT#${month}` : 'PAYMENT#';
   const items = await queryItems(`USER#${userId}`, prefix);
   const wsFilter = event.queryStringParameters?.workspace;
-  const filtered = wsFilter ? items.filter(i => i.workspaceId === wsFilter) : items;
-  return ok(event, filtered);
+  if (wsFilter) {
+    // Get recurring IDs for this workspace to match payments
+    const recurring = await queryItems(`USER#${userId}`, 'RECURRING#');
+    const wsRecurringIds = new Set(
+      recurring.filter(r => r.workspaceId === wsFilter).map(r => r.id as string)
+    );
+    return ok(event, items.filter(i => wsRecurringIds.has(i.recurringId as string)));
+  }
+  return ok(event, items);
 }
 
 async function removePayment(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
