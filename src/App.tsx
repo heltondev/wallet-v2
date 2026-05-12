@@ -405,7 +405,10 @@ export function App() {
 						recurring={recurringItems}
 						currency={activeCurrency}
 						monthlyBudget={activeBudget}
-						workspaceId={activeWorkspace}
+						workspaces={workspaces}
+						activeWorkspace={activeWorkspace}
+						onWorkspaceChange={setActiveWorkspace}
+						fxRates={fxRates}
 					/>
 				)}
 				{tab === 'cats' && !subScreen && (

@@ -4,8 +4,9 @@ import { fmtAmount, convertAmount } from '../utils/formatters';
 import { monthlyAmount } from '../utils/recurring';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { CategoryIcon } from '../components/CategoryIcon';
+import { WorkspaceSelector } from '../components/WorkspaceSelector';
 import { nextMonthLabel, currentMonth, currentYear } from '../utils/dates';
-import type { Transaction, RecurringTransaction, CurrencyCode } from '../types';
+import type { Transaction, RecurringTransaction, Workspace, CurrencyCode } from '../types';
 import './PrevisaoA.scss';
 
 interface PrevisaoAProps {
@@ -13,20 +14,23 @@ interface PrevisaoAProps {
   recurring: RecurringTransaction[];
   currency: CurrencyCode;
   monthlyBudget: number;
-  workspaceId?: string | null;
+  workspaces?: Workspace[];
+  activeWorkspace?: string | null;
+  onWorkspaceChange?: (id: string | null) => void;
+  fxRates?: Record<string, number>;
 }
 
-export function PrevisaoA({ tx, recurring, currency, monthlyBudget, workspaceId = null }: PrevisaoAProps) {
+export function PrevisaoA({ tx, recurring, currency, monthlyBudget, workspaces = [], activeWorkspace = null, onWorkspaceChange, fxRates }: PrevisaoAProps) {
   const activeRecurring = useMemo(() =>
-    recurring.filter(r => r.active && (!workspaceId || r.workspaceId === workspaceId)),
-  [recurring, workspaceId]);
+    recurring.filter(r => r.active && (!activeWorkspace || r.workspaceId === activeWorkspace)),
+  [recurring, activeWorkspace]);
 
   const recurringStats = useMemo(() => {
     let income = 0;
     let expenses = 0;
     for (const r of activeRecurring) {
       const monthly = monthlyAmount(r.amount, r.frequency, r.customDays);
-      const converted = convertAmount(monthly, r.currency, currency);
+      const converted = convertAmount(monthly, r.currency, currency, fxRates);
       if (converted > 0) income += converted;
       else expenses += Math.abs(converted);
     }
@@ -38,7 +42,7 @@ export function PrevisaoA({ tx, recurring, currency, monthlyBudget, workspaceId 
     let outs = 0;
     const byCat: Record<string, number> = {};
     for (const item of tx) {
-      const converted = convertAmount(item.amount, item.currency, currency);
+      const converted = convertAmount(item.amount, item.currency, currency, fxRates);
       if (converted > 0) ins += converted;
       else {
         const abs = Math.abs(converted);
@@ -57,6 +61,9 @@ export function PrevisaoA({ tx, recurring, currency, monthlyBudget, workspaceId 
     <div className="phone-surface forecast-screen" data-screen-label="Forecast A">
       <div className="forecast-screen__status-bar"><IOSStatusBar /></div>
       <div className="forecast-screen__scroll no-scrollbar">
+        {workspaces.length > 0 && onWorkspaceChange && (
+          <WorkspaceSelector workspaces={workspaces} activeId={activeWorkspace} onChange={onWorkspaceChange} />
+        )}
         <div className="forecast-screen__header">
           <div className="forecast-screen__label">PREVISÃO PARA</div>
           <h1 className="forecast-screen__title">{nextMonthLabel()}</h1>
@@ -74,7 +81,7 @@ export function PrevisaoA({ tx, recurring, currency, monthlyBudget, workspaceId 
             {/* Projected balance card */}
             <div className="forecast-screen__balance-card">
               <div className="forecast-screen__balance-label">Projeção {nextMonthLabel()}</div>
-              <div className="money forecast-screen__balance-value" style={{ color: recurringStats.net >= 0 ? 'var(--pos)' : 'var(--neg)' }}>
+              <div className={`money forecast-screen__balance-value ${recurringStats.net >= 0 ? 'forecast-screen__balance-value--pos' : 'forecast-screen__balance-value--neg'}`}>
                 {fmtAmount(recurringStats.net, currency, { decimals: 0 })}
               </div>
               <div className="forecast-screen__balance-sub">
@@ -107,7 +114,7 @@ export function PrevisaoA({ tx, recurring, currency, monthlyBudget, workspaceId 
                     </div>
                     <div>
                       <div className="forecast-screen__summary-label">Sobra projetada</div>
-                      <div className="money forecast-screen__summary-value" style={{ color: (monthlyBudget - recurringStats.expenses) >= 0 ? 'var(--pos)' : 'var(--neg)' }}>
+                      <div className={`money forecast-screen__summary-value ${(monthlyBudget - recurringStats.expenses) >= 0 ? 'forecast-screen__summary-value--pos' : 'forecast-screen__summary-value--neg'}`}>
                         {fmtAmount(monthlyBudget - recurringStats.expenses, currency, { decimals: 0 })}
                       </div>
                     </div>
@@ -126,7 +133,7 @@ export function PrevisaoA({ tx, recurring, currency, monthlyBudget, workspaceId 
                 <div className="forecast-screen__recurring-list">
                   {activeRecurring.map(r => {
                     const monthly = monthlyAmount(r.amount, r.frequency, r.customDays);
-                    const converted = convertAmount(monthly, r.currency, currency);
+                    const converted = convertAmount(monthly, r.currency, currency, fxRates);
                     return (
                       <div key={r.id} className="forecast-screen__recurring-row">
                         <CategoryIcon cat={r.cat} size={28} radius={8} />
