@@ -4,7 +4,6 @@ import { MonthSelector } from '../components/MonthSelector';
 import { BalanceCard } from '../components/BalanceCard';
 import { BudgetBar } from '../components/BudgetBar';
 import { StatCard } from '../components/StatCard';
-import { Icons } from '../components/icons/Icons';
 import { fmtAmount, convertAmount } from '../utils/formatters';
 import { currentMonth, currentYear, currentMonthKey, monthLabel, daysRemainingInMonth } from '../utils/dates';
 import { WorkspaceSelector } from '../components/WorkspaceSelector';
@@ -85,28 +84,14 @@ export function LiveHome({ tx, recurring, currency, monthlyBudget, onTabChange, 
           <StatCard label="Sobra projetada" value={fmtAmount(projectedBalance, currency, { decimals: 0 })} sub={`${activeRecurring.length} recorrentes`} accent={projectedBalance >= 0 ? 'pos' : 'neg'} />
         </div>
 
-        {/* Quick access cards */}
-        <div className="live-home__quick-cards">
-          <button className="live-home__quick-card" onClick={() => onTabChange('list')}>
-            <div className="live-home__quick-card-icon">
-              <Icons.list size={20} color="var(--text-2)" />
-            </div>
-            <div className="live-home__quick-card-info">
-              <div className="live-home__quick-card-count">{tx.length}</div>
-              <div className="live-home__quick-card-label">Transações</div>
-            </div>
-            <Icons.chevR size={16} color="var(--text-4)" />
-          </button>
-          <button className="live-home__quick-card" onClick={() => onNavigateRecurring?.()}>
-            <div className="live-home__quick-card-icon">
-              <Icons.repeat size={20} color="var(--text-2)" />
-            </div>
-            <div className="live-home__quick-card-info">
-              <div className="live-home__quick-card-count">{activeRecurring.length}</div>
-              <div className="live-home__quick-card-label">Recorrentes</div>
-            </div>
-            <Icons.chevR size={16} color="var(--text-4)" />
-          </button>
+        {/* Quick access cards — same grid as stats above */}
+        <div className="live-home__stats-grid">
+          <div className="live-home__clickable-card" onClick={() => onTabChange('list')}>
+            <StatCard label="Transações" value={String(tx.length)} sub="ver todas →" accent="neutral" icon="list" />
+          </div>
+          <div className="live-home__clickable-card" onClick={() => onNavigateRecurring?.()}>
+            <StatCard label="Recorrentes" value={String(activeRecurring.length)} sub="gerenciar →" accent="neutral" icon="repeat" />
+          </div>
         </div>
       </div>
     </div>
