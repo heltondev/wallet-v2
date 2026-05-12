@@ -20,7 +20,7 @@ import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL, convertAmount } from './utils/formatters';
 import { fetchFxRates } from './utils/fxRates';
 import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
-import { listTransactions, createTransaction, listAccounts, getSettings, generateRecurring, listWorkspaces, listRecurring } from './lib/api';
+import { listTransactions, createTransaction, deleteTransaction, listAccounts, getSettings, generateRecurring, listWorkspaces, listRecurring } from './lib/api';
 import type { Transaction, Account, Workspace, RecurringTransaction, TabId, FabKind, ToastData, CurrencyCode } from './types';
 import './App.scss';
 
@@ -167,6 +167,20 @@ export function App() {
     }
   };
 
+  const handleDeleteTx = async (txId: number) => {
+    try {
+      const txItem = tx.find(item => item.id === txId);
+      const month = txItem?.date?.slice(0, 7) ?? '';
+      await deleteTransaction(String(txId), month);
+      const txData = await listTransactions();
+      setTx(txData as unknown as Transaction[]);
+      showToast('Transação apagada', 0);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao apagar';
+      showToast(msg, 0);
+    }
+  };
+
   const handleSignOut = () => {
     signOut();
     setAuthed(false);
@@ -237,6 +251,8 @@ export function App() {
             workspaces={workspaces}
             activeWorkspace={activeWorkspace}
             onWorkspaceChange={setActiveWorkspace}
+            onDelete={handleDeleteTx}
+            onEdit={() => {}}
           />
         )}
         {tab === 'forecast' && (

@@ -29,8 +29,8 @@ export const listTransactions = (month?: string) =>
 export const updateTransaction = (id: string, month: string, data: Record<string, unknown>) =>
   apiFetch<Record<string, unknown>>(`/transactions/${id}?month=${month}`, { method: 'PUT', body: JSON.stringify({ month, ...data }) });
 
-export const deleteTransaction = (id: string) =>
-  apiFetch<void>(`/transactions/${id}`, { method: 'DELETE' });
+export const deleteTransaction = (id: string, month: string) =>
+  apiFetch<void>(`/transactions/${id}?month=${month}`, { method: 'DELETE' });
 
 // Accounts
 export const createAccount = (data: Record<string, unknown>) =>

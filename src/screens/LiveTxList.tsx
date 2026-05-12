@@ -22,10 +22,14 @@ interface LiveTxListProps {
   workspaces?: Workspace[];
   activeWorkspace?: string | null;
   onWorkspaceChange?: (id: string | null) => void;
+  onDelete?: (txId: number) => void;
+  onEdit?: (tx: Transaction) => void;
 }
 
-export function LiveTxList({ tx, displayCurrency, workspaces = [], activeWorkspace = null, onWorkspaceChange }: LiveTxListProps) {
+export function LiveTxList({ tx, displayCurrency, workspaces = [], activeWorkspace = null, onWorkspaceChange, onDelete, onEdit }: LiveTxListProps) {
   const [filter, setFilter] = useState<'all' | 'out' | 'in'>('all');
+  const [expandedTxId, setExpandedTxId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const filtered = useMemo(()=>{
     if (filter==='out') return tx.filter(item=>item.amount<0);
     if (filter==='in') return tx.filter(item=>item.amount>0);
@@ -59,11 +63,47 @@ export function LiveTxList({ tx, displayCurrency, workspaces = [], activeWorkspa
           <Chip active={filter==='all'} onClick={()=>setFilter('all')}>Todas</Chip>
           <Chip active={filter==='out'} onClick={()=>setFilter('out')}>Saídas</Chip>
           <Chip active={filter==='in'}  onClick={()=>setFilter('in')}>Entradas</Chip>
-          <Chip leadingIcon="filter">Filtros</Chip>
         </div>
         {grouped.map(grp=>(
           <TransactionGroup key={grp.day+grp.wd} day={grp.day} weekday={grp.wd.toUpperCase()+(grp.day==='14'?' · HOJE':'')} total={grp.total}>
-            {grp.items.map(row=>(<TransactionRow key={row.id} tx={row} displayCurrency={displayCurrency}/>))}
+            {grp.items.map(row=>(
+              <div key={row.id}>
+                <TransactionRow
+                  tx={row}
+                  displayCurrency={displayCurrency}
+                  onClick={() => {
+                    setExpandedTxId(expandedTxId === row.id ? null : row.id);
+                    setConfirmDeleteId(null);
+                  }}
+                />
+                {expandedTxId === row.id && (
+                  <div className="live-tx-list__tx-actions">
+                    <button
+                      className="live-tx-list__tx-action-btn"
+                      onClick={() => onEdit?.(row)}
+                    >
+                      <Icons.pencil size={14} color="var(--text-2)" />
+                      <span>Editar</span>
+                    </button>
+                    <button
+                      className={`live-tx-list__tx-action-btn ${confirmDeleteId === row.id ? 'live-tx-list__tx-action-btn--danger' : ''}`}
+                      onClick={() => {
+                        if (confirmDeleteId === row.id) {
+                          onDelete?.(row.id);
+                          setExpandedTxId(null);
+                          setConfirmDeleteId(null);
+                        } else {
+                          setConfirmDeleteId(row.id);
+                        }
+                      }}
+                    >
+                      <Icons.trash size={14} color={confirmDeleteId === row.id ? 'var(--neg)' : 'var(--text-2)'} />
+                      <span>{confirmDeleteId === row.id ? 'Confirmar' : 'Apagar'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
           </TransactionGroup>
         ))}
         {grouped.length===0 && (
