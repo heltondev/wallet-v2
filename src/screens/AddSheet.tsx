@@ -270,7 +270,12 @@ export function AddSheet({ open, onClose, onSave, accounts, activeWorkspace = nu
     <div className="add-sheet">
       <div onClick={onClose} className="add-sheet__backdrop" />
       <div className="add-sheet__panel no-scrollbar">
-        <div className="add-sheet__handle" />
+        <div className="add-sheet__top-bar">
+          <div className="add-sheet__handle" />
+          <button className="add-sheet__close-btn" onClick={onClose}>
+            <Icons.x size={20} color="var(--text-3)" />
+          </button>
+        </div>
 
         {/* Review Mode */}
         {reviewMode && extractResult && (

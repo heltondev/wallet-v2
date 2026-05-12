@@ -24,12 +24,29 @@
     animation: sheetIn 0.25s cubic-bezier(0.32, 0.72, 0, 1);
   }
 
+  &__top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding-bottom: 10px;
+  }
+
   &__handle {
     width: 36px;
     height: 4px;
     background: var(--bg-4);
     border-radius: 2px;
-    margin: 0 auto 14px;
+  }
+
+  &__close-btn {
+    position: absolute;
+    right: 0;
+    top: -2px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
   }
 
   // AI section
