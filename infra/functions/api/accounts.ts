@@ -1,7 +1,8 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { extractAuth } from '../shared/auth';
 import { putItem, queryItems, getItem, updateItem, deleteItem } from '../shared/dynamo';
-import { ok, created, badRequest, notFound, serverError } from '../shared/response';
+import { ok, created, badRequest, forbidden, notFound, serverError } from '../shared/response';
+import { resolveWorkspaceAccess } from '../shared/workspace-access';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -72,10 +73,24 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const method = event.httpMethod;
     const hasId = !!event.pathParameters?.id;
 
-    if (method === 'POST') return createAccount(event, auth.userId);
-    if (method === 'GET') return listAccounts(event, auth.userId);
-    if (method === 'PUT' && hasId) return updateAccount(event, auth.userId);
-    if (method === 'DELETE' && hasId) return removeAccount(event, auth.userId);
+    // Resolve shared workspace access
+    const ownerParam = event.queryStringParameters?.owner;
+    const workspaceParam = event.queryStringParameters?.workspace;
+    let targetUserId = auth.userId;
+
+    if (ownerParam && ownerParam !== auth.userId) {
+      if (!workspaceParam) return badRequest(event, 'workspace param required for shared access');
+      const access = await resolveWorkspaceAccess(auth.userId, workspaceParam);
+      if (!access || access.ownerId !== ownerParam) return forbidden(event, 'Acesso negado');
+      const isWrite = method === 'POST' || method === 'PUT' || method === 'DELETE';
+      if (isWrite && access.role === 'viewer') return forbidden(event, 'Permissão insuficiente');
+      targetUserId = ownerParam;
+    }
+
+    if (method === 'POST') return createAccount(event, targetUserId);
+    if (method === 'GET') return listAccounts(event, targetUserId);
+    if (method === 'PUT' && hasId) return updateAccount(event, targetUserId);
+    if (method === 'DELETE' && hasId) return removeAccount(event, targetUserId);
 
     return badRequest(event, 'Unsupported method');
   } catch (err) {

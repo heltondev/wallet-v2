@@ -21,12 +21,13 @@ interface LiveHomeProps {
   onWorkspaceChange?: (id: string | null) => void;
   onNavigateRecurring?: () => void;
   onMarkPaid?: (recurring: RecurringTransaction) => void;
+  onUndoPayment?: (paymentId: string) => void;
   onVerifyPayments?: () => void;
   onNavigateContas?: () => void;
   fxRates?: Record<string, number>;
 }
 
-export function LiveHome({ tx, recurring, payments, currency, monthlyBudget, workspaces = [], activeWorkspace = null, onWorkspaceChange, onNavigateRecurring, onMarkPaid, onVerifyPayments, onNavigateContas, fxRates }: LiveHomeProps) {
+export function LiveHome({ tx, recurring, payments, currency, monthlyBudget, workspaces = [], activeWorkspace = null, onWorkspaceChange, onNavigateRecurring, onMarkPaid, onUndoPayment, onVerifyPayments, onNavigateContas, fxRates }: LiveHomeProps) {
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
 
   const activeRecurring = useMemo(() =>
@@ -182,7 +183,7 @@ export function LiveHome({ tx, recurring, payments, currency, monthlyBudget, wor
                     </div>
                     {onMarkPaid && (
                       <button className="live-home__bill-pay-btn" onClick={() => onMarkPaid(item.recurring)}>
-                        Pagar
+                        {item.recurring.amount > 0 ? 'Receber' : 'Pagar'}
                       </button>
                     )}
                   </div>
@@ -214,7 +215,13 @@ export function LiveHome({ tx, recurring, payments, currency, monthlyBudget, wor
                     <div className="live-home__bill-amount">
                       {fmtAmount(Math.abs(item.monthlyConverted), currency, { decimals: 0 })}
                     </div>
-                    <div className="live-home__bill-check">✓</div>
+                    {item.matchingPayment && onUndoPayment ? (
+                      <button className="live-home__bill-undo-btn" onClick={() => onUndoPayment(item.matchingPayment!.id)}>
+                        <Icons.x size={14} color="var(--neg)" />
+                      </button>
+                    ) : (
+                      <div className="live-home__bill-check">✓</div>
+                    )}
                   </div>
                 ))}
               </div>

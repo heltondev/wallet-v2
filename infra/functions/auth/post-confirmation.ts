@@ -39,6 +39,8 @@ export async function handler(event: PostConfirmationEvent): Promise<PostConfirm
       SK: 'PROFILE',
       email,
       role,
+      GSI1PK: `EMAIL#${email.toLowerCase()}`,
+      GSI1SK: 'PROFILE',
       createdAt: now,
     }),
     putItem({

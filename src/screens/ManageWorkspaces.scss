@@ -193,4 +193,121 @@
 	&__delete-btn {
 		@include btn-icon;
 	}
+
+	&__share-btn {
+		@include btn-icon;
+	}
+
+	// Share panel
+	&__share-panel {
+		padding: $s-3-raw $s-4-raw;
+		border-top: 1px solid $border-1;
+		background: $bg-1;
+	}
+
+	&__share-form {
+		display: flex;
+		flex-direction: column;
+		gap: $s-2-raw;
+	}
+
+	&__share-input {
+		flex: 1;
+	}
+
+	&__share-role-row {
+		display: flex;
+		gap: $s-2-raw;
+	}
+
+	&__share-role-btn {
+		flex: 1;
+		padding: 6px 0;
+		border-radius: $r-input;
+		font-size: $fs-caption;
+		font-weight: $fw-medium;
+		cursor: pointer;
+		border: 1px solid $border-1;
+		background: transparent;
+		color: $text-3;
+		font-family: $font-sans;
+
+		&--active {
+			background: $text-1;
+			color: $bg-0;
+			border-color: $text-1;
+		}
+	}
+
+	&__share-add-btn {
+		@include btn-primary;
+		font-size: $fs-small;
+		padding: 8px;
+	}
+
+	&__share-error {
+		font-size: $fs-caption;
+		color: $neg;
+	}
+
+	&__share-list {
+		margin-top: $s-3-raw;
+		display: flex;
+		flex-direction: column;
+		gap: $s-2-raw;
+	}
+
+	&__share-item {
+		display: flex;
+		align-items: center;
+		gap: $s-2-raw;
+	}
+
+	&__share-email {
+		flex: 1;
+		font-size: $fs-small;
+		color: $text-2;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__share-select {
+		@include select;
+		width: auto;
+		font-size: $fs-caption;
+		padding: 4px 8px;
+	}
+
+	&__share-remove-btn {
+		@include btn-icon;
+		width: 24px;
+		height: 24px;
+	}
+
+	// Shared with me
+	&__shared-header {
+		font-size: $fs-caption;
+		font-weight: $fw-semibold;
+		color: $text-3;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		padding: $s-5-raw $s-4-raw $s-2-raw;
+	}
+
+	&__item--shared {
+		opacity: 0.85;
+	}
+
+	&__leave-btn {
+		padding: 4px 10px;
+		border: 1px solid $border-1;
+		border-radius: $r-input;
+		background: transparent;
+		color: $neg;
+		font-size: $fs-caption;
+		font-weight: $fw-medium;
+		font-family: $font-sans;
+		cursor: pointer;
+	}
 }

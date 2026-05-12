@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { ComponentType } from 'react';
+import * as XLSX from 'xlsx';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { listRecurring, createRecurring, updateRecurring, deleteRecurring, listAccounts, aiExtractRecurring, listWorkspaces } from '../lib/api';
@@ -110,14 +111,59 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
     });
   };
 
+  const readFileAsText = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  };
+
+  const readXlsxAsText = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const wb = XLSX.read(reader.result, { type: 'array' });
+        const lines: string[] = [];
+        for (const name of wb.SheetNames) {
+          lines.push(`[${name}]`);
+          lines.push(XLSX.utils.sheet_to_csv(wb.Sheets[name]));
+        }
+        resolve(lines.join('\n'));
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  const isTextFile = (f: File) =>
+    f.type === 'text/csv' || f.name.endsWith('.csv') || f.name.endsWith('.tsv');
+
+  const isSpreadsheet = (f: File) =>
+    f.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+    f.name.endsWith('.xlsx') || f.name.endsWith('.xls');
+
+  const isSupported = (f: File) =>
+    f.type.startsWith('image/') || f.type === 'application/pdf' || isTextFile(f) || isSpreadsheet(f);
+
   const handleAiFiles = async (fileList: FileList) => {
-    const newFiles = await Promise.all(
-      Array.from(fileList)
-        .filter(f => f.type.startsWith('image/') || f.type === 'application/pdf')
-        .map(readFileAsBase64)
-    );
-    setAiFiles(prev => [...prev, ...newFiles]);
-    if (!aiExpanded && newFiles.length > 0) setAiExpanded(true);
+    const arr = Array.from(fileList).filter(isSupported);
+    let addedFiles = false;
+    for (const f of arr) {
+      if (isTextFile(f)) {
+        const text = await readFileAsText(f);
+        setAiText(prev => prev ? `${prev}\n\n--- ${f.name} ---\n${text}` : `--- ${f.name} ---\n${text}`);
+      } else if (isSpreadsheet(f)) {
+        const text = await readXlsxAsText(f);
+        setAiText(prev => prev ? `${prev}\n\n--- ${f.name} ---\n${text}` : `--- ${f.name} ---\n${text}`);
+      } else {
+        const b64 = await readFileAsBase64(f);
+        setAiFiles(prev => [...prev, b64]);
+        addedFiles = true;
+      }
+    }
+    if (!aiExpanded && (addedFiles || arr.length > 0)) setAiExpanded(true);
   };
 
   const onAiDrop = (e: React.DragEvent) => {
@@ -441,7 +487,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
                     <>
                       <Icons.download size={20} color="var(--text-3)" />
                       <span className="manage-recurring__ai-dropzone-label">Arraste extratos ou faturas</span>
-                      <span className="manage-recurring__ai-dropzone-formats">PDF, JPG, PNG</span>
+                      <span className="manage-recurring__ai-dropzone-formats">PDF, JPG, PNG, CSV, XLSX</span>
                     </>
                   ) : (
                     <div className="manage-recurring__ai-file-list">
@@ -461,7 +507,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*,application/pdf"
+                  accept="image/*,application/pdf,.csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   multiple
                   onChange={e => { if (e.target.files) handleAiFiles(e.target.files); }}
                   className="manage-recurring__ai-hidden-input"

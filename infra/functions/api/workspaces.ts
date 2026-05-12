@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { extractAuth } from '../shared/auth';
-import { putItem, queryItems, getItem, updateItem, deleteItem } from '../shared/dynamo';
+import { putItem, queryItems, queryByGSI1, getItem, updateItem, deleteItem } from '../shared/dynamo';
 import { ok, created, badRequest, notFound, serverError } from '../shared/response';
 
 function generateId(): string {
@@ -36,8 +36,28 @@ async function createWorkspace(event: APIGatewayProxyEvent, userId: string): Pro
 }
 
 async function listWorkspaces(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
-  const items = await queryItems(`USER#${userId}`, 'WORKSPACE#');
-  return ok(event, items);
+  // Owned workspaces
+  const owned = await queryItems(`USER#${userId}`, 'WORKSPACE#');
+  const result = owned.map(w => ({ ...w, ownership: 'owned', role: 'owner' }));
+
+  // Shared workspaces via GSI1
+  const shares = await queryByGSI1(`SHARED_USER#${userId}`, 'WORKSPACE#');
+  for (const share of shares) {
+    const ownerId = share.ownerId as string;
+    const workspaceId = share.workspaceId as string;
+    const ws = await getItem(`USER#${ownerId}`, `WORKSPACE#${workspaceId}`);
+    if (ws) {
+      result.push({
+        ...ws,
+        ownership: 'shared',
+        role: share.role as string,
+        ownerId,
+        ownerEmail: share.ownerEmail as string,
+      });
+    }
+  }
+
+  return ok(event, result);
 }
 
 async function updateWorkspace(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
@@ -81,6 +101,12 @@ async function removeWorkspace(event: APIGatewayProxyEvent, userId: string): Pro
   const txLinked = transactions.some(t => t.workspaceId === id);
   if (txLinked) {
     return badRequest(event, 'Cannot delete workspace with linked transactions.');
+  }
+
+  // Delete all SHARE records for this workspace
+  const shareItems = await queryItems(`USER#${userId}`, `SHARE#${id}#`);
+  for (const s of shareItems) {
+    await deleteItem(`USER#${userId}`, s.SK as string);
   }
 
   await deleteItem(`USER#${userId}`, sk);

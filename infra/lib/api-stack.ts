@@ -223,6 +223,15 @@ export class ApiStack extends Stack {
     workspaceById.addMethod('PUT', new LambdaIntegration(workspacesFn), authOptions);
     workspaceById.addMethod('DELETE', new LambdaIntegration(workspacesFn), authOptions);
 
+    // Workspace Shares
+    const sharesFn = buildHandler('SharesFn', 'shares', 'functions/api/shares.ts');
+    const shares = workspaceById.addResource('shares', { defaultCorsPreflightOptions: corsOptions });
+    shares.addMethod('POST', new LambdaIntegration(sharesFn), authOptions);
+    shares.addMethod('GET', new LambdaIntegration(sharesFn), authOptions);
+    const shareByUser = shares.addResource('{userId}', { defaultCorsPreflightOptions: corsOptions });
+    shareByUser.addMethod('PUT', new LambdaIntegration(sharesFn), authOptions);
+    shareByUser.addMethod('DELETE', new LambdaIntegration(sharesFn), authOptions);
+
     // Admin - Costs
     const costsFn = buildHandler('CostsFn', 'costs', 'functions/api/costs.ts');
     costsFn.addToRolePolicy(

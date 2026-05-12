@@ -20,7 +20,7 @@ import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL, convertAmount } from './utils/formatters';
 import { fetchFxRates } from './utils/fxRates';
 import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
-import { listTransactions, createPayment, listPayments, listAccounts, getSettings, listWorkspaces, listRecurring } from './lib/api';
+import { listTransactions, createPayment, deletePayment, listPayments, listAccounts, getSettings, listWorkspaces, listRecurring } from './lib/api';
 import type { Transaction, Account, Workspace, RecurringTransaction, Payment, TabId, FabKind, ToastData, CurrencyCode, AiVerifyPaymentsMatch } from './types';
 import './App.scss';
 
@@ -82,26 +82,49 @@ export function App() {
 
   useEffect(() => {
     if (!authed) return;
-    loadData();
+    loadData(activeWorkspace);
   }, [authed]);
+
+  // Reload data when switching to/from shared workspace
+  useEffect(() => {
+    if (!authed) return;
+    const ws = workspaces.find(w => w.id === activeWorkspace);
+    if (ws?.ownership === 'shared' || activeWorkspace === null) {
+      loadData(activeWorkspace);
+    }
+  }, [activeWorkspace]);
 
   const currentMonthKey = () => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   };
 
-  const loadData = async () => {
+  const loadData = async (wsId?: string | null) => {
     try {
-      const [txData, accData, settingsData, wsData, recData, payData] = await Promise.all([
-        listTransactions(), listAccounts(), getSettings(), listWorkspaces(), listRecurring(), listPayments(currentMonthKey()),
+      // Always load settings + workspaces from own account
+      const [settingsData, wsData] = await Promise.all([getSettings(), listWorkspaces()]);
+      if (settingsData.theme) setTheme(settingsData.theme as 'dark' | 'light');
+      if (settingsData.currency) setCurrency(settingsData.currency as 'BRL' | 'USD');
+      const allWorkspaces = wsData as unknown as Workspace[];
+      setWorkspaces(allWorkspaces);
+
+      // Determine shared access params
+      const activeWs = allWorkspaces.find(w => w.id === wsId);
+      const isShared = activeWs?.ownership === 'shared';
+      const owner = isShared ? activeWs?.ownerId : undefined;
+      const workspace = isShared ? activeWs?.id : undefined;
+
+      // Load data — from owner's account if shared, own account otherwise
+      const [txData, accData, recData, payData] = await Promise.all([
+        listTransactions(undefined, owner, workspace),
+        listAccounts(owner, workspace),
+        listRecurring(owner, workspace),
+        listPayments(currentMonthKey(), owner, workspace),
       ]);
       setTx(txData as unknown as Transaction[]);
       setAccounts(accData as unknown as Account[]);
       setRecurringItems(recData as unknown as RecurringTransaction[]);
       setPayments(payData as unknown as Payment[]);
-      if (settingsData.theme) setTheme(settingsData.theme as 'dark' | 'light');
-      if (settingsData.currency) setCurrency(settingsData.currency as 'BRL' | 'USD');
-      setWorkspaces(wsData as unknown as Workspace[]);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao carregar dados';
       showToast(msg, 0);
@@ -136,8 +159,26 @@ export function App() {
     root.style.setProperty('--pos-bg', `color-mix(in oklch, ${accent} 18%, transparent)`);
   }, [accent]);
 
+  // Shared workspace access helpers
+  const activeWs = workspaces.find(w => w.id === activeWorkspace);
+  const sharedOwner = activeWs?.ownership === 'shared' ? activeWs.ownerId : undefined;
+  const sharedWsId = activeWs?.ownership === 'shared' ? activeWs.id : undefined;
+  const isViewerMode = activeWs?.role === 'viewer';
+
   const handleMarkPaid = (r: RecurringTransaction) => {
     setPayingBill(r);
+  };
+
+  const handleUndoPayment = async (paymentId: string) => {
+    try {
+      await deletePayment(paymentId, currentMonthKey(), sharedOwner, sharedWsId);
+      showToast('Pagamento desfeito', 0);
+      const payData = await listPayments(currentMonthKey(), sharedOwner, sharedWsId);
+      setPayments(payData as unknown as Payment[]);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao desfazer pagamento';
+      showToast(msg, 0);
+    }
   };
 
   const handleConfirmPayment = async (data: {
@@ -155,9 +196,9 @@ export function App() {
       await createPayment({
         ...data,
         month: currentMonthKey(),
-      });
+      }, sharedOwner, sharedWsId);
       showToast('Pagamento registrado', data.amount);
-      const payData = await listPayments(currentMonthKey());
+      const payData = await listPayments(currentMonthKey(), sharedOwner, sharedWsId);
       setPayments(payData as unknown as Payment[]);
       setPayingBill(null);
     } catch (err: unknown) {
@@ -177,10 +218,10 @@ export function App() {
           paidDate: m.paidDate,
           account: accounts[0]?.name ?? '',
           notes: `AI: ${m.matchReason}`,
-        });
+        }, sharedOwner, sharedWsId);
       }
       showToast(`${matches.length} pagamentos registrados`, 0);
-      const payData = await listPayments(currentMonthKey());
+      const payData = await listPayments(currentMonthKey(), sharedOwner, sharedWsId);
       setPayments(payData as unknown as Payment[]);
       setSubScreen(null);
     } catch (err: unknown) {
@@ -244,8 +285,9 @@ export function App() {
             activeWorkspace={activeWorkspace}
             onWorkspaceChange={setActiveWorkspace}
             onNavigateRecurring={() => { setTab('settings'); setSubScreen('recurring'); }}
-            onMarkPaid={handleMarkPaid}
-            onVerifyPayments={() => setSubScreen('verify-payments')}
+            onMarkPaid={isViewerMode ? undefined : handleMarkPaid}
+            onUndoPayment={isViewerMode ? undefined : handleUndoPayment}
+            onVerifyPayments={isViewerMode ? undefined : () => setSubScreen('verify-payments')}
             onNavigateContas={() => setTab('list')}
             fxRates={fxRates}
           />
@@ -259,8 +301,9 @@ export function App() {
             workspaces={workspaces}
             activeWorkspace={activeWorkspace}
             onWorkspaceChange={setActiveWorkspace}
-            onMarkPaid={handleMarkPaid}
-            onVerifyPayments={() => setSubScreen('verify-payments')}
+            onMarkPaid={isViewerMode ? undefined : handleMarkPaid}
+            onUndoPayment={isViewerMode ? undefined : handleUndoPayment}
+            onVerifyPayments={isViewerMode ? undefined : () => setSubScreen('verify-payments')}
             onNavigateRecurring={() => { setTab('settings'); setSubScreen('recurring'); }}
             fxRates={fxRates}
           />

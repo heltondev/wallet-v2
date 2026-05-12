@@ -7,6 +7,18 @@ export interface Workspace {
   monthlyBudget: number;
   icon: string;
   order: number;
+  ownership?: 'owned' | 'shared';
+  role?: 'owner' | 'editor' | 'viewer';
+  ownerId?: string;
+  ownerEmail?: string;
+}
+
+export interface WorkspaceShare {
+  workspaceId: string;
+  sharedUserId: string;
+  sharedEmail: string;
+  role: 'editor' | 'viewer';
+  createdAt: string;
 }
 
 export interface Transaction {

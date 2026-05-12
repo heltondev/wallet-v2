@@ -229,6 +229,24 @@
     font-weight: $fw-bold;
   }
 
+  &__bill-undo-btn {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: color-mix(in oklch, var(--neg) 12%, transparent);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+
+    &:active {
+      background: color-mix(in oklch, var(--neg) 25%, transparent);
+    }
+  }
+
   &__bills-divider {
     height: 1px;
     margin: 4px 16px;

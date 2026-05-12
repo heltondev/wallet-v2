@@ -21,12 +21,13 @@ interface LiveTxListProps {
   activeWorkspace?: string | null;
   onWorkspaceChange?: (id: string | null) => void;
   onMarkPaid?: (recurring: RecurringTransaction) => void;
+  onUndoPayment?: (paymentId: string) => void;
   onVerifyPayments?: () => void;
   onNavigateRecurring?: () => void;
   fxRates?: Record<string, number>;
 }
 
-export function LiveTxList({ tx, recurring, payments, displayCurrency, workspaces = [], activeWorkspace = null, onWorkspaceChange, onMarkPaid, onVerifyPayments, onNavigateRecurring, fxRates }: LiveTxListProps) {
+export function LiveTxList({ tx, recurring, payments, displayCurrency, workspaces = [], activeWorkspace = null, onWorkspaceChange, onMarkPaid, onUndoPayment, onVerifyPayments, onNavigateRecurring, fxRates }: LiveTxListProps) {
   const [filter, setFilter] = useState<FilterMode>('all');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -142,7 +143,7 @@ export function LiveTxList({ tx, recurring, payments, displayCurrency, workspace
                     className="live-tx-list__bill-pay-btn"
                     onClick={e => { e.stopPropagation(); onMarkPaid(item.recurring); }}
                   >
-                    Pagar
+                    {item.recurring.amount > 0 ? 'Receber' : 'Pagar'}
                   </button>
                 )}
               </div>
@@ -173,7 +174,13 @@ export function LiveTxList({ tx, recurring, payments, displayCurrency, workspace
                     {item.status !== 'paid' && onMarkPaid && (
                       <button className="live-tx-list__action-btn live-tx-list__action-btn--pay" onClick={() => onMarkPaid(item.recurring)}>
                         <Icons.check size={14} color="#0A0A0A" />
-                        Marcar como pago
+                        {item.recurring.amount > 0 ? 'Marcar como recebido' : 'Marcar como pago'}
+                      </button>
+                    )}
+                    {item.status === 'paid' && item.matchingPayment && onUndoPayment && (
+                      <button className="live-tx-list__action-btn live-tx-list__action-btn--undo" onClick={() => onUndoPayment(item.matchingPayment!.id)}>
+                        <Icons.x size={14} color="var(--neg)" />
+                        Desfazer pagamento
                       </button>
                     )}
                     <button className="live-tx-list__action-btn" onClick={onNavigateRecurring}>

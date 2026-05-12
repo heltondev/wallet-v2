@@ -1,7 +1,8 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { extractAuth } from '../shared/auth';
 import { putItem, queryItems, deleteItem } from '../shared/dynamo';
-import { ok, created, badRequest, serverError } from '../shared/response';
+import { ok, created, badRequest, forbidden, serverError } from '../shared/response';
+import { resolveWorkspaceAccess } from '../shared/workspace-access';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -65,9 +66,23 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const method = event.httpMethod;
     const hasId = !!event.pathParameters?.id;
 
-    if (method === 'POST') return createPayment(event, auth.userId);
-    if (method === 'GET') return listPayments(event, auth.userId);
-    if (method === 'DELETE' && hasId) return removePayment(event, auth.userId);
+    // Resolve shared workspace access
+    const ownerParam = event.queryStringParameters?.owner;
+    const workspaceParam = event.queryStringParameters?.workspace;
+    let targetUserId = auth.userId;
+
+    if (ownerParam && ownerParam !== auth.userId) {
+      if (!workspaceParam) return badRequest(event, 'workspace param required for shared access');
+      const access = await resolveWorkspaceAccess(auth.userId, workspaceParam);
+      if (!access || access.ownerId !== ownerParam) return forbidden(event, 'Acesso negado');
+      const isWrite = method === 'POST' || method === 'DELETE';
+      if (isWrite && access.role === 'viewer') return forbidden(event, 'Permissão insuficiente');
+      targetUserId = ownerParam;
+    }
+
+    if (method === 'POST') return createPayment(event, targetUserId);
+    if (method === 'GET') return listPayments(event, targetUserId);
+    if (method === 'DELETE' && hasId) return removePayment(event, targetUserId);
 
     return badRequest(event, 'Unsupported method');
   } catch (err) {

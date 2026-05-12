@@ -10,7 +10,8 @@ interface WorkspaceSelectorProps {
 export function WorkspaceSelector({ workspaces, activeId, onChange }: WorkspaceSelectorProps) {
   if (workspaces.length === 0) return null;
 
-  const sorted = [...workspaces].sort((a, b) => a.order - b.order);
+  const owned = [...workspaces].filter(w => w.ownership !== 'shared').sort((a, b) => a.order - b.order);
+  const shared = [...workspaces].filter(w => w.ownership === 'shared').sort((a, b) => a.order - b.order);
 
   return (
     <div className="workspace-selector">
@@ -21,10 +22,21 @@ export function WorkspaceSelector({ workspaces, activeId, onChange }: WorkspaceS
         >
           Todos
         </button>
-        {sorted.map(ws => (
+        {owned.map(ws => (
           <button
             key={ws.id}
             className={`workspace-selector__pill ${activeId === ws.id ? 'workspace-selector__pill--active' : ''}`}
+            onClick={() => onChange(ws.id)}
+          >
+            {ws.icon && <span className="workspace-selector__icon">{ws.icon}</span>}
+            {ws.name}
+          </button>
+        ))}
+        {shared.length > 0 && <span className="workspace-selector__separator" />}
+        {shared.map(ws => (
+          <button
+            key={ws.id}
+            className={`workspace-selector__pill workspace-selector__pill--shared ${activeId === ws.id ? 'workspace-selector__pill--active' : ''}`}
             onClick={() => onChange(ws.id)}
           >
             {ws.icon && <span className="workspace-selector__icon">{ws.icon}</span>}

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
-import { listWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace } from '../lib/api';
-import type { Workspace, CurrencyCode } from '../types';
+import { listWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace, shareWorkspace, listShares, updateShare, removeShare } from '../lib/api';
+import type { Workspace, WorkspaceShare, CurrencyCode } from '../types';
 import './ManageWorkspaces.scss';
 
 interface ManageWorkspacesProps {
@@ -30,6 +30,14 @@ export function ManageWorkspaces({ onBack }: ManageWorkspacesProps) {
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Share state
+  const [sharingId, setSharingId] = useState<string | null>(null);
+  const [shareEmail, setShareEmail] = useState('');
+  const [shareRole, setShareRole] = useState<'editor' | 'viewer'>('viewer');
+  const [shares, setShares] = useState<Record<string, WorkspaceShare[]>>({});
+  const [shareSaving, setShareSaving] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   const fetchWorkspaces = () => {
     setLoading(true);
@@ -110,6 +118,55 @@ export function ManageWorkspaces({ onBack }: ManageWorkspacesProps) {
       setError(msg);
     }
   };
+
+  const openShare = async (wsId: string) => {
+    if (sharingId === wsId) { setSharingId(null); return; }
+    setSharingId(wsId);
+    setShareEmail('');
+    setShareError(null);
+    try {
+      const data = await listShares(wsId);
+      setShares(prev => ({ ...prev, [wsId]: data as unknown as WorkspaceShare[] }));
+    } catch { /* ignore */ }
+  };
+
+  const handleShare = async () => {
+    if (!sharingId || !shareEmail.trim()) return;
+    setShareSaving(true);
+    setShareError(null);
+    try {
+      await shareWorkspace(sharingId, { email: shareEmail.trim(), role: shareRole });
+      setShareEmail('');
+      const data = await listShares(sharingId);
+      setShares(prev => ({ ...prev, [sharingId]: data as unknown as WorkspaceShare[] }));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao compartilhar';
+      setShareError(msg);
+    } finally {
+      setShareSaving(false);
+    }
+  };
+
+  const handleUpdateShareRole = async (wsId: string, userId: string, newRole: 'editor' | 'viewer') => {
+    try {
+      await updateShare(wsId, userId, { role: newRole });
+      const data = await listShares(wsId);
+      setShares(prev => ({ ...prev, [wsId]: data as unknown as WorkspaceShare[] }));
+    } catch { /* ignore */ }
+  };
+
+  const handleRemoveShare = async (wsId: string, userId: string) => {
+    try {
+      await removeShare(wsId, userId);
+      setShares(prev => ({
+        ...prev,
+        [wsId]: (prev[wsId] ?? []).filter(s => s.sharedUserId !== userId),
+      }));
+    } catch { /* ignore */ }
+  };
+
+  const ownedWorkspaces = workspaces.filter(w => w.ownership !== 'shared');
+  const sharedWorkspaces = workspaces.filter(w => w.ownership === 'shared');
 
   return (
     <div className="manage-workspaces">
@@ -215,28 +272,120 @@ export function ManageWorkspaces({ onBack }: ManageWorkspacesProps) {
             <div className="manage-workspaces__empty-text">Nenhum espaço cadastrado</div>
           </div>
         ) : (
-          <div className="manage-workspaces__list">
-            {workspaces.map(ws => (
-              <div key={ws.id} className="manage-workspaces__item">
-                <span className="manage-workspaces__item-icon">{ws.icon}</span>
-                <div className="manage-workspaces__item-info">
-                  <div className="manage-workspaces__item-name">{ws.name}</div>
-                  <div className="manage-workspaces__item-meta">
-                    {ws.currency} · {ws.currency === 'BRL' ? 'R$' : ws.currency === 'USD' ? '$' : '€'} {ws.monthlyBudget.toLocaleString('pt-BR')}
+          <>
+            <div className="manage-workspaces__list">
+              {ownedWorkspaces.map(ws => (
+                <div key={ws.id}>
+                  <div className="manage-workspaces__item">
+                    <span className="manage-workspaces__item-icon">{ws.icon}</span>
+                    <div className="manage-workspaces__item-info">
+                      <div className="manage-workspaces__item-name">{ws.name}</div>
+                      <div className="manage-workspaces__item-meta">
+                        {ws.currency} · {ws.currency === 'BRL' ? 'R$' : ws.currency === 'USD' ? '$' : '€'} {ws.monthlyBudget.toLocaleString('pt-BR')}
+                      </div>
+                    </div>
+                    <button onClick={() => openShare(ws.id)} className="manage-workspaces__share-btn">
+                      <Icons.users size={16} color={sharingId === ws.id ? 'var(--pos)' : 'var(--text-4)'} />
+                    </button>
+                    <button onClick={() => openEdit(ws)} className="manage-workspaces__edit-btn">
+                      <Icons.pencil size={16} color="var(--text-4)" />
+                    </button>
+                    <button onClick={() => handleDelete(ws.id)} className="manage-workspaces__delete-btn">
+                      <Icons.trash
+                        size={16}
+                        color={confirmDelete === ws.id ? 'var(--neg)' : 'var(--text-4)'}
+                      />
+                    </button>
                   </div>
+
+                  {sharingId === ws.id && (
+                    <div className="manage-workspaces__share-panel">
+                      <div className="manage-workspaces__share-form">
+                        <input
+                          type="email"
+                          placeholder="Email do usuário"
+                          value={shareEmail}
+                          onChange={e => setShareEmail(e.target.value)}
+                          className="manage-workspaces__input manage-workspaces__share-input"
+                        />
+                        <div className="manage-workspaces__share-role-row">
+                          <button
+                            onClick={() => setShareRole('editor')}
+                            className={`manage-workspaces__share-role-btn ${shareRole === 'editor' ? 'manage-workspaces__share-role-btn--active' : ''}`}
+                          >
+                            Editor
+                          </button>
+                          <button
+                            onClick={() => setShareRole('viewer')}
+                            className={`manage-workspaces__share-role-btn ${shareRole === 'viewer' ? 'manage-workspaces__share-role-btn--active' : ''}`}
+                          >
+                            Viewer
+                          </button>
+                        </div>
+                        <button
+                          onClick={handleShare}
+                          disabled={shareSaving || !shareEmail.trim()}
+                          className="manage-workspaces__share-add-btn"
+                        >
+                          {shareSaving ? 'Compartilhando...' : 'Compartilhar'}
+                        </button>
+                        {shareError && <div className="manage-workspaces__share-error">{shareError}</div>}
+                      </div>
+
+                      {(shares[ws.id] ?? []).length > 0 && (
+                        <div className="manage-workspaces__share-list">
+                          {(shares[ws.id] ?? []).map(s => (
+                            <div key={s.sharedUserId} className="manage-workspaces__share-item">
+                              <span className="manage-workspaces__share-email">{s.sharedEmail}</span>
+                              <select
+                                value={s.role}
+                                onChange={e => handleUpdateShareRole(ws.id, s.sharedUserId, e.target.value as 'editor' | 'viewer')}
+                                className="manage-workspaces__share-select"
+                              >
+                                <option value="editor">Editor</option>
+                                <option value="viewer">Viewer</option>
+                              </select>
+                              <button
+                                onClick={() => handleRemoveShare(ws.id, s.sharedUserId)}
+                                className="manage-workspaces__share-remove-btn"
+                              >
+                                <Icons.x size={14} color="var(--neg)" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <button onClick={() => openEdit(ws)} className="manage-workspaces__edit-btn">
-                  <Icons.pencil size={16} color="var(--text-4)" />
-                </button>
-                <button onClick={() => handleDelete(ws.id)} className="manage-workspaces__delete-btn">
-                  <Icons.trash
-                    size={16}
-                    color={confirmDelete === ws.id ? 'var(--neg)' : 'var(--text-4)'}
-                  />
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            {sharedWorkspaces.length > 0 && (
+              <>
+                <div className="manage-workspaces__shared-header">Compartilhados comigo</div>
+                <div className="manage-workspaces__list">
+                  {sharedWorkspaces.map(ws => (
+                    <div key={ws.id} className="manage-workspaces__item manage-workspaces__item--shared">
+                      <span className="manage-workspaces__item-icon">{ws.icon}</span>
+                      <div className="manage-workspaces__item-info">
+                        <div className="manage-workspaces__item-name">{ws.name}</div>
+                        <div className="manage-workspaces__item-meta">
+                          {ws.ownerEmail} · {ws.role}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeShare(ws.id, '')}
+                        className="manage-workspaces__leave-btn"
+                      >
+                        Sair
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         )}
       </div>
     </div>

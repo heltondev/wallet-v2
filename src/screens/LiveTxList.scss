@@ -231,6 +231,11 @@
       background: $pos;
       color: #0a0a0a;
     }
+
+    &--undo {
+      background: color-mix(in oklch, var(--neg) 15%, transparent);
+      color: var(--neg);
+    }
   }
 
   // ─── Empty state ───────────────────────────────────────────

@@ -19,12 +19,20 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   return res.json();
 }
 
-// Transactions
-export const createTransaction = (data: Record<string, unknown>) =>
-  apiFetch<Record<string, unknown>>('/transactions', { method: 'POST', body: JSON.stringify(data) });
+// Shared access helpers
+function sharedParams(owner?: string, workspace?: string): string {
+  if (!owner || !workspace) return '';
+  return `&owner=${owner}&workspace=${workspace}`;
+}
 
-export const listTransactions = (month?: string) =>
-  apiFetch<Record<string, unknown>[]>(month ? `/transactions?month=${month}` : '/transactions');
+// Transactions
+export const createTransaction = (data: Record<string, unknown>, owner?: string, workspace?: string) =>
+  apiFetch<Record<string, unknown>>(`/transactions?_=1${sharedParams(owner, workspace)}`, { method: 'POST', body: JSON.stringify(data) });
+
+export const listTransactions = (month?: string, owner?: string, workspace?: string) => {
+  const base = month ? `/transactions?month=${month}` : '/transactions?_=1';
+  return apiFetch<Record<string, unknown>[]>(`${base}${sharedParams(owner, workspace)}`);
+};
 
 export const updateTransaction = (id: string, month: string, data: Record<string, unknown>) =>
   apiFetch<Record<string, unknown>>(`/transactions/${id}?month=${month}`, { method: 'PUT', body: JSON.stringify({ month, ...data }) });
@@ -33,11 +41,11 @@ export const deleteTransaction = (id: string, month: string) =>
   apiFetch<void>(`/transactions/${id}?month=${month}`, { method: 'DELETE' });
 
 // Accounts
-export const createAccount = (data: Record<string, unknown>) =>
-  apiFetch<Record<string, unknown>>('/accounts', { method: 'POST', body: JSON.stringify(data) });
+export const createAccount = (data: Record<string, unknown>, owner?: string, workspace?: string) =>
+  apiFetch<Record<string, unknown>>(`/accounts?_=1${sharedParams(owner, workspace)}`, { method: 'POST', body: JSON.stringify(data) });
 
-export const listAccounts = () =>
-  apiFetch<Record<string, unknown>[]>('/accounts');
+export const listAccounts = (owner?: string, workspace?: string) =>
+  apiFetch<Record<string, unknown>[]>(`/accounts?_=1${sharedParams(owner, workspace)}`);
 
 // Categories
 export const listCategories = () =>
@@ -118,11 +126,11 @@ export const aiExtractRecurring = async (
 };
 
 // Recurring
-export const listRecurring = () =>
-  apiFetch<Record<string, unknown>[]>('/recurring');
+export const listRecurring = (owner?: string, workspace?: string) =>
+  apiFetch<Record<string, unknown>[]>(`/recurring?_=1${sharedParams(owner, workspace)}`);
 
-export const createRecurring = (data: Record<string, unknown>) =>
-  apiFetch<Record<string, unknown>>('/recurring', { method: 'POST', body: JSON.stringify(data) });
+export const createRecurring = (data: Record<string, unknown>, owner?: string, workspace?: string) =>
+  apiFetch<Record<string, unknown>>(`/recurring?_=1${sharedParams(owner, workspace)}`, { method: 'POST', body: JSON.stringify(data) });
 
 export const updateRecurring = (id: string, data: Record<string, unknown>) =>
   apiFetch<Record<string, unknown>>(`/recurring/${id}`, { method: 'PUT', body: JSON.stringify(data) });
@@ -146,6 +154,19 @@ export const updateWorkspace = (id: string, data: Record<string, unknown>) =>
 export const deleteWorkspace = (id: string) =>
   apiFetch<void>(`/workspaces/${id}`, { method: 'DELETE' });
 
+// Workspace Shares
+export const shareWorkspace = (workspaceId: string, data: { email: string; role: string }) =>
+  apiFetch<import('../types').WorkspaceShare>(`/workspaces/${workspaceId}/shares`, { method: 'POST', body: JSON.stringify(data) });
+
+export const listShares = (workspaceId: string) =>
+  apiFetch<import('../types').WorkspaceShare[]>(`/workspaces/${workspaceId}/shares`);
+
+export const updateShare = (workspaceId: string, userId: string, data: { role: string }) =>
+  apiFetch<import('../types').WorkspaceShare>(`/workspaces/${workspaceId}/shares/${userId}`, { method: 'PUT', body: JSON.stringify(data) });
+
+export const removeShare = (workspaceId: string, userId: string) =>
+  apiFetch<void>(`/workspaces/${workspaceId}/shares/${userId}`, { method: 'DELETE' });
+
 // Receipts
 export const getUploadUrl = (txId: string, fileName: string, contentType: string) =>
   apiFetch<{ uploadUrl: string; key: string }>('/receipts/upload-url', { method: 'POST', body: JSON.stringify({ txId, fileName, contentType }) });
@@ -158,14 +179,14 @@ export const uploadFileToS3 = async (url: string, file: File) => {
 };
 
 // Payments
-export const createPayment = (data: Record<string, unknown>) =>
-  apiFetch<Record<string, unknown>>('/payments', { method: 'POST', body: JSON.stringify(data) });
+export const createPayment = (data: Record<string, unknown>, owner?: string, workspace?: string) =>
+  apiFetch<Record<string, unknown>>(`/payments?_=1${sharedParams(owner, workspace)}`, { method: 'POST', body: JSON.stringify(data) });
 
-export const listPayments = (month: string) =>
-  apiFetch<Record<string, unknown>[]>(`/payments?month=${month}`);
+export const listPayments = (month: string, owner?: string, workspace?: string) =>
+  apiFetch<Record<string, unknown>[]>(`/payments?month=${month}${sharedParams(owner, workspace)}`);
 
-export const deletePayment = (id: string, month: string) =>
-  apiFetch<void>(`/payments/${id}?month=${month}`, { method: 'DELETE' });
+export const deletePayment = (id: string, month: string, owner?: string, workspace?: string) =>
+  apiFetch<void>(`/payments/${id}?month=${month}${sharedParams(owner, workspace)}`, { method: 'DELETE' });
 
 export const aiVerifyPayments = async (
   files: { base64: string; mimeType: string }[],
