@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { ComponentType } from 'react';
 import { Icons } from '../components/icons/Icons';
+// @ts-expect-error — version injected by vite define
+const APP_VERSION: string = __APP_VERSION__;
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { signOut, getSession } from '../lib/auth';
 import { getSettings, updateSettings, listAccounts, listCategories } from '../lib/api';
@@ -187,7 +189,7 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
             <div className="settings-screen__about">
               <div className="settings-screen__about-row">
                 <span className="settings-screen__about-label">Versão</span>
-                <span className="settings-screen__about-value">0.1.0</span>
+                <span className="settings-screen__about-value">{APP_VERSION}</span>
               </div>
               <div className="settings-screen__about-row">
                 <span className="settings-screen__about-label">Stack</span>
