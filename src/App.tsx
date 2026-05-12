@@ -410,9 +410,10 @@ export function App() {
 				)}
 				{tab === 'cats' && !subScreen && (
 					<CategoriasScreen
-						tx={filteredTx}
+						recurring={recurringItems}
 						currency={activeCurrency}
 						workspaceId={activeWorkspace}
+						fxRates={fxRates}
 					/>
 				)}
 				{tab === 'settings' && !subScreen && (
