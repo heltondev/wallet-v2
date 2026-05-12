@@ -16,12 +16,14 @@ export function WorkspaceSelector({ workspaces, activeId, onChange }: WorkspaceS
   return (
     <div className="workspace-selector">
       <div className="workspace-selector__track no-scrollbar">
-        <button
-          className={`workspace-selector__pill ${activeId === null ? 'workspace-selector__pill--active' : ''}`}
-          onClick={() => onChange(null)}
-        >
-          Todos
-        </button>
+        {owned.length > 0 && (
+          <button
+            className={`workspace-selector__pill ${activeId === null ? 'workspace-selector__pill--active' : ''}`}
+            onClick={() => onChange(null)}
+          >
+            Todos
+          </button>
+        )}
         {owned.map(ws => (
           <button
             key={ws.id}

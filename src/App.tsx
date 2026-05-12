@@ -152,6 +152,13 @@ export function App() {
 			const allWorkspaces = wsData as unknown as Workspace[];
 			setWorkspaces(allWorkspaces);
 
+			// Auto-select first workspace if user has no owned workspaces
+			const hasOwned = allWorkspaces.some(w => w.ownership !== 'shared');
+			if (!hasOwned && wsId === null && allWorkspaces.length > 0) {
+				wsId = allWorkspaces[0].id;
+				setActiveWorkspace(wsId);
+			}
+
 			// Determine shared access params
 			const activeWs = allWorkspaces.find((w) => w.id === wsId);
 			const isShared = activeWs?.ownership === 'shared';
