@@ -242,6 +242,28 @@ export function App() {
             activeWorkspace={activeWorkspace}
             onWorkspaceChange={setActiveWorkspace}
             onNavigateRecurring={() => { setTab('settings'); setSubScreen('recurring'); }}
+            onMarkPaid={async (r) => {
+              try {
+                const fields = {
+                  ...txDateFields(),
+                  desc: r.desc,
+                  cat: r.cat,
+                  amount: r.amount,
+                  currency: r.currency,
+                  fxRate: r.fxRate,
+                  account: r.account,
+                  recurringId: r.id,
+                  workspaceId: r.workspaceId ?? activeWorkspace ?? undefined,
+                };
+                await createTransaction(fields);
+                showToast(r.desc, r.amount);
+                const txData = await listTransactions();
+                setTx(txData as unknown as Transaction[]);
+              } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : 'Erro ao marcar como pago';
+                showToast(msg, 0);
+              }
+            }}
             fxRates={fxRates}
           />
         )}

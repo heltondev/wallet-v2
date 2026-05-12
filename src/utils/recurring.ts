@@ -1,4 +1,5 @@
-import type { RecurringFrequency } from '../types';
+import { convertAmount } from './formatters';
+import type { RecurringFrequency, RecurringTransaction, Transaction, CurrencyCode } from '../types';
 
 export function monthlyMultiplier(frequency: RecurringFrequency, customDays?: number | null): number {
   switch (frequency) {
@@ -15,4 +16,73 @@ export function monthlyMultiplier(frequency: RecurringFrequency, customDays?: nu
 
 export function monthlyAmount(amount: number, frequency: RecurringFrequency, customDays?: number | null): number {
   return amount * monthlyMultiplier(frequency, customDays);
+}
+
+export interface RecurringStatus {
+  recurring: RecurringTransaction;
+  status: 'paid' | 'pending' | 'overdue';
+  matchingTx?: Transaction;
+  monthlyConverted: number;
+}
+
+export function getRecurringStatuses(
+  recurring: RecurringTransaction[],
+  transactions: Transaction[],
+  displayCurrency: CurrencyCode,
+  fxRates?: Record<string, number>,
+): RecurringStatus[] {
+  const now = new Date();
+  const currentDay = now.getDate();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  const thisMonthTx = transactions.filter(t => {
+    const d = new Date(t.date);
+    return d >= monthStart && d <= monthEnd;
+  });
+
+  return recurring
+    .filter(r => r.active && r.frequency === 'monthly')
+    .map(r => {
+      const converted = convertAmount(
+        monthlyAmount(r.amount, r.frequency, r.customDays),
+        r.currency,
+        displayCurrency,
+        fxRates,
+      );
+
+      // Exact match by recurringId
+      let match = thisMonthTx.find(t => t.recurringId === r.id);
+
+      // Fuzzy match: same desc + similar amount (within 20%)
+      if (!match) {
+        const descLower = r.desc.toLowerCase();
+        match = thisMonthTx.find(t => {
+          if (t.desc.toLowerCase() !== descLower) return false;
+          const ratio = Math.abs(t.amount) / Math.abs(r.amount);
+          return ratio >= 0.8 && ratio <= 1.2;
+        });
+      }
+
+      let status: 'paid' | 'pending' | 'overdue';
+      if (match) {
+        status = 'paid';
+      } else if (r.dayOfMonth && currentDay > r.dayOfMonth) {
+        status = 'overdue';
+      } else {
+        status = 'pending';
+      }
+
+      return {
+        recurring: r,
+        status,
+        matchingTx: match,
+        monthlyConverted: converted,
+      };
+    })
+    .sort((a, b) => {
+      const order = { overdue: 0, pending: 1, paid: 2 };
+      if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status];
+      return (a.recurring.dayOfMonth ?? 0) - (b.recurring.dayOfMonth ?? 0);
+    });
 }
