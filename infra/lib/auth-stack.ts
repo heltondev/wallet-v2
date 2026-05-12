@@ -7,6 +7,7 @@ import {
   UserPoolClient,
 } from 'aws-cdk-lib/aws-cognito';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
@@ -84,6 +85,14 @@ export class AuthStack extends Stack {
         postConfirmation,
       },
     });
+
+    postConfirmation.addToRolePolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: ['cognito-idp:AdminAddUserToGroup'],
+        resources: [`arn:aws:cognito-idp:${this.region}:${this.account}:userpool/*`],
+      }),
+    );
 
     new CfnUserPoolGroup(this, 'OwnerGroup', {
       userPoolId: this.userPool.userPoolId,
