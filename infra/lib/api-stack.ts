@@ -187,8 +187,17 @@ export class ApiStack extends Stack {
     ai.addResource('chat').addMethod('POST', aiIntegration, authOptions);
     ai.addResource('learn-category').addMethod('POST', aiIntegration, authOptions);
     ai.addResource('extract-recurring').addMethod('POST', aiIntegration, authOptions);
+    ai.addResource('verify-payments').addMethod('POST', aiIntegration, authOptions);
     const aiJobs = ai.addResource('jobs');
     aiJobs.addResource('{jobId}').addMethod('GET', new LambdaIntegration(aiFn), authOptions);
+
+    // Payments
+    const paymentsFn = buildHandler('PaymentsFn', 'payments', 'functions/api/payments.ts');
+    const payments = api.root.addResource('payments');
+    payments.addMethod('POST', new LambdaIntegration(paymentsFn), authOptions);
+    payments.addMethod('GET', new LambdaIntegration(paymentsFn), authOptions);
+    const paymentById = payments.addResource('{id}');
+    paymentById.addMethod('DELETE', new LambdaIntegration(paymentsFn), authOptions);
 
     // Recurring
     const recurringFn = buildHandler('RecurringFn', 'recurring', 'functions/api/recurring.ts');

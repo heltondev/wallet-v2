@@ -157,6 +157,35 @@ export const uploadFileToS3 = async (url: string, file: File) => {
   await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
 };
 
+// Payments
+export const createPayment = (data: Record<string, unknown>) =>
+  apiFetch<Record<string, unknown>>('/payments', { method: 'POST', body: JSON.stringify(data) });
+
+export const listPayments = (month: string) =>
+  apiFetch<Record<string, unknown>[]>(`/payments?month=${month}`);
+
+export const deletePayment = (id: string, month: string) =>
+  apiFetch<void>(`/payments/${id}?month=${month}`, { method: 'DELETE' });
+
+export const aiVerifyPayments = async (
+  files: { base64: string; mimeType: string }[],
+  text: string,
+): Promise<import('../types').AiVerifyPaymentsResult> => {
+  const { jobId } = await apiFetch<{ jobId: string }>('/ai/verify-payments', {
+    method: 'POST',
+    body: JSON.stringify({ files, text }),
+  });
+
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 5000));
+    const job = await apiFetch<{ status: string; result?: import('../types').AiVerifyPaymentsResult; error?: string }>(`/ai/jobs/${jobId}`);
+    if (job.status === 'completed' && job.result) return job.result;
+    if (job.status === 'failed') throw new Error(job.error ?? 'AI processing failed');
+  }
+
+  throw new Error('AI processing timed out');
+};
+
 // Admin
 export const getAdminCosts = () =>
   apiFetch<Record<string, unknown>>('/admin/costs');

@@ -711,6 +711,128 @@ async function processExtractRecurring(
   }
 }
 
+async function verifyPayments(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
+  const body = JSON.parse(event.body ?? '{}');
+  const { files, text, jobId: existingJobId, fileKeys: existingFileKeys } = body as {
+    files?: { base64: string; mimeType: string }[];
+    text?: string;
+    jobId?: string;
+    fileKeys?: string[];
+  };
+
+  if (existingJobId && existingFileKeys) {
+    const loadedFiles = await loadJobFiles(existingJobId, existingFileKeys);
+    return processVerifyPayments(event, userId, existingJobId, loadedFiles, text);
+  }
+
+  if ((!files || files.length === 0) && !text?.trim()) {
+    return badRequest(event, 'At least one file or text is required');
+  }
+
+  const jobId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  let fileKeys: string[] = [];
+  if (files && files.length > 0) {
+    fileKeys = await storeJobFiles(jobId, files);
+  }
+
+  await putItem({
+    PK: 'GLOBAL',
+    SK: `AI_JOB#${jobId}`,
+    jobId,
+    userId,
+    status: 'processing',
+    feature: 'verify-payments',
+    createdAt: new Date().toISOString(),
+  });
+
+  const lambda = new LambdaClient({});
+  const workerPayload = {
+    resource: event.resource,
+    httpMethod: event.httpMethod,
+    headers: event.headers,
+    requestContext: event.requestContext,
+    body: JSON.stringify({ jobId, fileKeys, text }),
+  };
+  await lambda.send(new InvokeCommand({
+    FunctionName: process.env.AWS_LAMBDA_FUNCTION_NAME!,
+    InvocationType: 'Event',
+    Payload: new TextEncoder().encode(JSON.stringify(workerPayload)),
+  }));
+
+  return ok(event, { jobId, status: 'processing' });
+}
+
+async function processVerifyPayments(
+  event: APIGatewayProxyEvent,
+  userId: string,
+  jobId: string,
+  files?: { base64: string; mimeType: string }[],
+  text?: string,
+): Promise<APIGatewayProxyResult> {
+  try {
+    const [basePrompt, userContext, recurringItems] = await Promise.all([
+      loadPrompt('verify-payments'),
+      loadUserContext(userId),
+      queryItems(`USER#${userId}`, 'RECURRING#'),
+    ]);
+
+    const activeRecurring = recurringItems.filter(r => r.active);
+    const recurringList = activeRecurring.map(r =>
+      `ID: ${r.id} | ${r.desc} | ${Math.abs(r.amount as number)} ${r.currency} | day ${r.dayOfMonth ?? '?'} | ${r.cat}`
+    ).join('\n');
+
+    const systemPrompt = buildPromptWithContext(basePrompt, userContext, [], {
+      recurringBills: recurringList,
+    });
+
+    const userContent: ContentPart[] = [];
+    if (text?.trim()) {
+      userContent.push({ type: 'text', text: text.trim() });
+    } else {
+      userContent.push({ type: 'text', text: 'Analyze the provided bank statement or receipt and identify which recurring bills were paid. Match against the list of pending bills.' });
+    }
+    if (files) {
+      userContent.push(...buildFileContent(files));
+    }
+
+    const model = 'gpt-4o';
+    const result = await callOpenAi(systemPrompt, userContent, model, {
+      responseFormat: 'json',
+      maxTokens: 8000,
+    });
+
+    await logUsage('verify-payments', model, result.promptTokens, result.completionTokens);
+
+    const parsed = JSON.parse(result.content);
+    await putItem({
+      PK: 'GLOBAL',
+      SK: `AI_JOB#${jobId}`,
+      jobId,
+      userId,
+      status: 'completed',
+      feature: 'verify-payments',
+      result: parsed,
+      completedAt: new Date().toISOString(),
+    });
+
+    return ok(event, { jobId, status: 'completed' });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    await putItem({
+      PK: 'GLOBAL',
+      SK: `AI_JOB#${jobId}`,
+      jobId,
+      userId,
+      status: 'failed',
+      feature: 'verify-payments',
+      error: message,
+      completedAt: new Date().toISOString(),
+    });
+    return serverError(event, message);
+  }
+}
+
 async function getJobStatus(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   const jobId = event.pathParameters?.jobId;
   if (!jobId) return badRequest(event, 'Missing jobId');
@@ -737,6 +859,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (resource === '/ai/categorize') return categorize(event, auth.userId);
     if (resource === '/ai/extract-receipt') return extractReceipt(event, auth.userId);
     if (resource === '/ai/extract-recurring') return extractRecurring(event, auth.userId);
+    if (resource === '/ai/verify-payments') return verifyPayments(event, auth.userId);
     if (resource === '/ai/insights') return insights(event, auth.userId);
     if (resource === '/ai/forecast') return forecast(event, auth.userId);
     if (resource === '/ai/chat') return chat(event, auth.userId);

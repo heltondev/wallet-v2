@@ -2,116 +2,247 @@
 @use '../styles/mixins' as *;
 
 .live-tx-list {
-	height: 100%;
-	position: relative;
+  height: 100%;
+  position: relative;
 
-	&__status-bar {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		z-index: 10;
-	}
+  &__status-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+  }
 
-	&__scroll {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: $screen-scroll-bottom;
-		overflow: auto;
-		padding: $s-4-raw;
-		@include viewport-height(75px);
-	}
+  &__scroll {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: $screen-scroll-bottom;
+    overflow: auto;
+    padding: $s-4-raw;
+    @include viewport-height(75px);
+  }
 
-	&__header {
-		padding: 8px 16px 6px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
+  &__header {
+    padding: 8px 16px 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-	&__title {
-		font-size: 24px;
-		font-weight: 600;
-		color: var(--text-1);
-		letter-spacing: -0.6px;
-		margin: 0;
-	}
+  &__title {
+    @include heading-1;
+  }
 
-	&__search-btn {
-		background: var(--bg-2);
-		border: none;
-		width: 36px;
-		height: 36px;
-		border-radius: var(--r-input);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-	}
+  &__header-actions {
+    display: flex;
+    gap: 8px;
+  }
 
-	&__search {
-		padding: 0 16px 8px;
-	}
+  &__search-btn {
+    background: $bg-2;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: $r-input;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
 
-	&__search-input {
-		width: 100%;
-		box-sizing: border-box;
-		padding: 10px 12px;
-		background: var(--bg-2);
-		border: 1px solid var(--border-1);
-		border-radius: var(--r-input);
-		color: var(--text-1);
-		font-family: var(--font-sans);
-		font-size: 14px;
-		outline: none;
-	}
+  &__search {
+    padding: 0 16px 8px;
+  }
 
-	&__chips {
-		display: flex;
-		gap: 6px;
-		padding: 8px 16px 14px;
-		overflow-x: auto;
-	}
+  &__search-input {
+    @include input;
+  }
 
-	&__empty {
-		padding: 80px 24px;
-		text-align: center;
-	}
+  &__chips {
+    display: flex;
+    gap: 6px;
+    padding: 8px 16px 14px;
+    overflow-x: auto;
+  }
 
-	&__empty-text {
-		font-size: 13px;
-		color: var(--text-3);
-		margin-top: 10px;
-		font-family: var(--font-mono);
-	}
+  // ─── Verify button ─────────────────────────────────────────
+  &__verify-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: calc(100% - 32px);
+    margin: 0 16px 14px;
+    padding: 10px 0;
+    border-radius: $r-input;
+    border: 1px dashed $pos;
+    background: color-mix(in oklch, var(--pos) 6%, transparent);
+    color: $pos;
+    font-family: $font-sans;
+    font-size: $fs-small;
+    font-weight: $fw-semibold;
+    cursor: pointer;
+  }
 
-	&__tx-actions {
-		display: flex;
-		gap: 8px;
-		padding: 8px 12px;
-		margin: 0 0 4px;
-		background: var(--bg-2);
-		border-radius: var(--r-card, 10px);
-	}
+  // ─── Bill list ─────────────────────────────────────────────
+  &__bill-list {
+    padding: 0 16px;
+  }
 
-	&__tx-action-btn {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		padding: 6px 12px;
-		border: none;
-		border-radius: var(--r-input, 8px);
-		background: var(--bg-3, rgba(255, 255, 255, 0.06));
-		color: var(--text-2);
-		font-size: 12px;
-		font-weight: 500;
-		cursor: pointer;
+  &__bill-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid $border-1;
+    cursor: pointer;
 
-		&--danger {
-			background: rgba(239, 68, 68, 0.15);
-			color: var(--neg);
-		}
-	}
+    &--overdue {
+      .live-tx-list__bill-desc {
+        color: $neg;
+      }
+    }
+
+    &--paid {
+      opacity: 0.65;
+    }
+  }
+
+  &__bill-status-dot {
+    width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+
+    &--pending {
+      background: $warn;
+    }
+
+    &--overdue {
+      background: $neg;
+    }
+  }
+
+  &__bill-icon {
+    flex-shrink: 0;
+  }
+
+  &__bill-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__bill-desc {
+    font-size: $fs-body;
+    font-weight: $fw-medium;
+    color: $text-1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__bill-meta {
+    font-size: $fs-caption;
+    color: $text-3;
+  }
+
+  &__bill-amount {
+    font-family: $font-mono;
+    font-size: $fs-small;
+    font-variant-numeric: tabular-nums;
+    color: $text-2;
+    white-space: nowrap;
+  }
+
+  &__bill-pay-btn {
+    flex-shrink: 0;
+    padding: 4px 12px;
+    border-radius: $r-input;
+    border: 1px solid $pos;
+    background: transparent;
+    color: $pos;
+    font-family: $font-sans;
+    font-size: $fs-caption;
+    font-weight: $fw-semibold;
+    cursor: pointer;
+
+    &:active {
+      background: color-mix(in oklch, var(--pos) 15%, transparent);
+    }
+  }
+
+  // ─── Expanded details ──────────────────────────────────────
+  &__bill-expanded {
+    padding: 10px 16px 14px 30px;
+    background: $bg-1;
+    border-bottom: 1px solid $border-1;
+  }
+
+  &__bill-detail {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+  }
+
+  &__bill-detail-label {
+    font-size: $fs-caption;
+    color: $text-3;
+  }
+
+  &__bill-detail-value {
+    font-size: $fs-caption;
+    color: $text-2;
+    font-family: $font-mono;
+  }
+
+  &__bill-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  &__action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: $r-input;
+    background: $bg-3;
+    color: $text-2;
+    font-size: 12px;
+    font-weight: $fw-medium;
+    font-family: $font-sans;
+    cursor: pointer;
+
+    &--pay {
+      background: $pos;
+      color: #0a0a0a;
+    }
+  }
+
+  // ─── Empty state ───────────────────────────────────────────
+  &__empty {
+    padding: 80px 24px;
+    text-align: center;
+  }
+
+  &__empty-text {
+    font-size: $fs-small;
+    color: $text-3;
+    margin-top: 10px;
+    font-family: $font-mono;
+  }
 }

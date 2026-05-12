@@ -158,3 +158,33 @@ export interface AiExtractRecurringResult {
   warnings: string[];
   suggestions: string[];
 }
+
+export interface Payment {
+  id: string;
+  recurringId: string;
+  month: string; // YYYY-MM
+  amount: number;
+  currency: CurrencyCode;
+  paidDate: string; // ISO date
+  account: string;
+  receiptKey?: string;
+  receiptName?: string;
+  notes?: string;
+  workspaceId?: string;
+}
+
+export interface AiVerifyPaymentsMatch {
+  recurringId: string;
+  recurringDesc: string;
+  amount: number;
+  currency: CurrencyCode;
+  paidDate: string;
+  confidence: 'high' | 'medium' | 'low';
+  matchReason: string;
+}
+
+export interface AiVerifyPaymentsResult {
+  matches: AiVerifyPaymentsMatch[];
+  unmatched: string[];
+  warnings: string[];
+}

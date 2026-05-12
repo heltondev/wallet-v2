@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { LiveHome } from './screens/LiveHome';
 import { LiveTxList } from './screens/LiveTxList';
-import { AddSheet } from './screens/AddSheet';
+import { PaymentSheet } from './screens/PaymentSheet';
+import { VerifyPayments } from './screens/VerifyPayments';
 import { PrevisaoA } from './screens/PrevisaoA';
 import { CategoriasScreen } from './screens/CategoriasScreen';
 import { AjustesScreen } from './screens/AjustesScreen';
@@ -15,25 +16,14 @@ import { ManageCategories } from './screens/ManageCategories';
 import { ManagePrompts } from './screens/ManagePrompts';
 import { ManageRecurring } from './screens/ManageRecurring';
 import { ManageWorkspaces } from './screens/ManageWorkspaces';
-import { FAB } from './components/FAB';
 import { BottomTabBar } from './components/BottomTabBar';
 import { fmtBRL, convertAmount } from './utils/formatters';
 import { fetchFxRates } from './utils/fxRates';
 import { isAuthenticated, signOut, handleAuthCallback } from './lib/auth';
-import { listTransactions, createTransaction, deleteTransaction, listAccounts, getSettings, generateRecurring, listWorkspaces, listRecurring } from './lib/api';
-import type { Transaction, Account, Workspace, RecurringTransaction, TabId, FabKind, ToastData, CurrencyCode } from './types';
+import { listTransactions, createPayment, listPayments, listAccounts, getSettings, listWorkspaces, listRecurring } from './lib/api';
+import type { Transaction, Account, Workspace, RecurringTransaction, Payment, TabId, FabKind, ToastData, CurrencyCode, AiVerifyPaymentsMatch } from './types';
 import './App.scss';
 
-
-const PT_WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
-
-function txDateFields() {
-  const now = new Date();
-  const iso = now.toISOString().slice(0, 10);
-  const day = String(now.getDate());
-  const wd = PT_WEEKDAYS[now.getDay()];
-  return { date: iso, day, wd };
-}
 
 interface WalletSettings {
   theme: 'dark' | 'light';
@@ -54,24 +44,25 @@ export function App() {
   const [currency, setCurrency] = useState<'BRL' | 'USD'>(DEFAULT_SETTINGS.currency);
 
   const [tab, setTab] = useState<TabId>('home');
-  const [sheet, setSheet] = useState(false);
-  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [tx, setTx] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [recurringItems, setRecurringItems] = useState<RecurringTransaction[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [toast, setToast] = useState<ToastData | null>(null);
   const [subScreen, setSubScreen] = useState<string | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
   const [fxRates, setFxRates] = useState<Record<string, number>>({ USD: 1, BRL: 5.19, EUR: 0.92 });
 
-  // Check auth on mount — handle OAuth callback if present
+  // Payment sheet state
+  const [payingBill, setPayingBill] = useState<RecurringTransaction | null>(null);
+
+  // Check auth on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
 
     if (code) {
-      // OAuth callback — exchange code for tokens
       window.history.replaceState({}, '', '/');
       handleAuthCallback(code)
         .then(() => { setAuthed(true); setAuthLoading(false); })
@@ -84,36 +75,30 @@ export function App() {
     }
   }, []);
 
-  // Fetch live FX rates after auth
   useEffect(() => {
     if (!authed) return;
     fetchFxRates().then(setFxRates);
   }, [authed]);
 
-  // Load data from API after auth, then generate pending recurring transactions
   useEffect(() => {
     if (!authed) return;
-    loadData().then(async () => {
-      try {
-        const result = await generateRecurring();
-        if (result.generated.length > 0) {
-          const txData = await listTransactions();
-          setTx(txData as unknown as Transaction[]);
-        }
-      } catch {
-        // Recurring generation failed — non-blocking
-      }
-    });
+    loadData();
   }, [authed]);
+
+  const currentMonthKey = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
 
   const loadData = async () => {
     try {
-      const [txData, accData, settingsData, wsData, recData] = await Promise.all([
-        listTransactions(), listAccounts(), getSettings(), listWorkspaces(), listRecurring(),
+      const [txData, accData, settingsData, wsData, recData, payData] = await Promise.all([
+        listTransactions(), listAccounts(), getSettings(), listWorkspaces(), listRecurring(), listPayments(currentMonthKey()),
       ]);
       setTx(txData as unknown as Transaction[]);
       setAccounts(accData as unknown as Account[]);
       setRecurringItems(recData as unknown as RecurringTransaction[]);
+      setPayments(payData as unknown as Payment[]);
       if (settingsData.theme) setTheme(settingsData.theme as 'dark' | 'light');
       if (settingsData.currency) setCurrency(settingsData.currency as 'BRL' | 'USD');
       setWorkspaces(wsData as unknown as Workspace[]);
@@ -132,6 +117,10 @@ export function App() {
     ? tx.filter(t => t.workspaceId === activeWorkspace)
     : tx;
 
+  const filteredPayments = activeWorkspace
+    ? payments.filter(p => p.workspaceId === activeWorkspace)
+    : payments;
+
   const activeBudget = activeWorkspace
     ? workspaces.find(w => w.id === activeWorkspace)?.monthlyBudget ?? 0
     : workspaces.reduce((sum, w) => sum + convertAmount(w.monthlyBudget, w.currency, currency, fxRates), 0);
@@ -140,44 +129,65 @@ export function App() {
     ? workspaces.find(w => w.id === activeWorkspace)?.currency ?? currency
     : currency;
 
-  // Apply theme attribute
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // Override --pos and --pos-bg when accent changes
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--pos', accent);
     root.style.setProperty('--pos-bg', `color-mix(in oklch, ${accent} 18%, transparent)`);
   }, [accent]);
 
-  const onSave = async (data: { desc: string; cat: string; amount: number; currency: CurrencyCode; fxRate: number; account: string; date?: string; day?: string; wd?: string; workspaceId?: string | null }): Promise<string | undefined> => {
+  const handleMarkPaid = (r: RecurringTransaction) => {
+    setPayingBill(r);
+  };
+
+  const handleConfirmPayment = async (data: {
+    recurringId: string;
+    amount: number;
+    currency: CurrencyCode;
+    paidDate: string;
+    account: string;
+    notes?: string;
+    receiptKey?: string;
+    receiptName?: string;
+    workspaceId?: string;
+  }) => {
     try {
-      const fields = data.date ? data : { ...txDateFields(), ...data };
-      const result = await createTransaction(fields);
-      showToast(data.desc, data.amount);
-      // Re-fetch to get server-assigned id
-      const txData = await listTransactions();
-      setTx(txData as unknown as Transaction[]);
-      return result.id as string;
+      await createPayment({
+        ...data,
+        month: currentMonthKey(),
+      });
+      showToast('Pagamento registrado', data.amount);
+      const payData = await listPayments(currentMonthKey());
+      setPayments(payData as unknown as Payment[]);
+      setPayingBill(null);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao salvar';
+      const msg = err instanceof Error ? err.message : 'Erro ao registrar pagamento';
       showToast(msg, 0);
-      return undefined;
     }
   };
 
-  const handleDeleteTx = async (txId: number) => {
+  const handleVerifyConfirm = async (matches: AiVerifyPaymentsMatch[]) => {
     try {
-      const txItem = tx.find(item => item.id === txId);
-      const month = txItem?.date?.slice(0, 7) ?? '';
-      await deleteTransaction(String(txId), month);
-      const txData = await listTransactions();
-      setTx(txData as unknown as Transaction[]);
-      showToast('Transação apagada', 0);
+      for (const m of matches) {
+        await createPayment({
+          recurringId: m.recurringId,
+          month: currentMonthKey(),
+          amount: m.amount,
+          currency: m.currency,
+          paidDate: m.paidDate,
+          account: accounts[0]?.name ?? '',
+          notes: `AI: ${m.matchReason}`,
+        });
+      }
+      showToast(`${matches.length} pagamentos registrados`, 0);
+      const payData = await listPayments(currentMonthKey());
+      setPayments(payData as unknown as Payment[]);
+      setSubScreen(null);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao apagar';
+      const msg = err instanceof Error ? err.message : 'Erro ao registrar pagamentos';
       showToast(msg, 0);
     }
   };
@@ -187,6 +197,7 @@ export function App() {
     setAuthed(false);
     setTx([]);
     setAccounts([]);
+    setPayments([]);
     setTab('home');
     setSubScreen(null);
   };
@@ -198,9 +209,7 @@ export function App() {
         <div className="phone-shell">
           <div className="island" />
           <div className="phone-surface app__loading">
-            <span className="app__loading-text">
-              Carregando...
-            </span>
+            <span className="app__loading-text">Carregando...</span>
           </div>
         </div>
       </div>
@@ -213,9 +222,7 @@ export function App() {
         <div className="app__stage-bg" />
         <div className="phone-shell">
           <div className="island" />
-          <div
-            className={`home-ind ${theme === 'dark' ? 'app__home-ind--dark' : 'app__home-ind--light'}`}
-          />
+          <div className={`home-ind ${theme === 'dark' ? 'app__home-ind--dark' : 'app__home-ind--light'}`} />
           <LoginScreen onAuthenticated={() => { setAuthed(true); }} />
         </div>
       </div>
@@ -227,61 +234,44 @@ export function App() {
       <div className="app__stage-bg" />
       <div className="phone-shell" data-theme={theme}>
         <div className="island" />
-        <div
-          className={`home-ind ${theme === 'dark' ? 'app__home-ind--dark' : 'app__home-ind--light'}`}
-        />
+        <div className={`home-ind ${theme === 'dark' ? 'app__home-ind--dark' : 'app__home-ind--light'}`} />
 
-        {tab === 'home' && (
+        {tab === 'home' && !subScreen && (
           <LiveHome
             tx={filteredTx}
             recurring={recurringItems}
+            payments={filteredPayments}
             currency={activeCurrency}
             monthlyBudget={activeBudget}
-            onTabChange={(id) => setTab(id as TabId)}
             workspaces={workspaces}
             activeWorkspace={activeWorkspace}
             onWorkspaceChange={setActiveWorkspace}
             onNavigateRecurring={() => { setTab('settings'); setSubScreen('recurring'); }}
-            onMarkPaid={async (r) => {
-              try {
-                const fields = {
-                  ...txDateFields(),
-                  desc: r.desc,
-                  cat: r.cat,
-                  amount: r.amount,
-                  currency: r.currency,
-                  fxRate: r.fxRate,
-                  account: r.account,
-                  recurringId: r.id,
-                  workspaceId: r.workspaceId ?? activeWorkspace ?? undefined,
-                };
-                await createTransaction(fields);
-                showToast(r.desc, r.amount);
-                const txData = await listTransactions();
-                setTx(txData as unknown as Transaction[]);
-              } catch (err: unknown) {
-                const msg = err instanceof Error ? err.message : 'Erro ao marcar como pago';
-                showToast(msg, 0);
-              }
-            }}
+            onMarkPaid={handleMarkPaid}
+            onVerifyPayments={() => setSubScreen('verify-payments')}
+            onNavigateContas={() => setTab('list')}
             fxRates={fxRates}
           />
         )}
-        {tab === 'list' && (
+        {tab === 'list' && !subScreen && (
           <LiveTxList
             tx={filteredTx}
+            recurring={recurringItems}
+            payments={filteredPayments}
             displayCurrency={activeCurrency}
             workspaces={workspaces}
             activeWorkspace={activeWorkspace}
             onWorkspaceChange={setActiveWorkspace}
-            onDelete={handleDeleteTx}
-            onEdit={(txItem) => { setEditingTx(txItem); setSheet(true); }}
+            onMarkPaid={handleMarkPaid}
+            onVerifyPayments={() => setSubScreen('verify-payments')}
+            onNavigateRecurring={() => { setTab('settings'); setSubScreen('recurring'); }}
+            fxRates={fxRates}
           />
         )}
-        {tab === 'forecast' && (
+        {tab === 'forecast' && !subScreen && (
           <PrevisaoA tx={filteredTx} recurring={recurringItems} currency={activeCurrency} monthlyBudget={activeBudget} workspaceId={activeWorkspace} />
         )}
-        {tab === 'cats' && (
+        {tab === 'cats' && !subScreen && (
           <CategoriasScreen tx={filteredTx} currency={activeCurrency} workspaceId={activeWorkspace} />
         )}
         {tab === 'settings' && !subScreen && (
@@ -295,6 +285,16 @@ export function App() {
               if (s.currency) setCurrency(s.currency as 'BRL' | 'USD');
             }}
           />
+        )}
+
+        {subScreen === 'verify-payments' && (
+          <div className="app__sub-screen">
+            <VerifyPayments
+              onBack={() => setSubScreen(null)}
+              onConfirm={handleVerifyConfirm}
+              currency={activeCurrency}
+            />
+          </div>
         )}
         {subScreen === 'ai-chat' && (
           <div className="app__sub-screen">
@@ -315,19 +315,7 @@ export function App() {
           <div className="app__sub-screen">
             <ReceiptScreen fabKind={fab} onBack={() => setSubScreen(null)} onSave={async (data) => {
               try {
-                const fields = {
-                  ...txDateFields(),
-                  desc: data.desc ?? 'Recibo',
-                  cat: data.cat ?? 'outros',
-                  amount: data.amount ?? 0,
-                  currency: data.currency ?? 'BRL',
-                  fxRate: data.fxRate ?? 1,
-                  account: data.account ?? 'Itau · Debito',
-                };
-                await createTransaction(fields);
-                showToast(fields.desc, fields.amount);
-                const txData = await listTransactions();
-                setTx(txData as unknown as Transaction[]);
+                showToast(data.desc ?? 'Recibo', data.amount ?? 0);
               } catch (err: unknown) {
                 const msg = err instanceof Error ? err.message : 'Erro ao salvar';
                 showToast(msg, 0);
@@ -362,20 +350,25 @@ export function App() {
           </div>
         )}
 
-        {/* Global tab bar + FAB — outside all screens */}
+        {/* Tab bar — no FAB */}
         {!subScreen && (
-          <>
-            <FAB kind={fab} onClick={() => setSheet(true)} />
-            <BottomTabBar
-              active={tab}
-              fabKind={fab}
-              onChange={(id) => setTab(id)}
-              onAdd={() => setSheet(true)}
-            />
-          </>
+          <BottomTabBar
+            active={tab}
+            fabKind={fab}
+            onChange={(id) => setTab(id)}
+          />
         )}
 
-        <AddSheet open={sheet} onClose={() => { setSheet(false); setEditingTx(null); }} onSave={onSave} accounts={accounts} activeWorkspace={activeWorkspace} workspaces={workspaces} editingTx={editingTx} />
+        {/* Payment sheet */}
+        {payingBill && (
+          <PaymentSheet
+            open={!!payingBill}
+            recurring={payingBill}
+            accounts={accounts}
+            onClose={() => setPayingBill(null)}
+            onConfirm={handleConfirmPayment}
+          />
+        )}
 
         {toast && (
           <div className="toast">
@@ -391,7 +384,6 @@ export function App() {
           </div>
         )}
       </div>
-
     </div>
   );
 }

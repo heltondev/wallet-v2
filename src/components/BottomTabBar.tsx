@@ -13,7 +13,7 @@ interface BottomTabBarProps {
 export const BottomTabBar: React.FC<BottomTabBarProps> = ({ active = 'home', onChange, fabKind = 'circle', onAdd }) => {
   const tabs = [
     { id:'home', label:'Home', icon:'home' },
-    { id:'list', label:'Transacoes', icon:'list' },
+    { id:'list', label:'Contas', icon:'repeat' },
     ...(fabKind==='tab' ? [{ id:'add', label:'', icon:'plus', center:true }] : []),
     { id:'forecast', label:'Previsao', icon:'trending' },
     { id:'cats', label:'Categorias', icon:'grid' },

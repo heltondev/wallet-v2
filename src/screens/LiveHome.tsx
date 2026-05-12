@@ -1,49 +1,37 @@
 import { useMemo } from 'react';
+import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
-import { MonthSelector } from '../components/MonthSelector';
-import { BalanceCard } from '../components/BalanceCard';
-import { BudgetBar } from '../components/BudgetBar';
-import { StatCard } from '../components/StatCard';
 import { CategoryIcon } from '../components/CategoryIcon';
 import { fmtAmount, convertAmount } from '../utils/formatters';
 import { monthlyAmount, getRecurringStatuses } from '../utils/recurring';
 import type { RecurringStatus } from '../utils/recurring';
-import { currentMonth, currentYear, currentMonthKey, monthLabel, daysRemainingInMonth } from '../utils/dates';
+import { currentMonthKey, monthLabel } from '../utils/dates';
 import { WorkspaceSelector } from '../components/WorkspaceSelector';
-import type { Transaction, RecurringTransaction, Workspace, TabId, CurrencyCode } from '../types';
+import type { Transaction, RecurringTransaction, Payment, Workspace, CurrencyCode } from '../types';
 import './LiveHome.scss';
 
 interface LiveHomeProps {
   tx: Transaction[];
   recurring: RecurringTransaction[];
+  payments: Payment[];
   currency: CurrencyCode;
   monthlyBudget: number;
-  onTabChange: (tab: TabId) => void;
   workspaces?: Workspace[];
   activeWorkspace?: string | null;
   onWorkspaceChange?: (id: string | null) => void;
   onNavigateRecurring?: () => void;
   onMarkPaid?: (recurring: RecurringTransaction) => void;
+  onVerifyPayments?: () => void;
+  onNavigateContas?: () => void;
   fxRates?: Record<string, number>;
 }
 
-export function LiveHome({ tx, recurring, currency, monthlyBudget, onTabChange, workspaces = [], activeWorkspace = null, onWorkspaceChange, onNavigateRecurring, onMarkPaid, fxRates }: LiveHomeProps) {
+export function LiveHome({ tx, recurring, payments, currency, monthlyBudget, workspaces = [], activeWorkspace = null, onWorkspaceChange, onNavigateRecurring, onMarkPaid, onVerifyPayments, onNavigateContas, fxRates }: LiveHomeProps) {
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
 
   const activeRecurring = useMemo(() =>
     recurring.filter(r => r.active && (!activeWorkspace || r.workspaceId === activeWorkspace)),
   [recurring, activeWorkspace]);
-
-  const txStats = useMemo(() => {
-    let ins = 0;
-    let outs = 0;
-    for (const item of tx) {
-      const converted = convertAmount(item.amount, item.currency, currency, fxRates);
-      if (converted > 0) ins += converted;
-      else outs += Math.abs(converted);
-    }
-    return { ins, outs, balance: ins - outs };
-  }, [tx, currency, fxRates]);
 
   const recStats = useMemo(() => {
     let income = 0;
@@ -58,8 +46,8 @@ export function LiveHome({ tx, recurring, currency, monthlyBudget, onTabChange, 
   }, [activeRecurring, currency, fxRates]);
 
   const billStatuses = useMemo(() =>
-    getRecurringStatuses(activeRecurring, tx, currency, fxRates),
-  [activeRecurring, tx, currency, fxRates]);
+    getRecurringStatuses(activeRecurring, tx, currency, fxRates, payments),
+  [activeRecurring, tx, currency, fxRates, payments]);
 
   const pendingBills = useMemo(() =>
     billStatuses.filter((s: RecurringStatus) => s.status !== 'paid'),
@@ -69,14 +57,15 @@ export function LiveHome({ tx, recurring, currency, monthlyBudget, onTabChange, 
     billStatuses.filter((s: RecurringStatus) => s.status === 'paid'),
   [billStatuses]);
 
-  const month = currentMonth();
-  const year = currentYear();
-  const label = monthLabel(currentMonthKey());
-  const daysLeft = daysRemainingInMonth();
+  const pendingTotal = useMemo(() =>
+    pendingBills.reduce((sum, b) => sum + Math.abs(b.monthlyConverted), 0),
+  [pendingBills]);
 
-  const totalIncome = txStats.ins + recStats.income;
-  const totalExpenses = txStats.outs + recStats.expenses;
-  const projectedBalance = totalIncome - totalExpenses;
+  const paidTotal = useMemo(() =>
+    paidBills.reduce((sum, b) => sum + Math.abs(b.monthlyConverted), 0),
+  [paidBills]);
+
+  const label = monthLabel(currentMonthKey());
 
   return (
     <div className="phone-surface live-home">
@@ -85,19 +74,54 @@ export function LiveHome({ tx, recurring, currency, monthlyBudget, onTabChange, 
         {workspaces.length > 0 && onWorkspaceChange && (
           <WorkspaceSelector workspaces={workspaces} activeId={activeWorkspace} onChange={onWorkspaceChange} />
         )}
-        <MonthSelector month={month} year={year} />
-        <div className="live-home__balance-wrap" key={projectedBalance}>
-          <div className="live-home__balance-anim">
-            <BalanceCard value={txStats.balance} delta={0} month={label} currency={currency} kind="a" />
+
+        {/* Month summary card */}
+        <div className="live-home__summary-card">
+          <div className="live-home__summary-month">{label}</div>
+          <div className="live-home__summary-row">
+            <div className="live-home__summary-block">
+              <span className="live-home__summary-label">Pendente</span>
+              <span className="live-home__summary-value live-home__summary-value--pending">
+                {fmtAmount(pendingTotal, currency, { decimals: 0 })}
+              </span>
+            </div>
+            <div className="live-home__summary-divider" />
+            <div className="live-home__summary-block">
+              <span className="live-home__summary-label">Pago</span>
+              <span className="live-home__summary-value live-home__summary-value--paid">
+                {fmtAmount(paidTotal, currency, { decimals: 0 })}
+              </span>
+            </div>
+            {monthlyBudget > 0 && (
+              <>
+                <div className="live-home__summary-divider" />
+                <div className="live-home__summary-block">
+                  <span className="live-home__summary-label">Orcamento</span>
+                  <span className="live-home__summary-value">
+                    {fmtAmount(monthlyBudget, currency, { decimals: 0 })}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+          {billStatuses.length > 0 && (
+            <div className="live-home__summary-progress">
+              <div
+                className="live-home__summary-progress-fill"
+                style={{ width: `${billStatuses.length > 0 ? Math.round((paidBills.length / billStatuses.length) * 100) : 0}%` }}
+              />
+            </div>
+          )}
+          <div className="live-home__summary-progress-label">
+            {paidBills.length} de {billStatuses.length} contas pagas
           </div>
         </div>
-        <div className="live-home__budget-wrap">
-          <BudgetBar spent={txStats.outs} budget={monthlyBudget} label="Orçamento mensal" currency={currency} />
-        </div>
+
+        {/* Bills section */}
         {billStatuses.length > 0 && (
           <div className="live-home__bills-section">
             <div className="live-home__bills-header">
-              <span className="live-home__bills-title">Contas do mês</span>
+              <span className="live-home__bills-title">Contas do mes</span>
               {pendingBills.length > 0 && (
                 <span className="live-home__bills-badge">{pendingBills.length} pendente{pendingBills.length > 1 ? 's' : ''}</span>
               )}
@@ -144,7 +168,11 @@ export function LiveHome({ tx, recurring, currency, monthlyBudget, onTabChange, 
                     <div className="live-home__bill-info">
                       <span className="live-home__bill-desc">{item.recurring.desc}</span>
                       <span className="live-home__bill-meta">
-                        {item.matchingTx ? `Pago ${item.matchingTx.date.slice(8, 10)}/${item.matchingTx.date.slice(5, 7)}` : 'Pago'}
+                        {item.matchingPayment
+                          ? `Pago ${item.matchingPayment.paidDate.slice(8, 10)}/${item.matchingPayment.paidDate.slice(5, 7)}`
+                          : item.matchingTx
+                            ? `Pago ${item.matchingTx.date.slice(8, 10)}/${item.matchingTx.date.slice(5, 7)}`
+                            : 'Pago'}
                       </span>
                     </div>
                     <div className="live-home__bill-amount">
@@ -158,23 +186,43 @@ export function LiveHome({ tx, recurring, currency, monthlyBudget, onTabChange, 
           </div>
         )}
 
-        <div className="live-home__stats-grid">
-          <StatCard label="Entradas" value={fmtAmount(txStats.ins, currency, { decimals: 0 })} sub="realizadas" accent="pos" icon="arrowDown" />
-          <StatCard label="Saídas" value={fmtAmount(txStats.outs, currency, { decimals: 0 })} sub="realizadas" accent="neg" icon="arrowUp" />
-          <StatCard label="Previsto restante" value={fmtAmount(monthlyBudget - totalExpenses, currency, { decimals: 0 })} sub={`${daysLeft} dias restantes`} accent="neutral" />
-          <StatCard label="Sobra projetada" value={fmtAmount(projectedBalance, currency, { decimals: 0 })} sub={`${activeRecurring.length} recorrentes`} accent={projectedBalance >= 0 ? 'pos' : 'neg'} />
+        {/* Verify payments button */}
+        {onVerifyPayments && (
+          <button className="live-home__verify-btn" onClick={onVerifyPayments}>
+            <Icons.alert size={18} color="var(--pos)" />
+            <span>Verificar pagamento</span>
+          </button>
+        )}
+
+        {/* Quick stats */}
+        <div className="live-home__quick-stats">
+          <div className="live-home__stat-card" onClick={onNavigateContas}>
+            <span className="live-home__stat-label">Receita mensal</span>
+            <span className="live-home__stat-value live-home__stat-value--pos">
+              {fmtAmount(recStats.income, currency, { decimals: 0 })}
+            </span>
+            <span className="live-home__stat-sub">{activeRecurring.filter(r => r.amount > 0).length} entradas</span>
+          </div>
+          <div className="live-home__stat-card" onClick={onNavigateContas}>
+            <span className="live-home__stat-label">Despesa mensal</span>
+            <span className="live-home__stat-value live-home__stat-value--neg">
+              {fmtAmount(recStats.expenses, currency, { decimals: 0 })}
+            </span>
+            <span className="live-home__stat-sub">{activeRecurring.filter(r => r.amount < 0).length} saidas</span>
+          </div>
         </div>
 
-        {/* Quick access cards — same grid as stats above */}
-        <div className="live-home__stats-grid">
-          <div className="live-home__clickable-card" onClick={() => onTabChange('list')}>
-            <StatCard label="Transações" value={String(tx.length)} sub="ver todas →" accent="neutral" icon="list" />
-          </div>
-          <div className="live-home__clickable-card" onClick={() => onNavigateRecurring?.()}>
-            <StatCard label="Recorrentes" value={String(activeRecurring.length)} sub="gerenciar →" accent="neutral" icon="repeat" />
-          </div>
+        {/* Quick links */}
+        <div className="live-home__quick-links">
+          <button className="live-home__quick-link" onClick={onNavigateContas}>
+            Ver todas as contas →
+          </button>
+          <button className="live-home__quick-link" onClick={onNavigateRecurring}>
+            Gerenciar recorrentes →
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
