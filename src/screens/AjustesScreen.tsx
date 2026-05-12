@@ -148,14 +148,14 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], isOwner =
           </div>
         </div>
 
-        {isOwner && (
-          <Section title="CONTA">
-            <Row label="Carteiras e contas" detail={String(accountCount)} icon="wallet" onClick={() => onNavigate?.('accounts')} />
-            <Row label="Categorias" detail={String(categoryCount)} icon="grid" onClick={() => onNavigate?.('categories')} />
-            <Row label="Recorrentes" icon="repeat" onClick={() => onNavigate?.('recurring')} />
+        <Section title="CONTA">
+          <Row label="Carteiras e contas" detail={String(accountCount)} icon="wallet" onClick={() => onNavigate?.('accounts')} />
+          <Row label="Categorias" detail={String(categoryCount)} icon="grid" onClick={() => onNavigate?.('categories')} />
+          <Row label="Recorrentes" icon="repeat" onClick={() => onNavigate?.('recurring')} />
+          {isOwner && (
             <Row label="Espaços" icon="grid" last onClick={() => onNavigate?.('workspaces')} />
-          </Section>
-        )}
+          )}
+        </Section>
 
         <Section title="APARÊNCIA">
           <Row label="Tema" detail={theme === 'dark' ? 'Escuro' : 'Claro'} icon="moon" onClick={toggleTheme} />
@@ -163,25 +163,23 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], isOwner =
         </Section>
 
         {isOwner && (
-          <>
-            <Section title="DADOS">
-              <Row label="Exportar dados" detail={`${tx.length} transações`} icon="download" onClick={() => setExportOpen(!exportOpen)} />
-              {exportOpen && (
-                <div className="settings-screen__export-row">
-                  <button onClick={exportCSV} className="settings-screen__export-btn">CSV</button>
-                  <button onClick={exportJSON} className="settings-screen__export-btn">JSON</button>
-                </div>
-              )}
-              <Row label="Backup na nuvem" detail="Ativo" icon="cloud" last />
-            </Section>
-
-            <Section title="INTELIGÊNCIA ARTIFICIAL">
-              <Row label="Assistente financeiro" detail="Chat" icon="alert" onClick={() => onNavigate?.('ai-chat')} />
-              <Row label="Insights do mês" icon="trending" onClick={() => onNavigate?.('ai-insights')} />
-              <Row label="Escanear recibo" icon="search" last onClick={() => onNavigate?.('ai-receipt')} />
-            </Section>
-          </>
+          <Section title="DADOS">
+            <Row label="Exportar dados" detail={`${tx.length} transações`} icon="download" onClick={() => setExportOpen(!exportOpen)} />
+            {exportOpen && (
+              <div className="settings-screen__export-row">
+                <button onClick={exportCSV} className="settings-screen__export-btn">CSV</button>
+                <button onClick={exportJSON} className="settings-screen__export-btn">JSON</button>
+              </div>
+            )}
+            <Row label="Backup na nuvem" detail="Ativo" icon="cloud" last />
+          </Section>
         )}
+
+        <Section title="INTELIGÊNCIA ARTIFICIAL">
+          <Row label="Assistente financeiro" detail="Chat" icon="alert" onClick={() => onNavigate?.('ai-chat')} />
+          <Row label="Insights do mês" icon="trending" onClick={() => onNavigate?.('ai-insights')} />
+          <Row label="Escanear recibo" icon="search" last onClick={() => onNavigate?.('ai-receipt')} />
+        </Section>
 
         {userEmail === 'holiver.usa@gmail.com' && (
           <Section title="ADMIN">
