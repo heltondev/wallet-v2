@@ -485,6 +485,8 @@ export function App() {
 				{subScreen === 'accounts' && (
 					<div className='app__sub-screen'>
 						<ManageAccounts
+							sharedOwner={sharedOwner}
+							sharedWorkspace={sharedWsId}
 							onBack={() => {
 								setSubScreen(null);
 								loadData();
@@ -494,7 +496,7 @@ export function App() {
 				)}
 				{subScreen === 'categories' && (
 					<div className='app__sub-screen'>
-						<ManageCategories onBack={() => setSubScreen(null)} />
+						<ManageCategories onBack={() => setSubScreen(null)} sharedOwner={sharedOwner} sharedWorkspace={sharedWsId} />
 					</div>
 				)}
 				{subScreen === 'prompts' && (
@@ -504,7 +506,7 @@ export function App() {
 				)}
 				{subScreen === 'recurring' && (
 					<div className='app__sub-screen'>
-						<ManageRecurring onBack={() => setSubScreen(null)} />
+						<ManageRecurring onBack={() => setSubScreen(null)} sharedOwner={sharedOwner} sharedWorkspace={sharedWsId} />
 					</div>
 				)}
 				{subScreen === 'workspaces' && (

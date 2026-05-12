@@ -7,11 +7,13 @@ import './ManageAccounts.scss';
 
 interface ManageAccountsProps {
   onBack?: () => void;
+  sharedOwner?: string;
+  sharedWorkspace?: string;
 }
 
 const CURRENCIES: CurrencyCode[] = ['BRL', 'USD', 'EUR'];
 
-export function ManageAccounts({ onBack }: ManageAccountsProps) {
+export function ManageAccounts({ onBack, sharedOwner, sharedWorkspace }: ManageAccountsProps) {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -25,7 +27,7 @@ export function ManageAccounts({ onBack }: ManageAccountsProps) {
 
   const fetchAccounts = () => {
     setLoading(true);
-    listAccounts()
+    listAccounts(sharedOwner, sharedWorkspace)
       .then(data => setAccounts(data as unknown as Account[]))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -44,7 +46,7 @@ export function ManageAccounts({ onBack }: ManageAccountsProps) {
     try {
       const payload: Record<string, unknown> = { name: name.trim(), institution: institution.trim(), currency };
       if (workspaceId) payload.workspaceId = workspaceId;
-      await createAccount(payload);
+      await createAccount(payload, sharedOwner, sharedWorkspace);
       setName('');
       setInstitution('');
       setCurrency('BRL');

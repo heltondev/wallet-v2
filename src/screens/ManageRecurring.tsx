@@ -10,6 +10,8 @@ import './ManageRecurring.scss';
 
 interface ManageRecurringProps {
   onBack?: () => void;
+  sharedOwner?: string;
+  sharedWorkspace?: string;
 }
 
 const FREQUENCIES: { value: RecurringFrequency; label: string }[] = [
@@ -71,7 +73,7 @@ const emptyForm = (): FormData => ({
   workspaceId: '',
 });
 
-export function ManageRecurring({ onBack }: ManageRecurringProps) {
+export function ManageRecurring({ onBack, sharedOwner, sharedWorkspace }: ManageRecurringProps) {
   const [items, setItems] = useState<RecurringTransaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -242,7 +244,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
           fxRate: 1,
           notes: r.notes,
           active: true,
-        });
+        }, sharedOwner, sharedWorkspace);
       }
       setAiReviewMode(false);
       setAiReviewItems([]);
@@ -257,7 +259,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [recData, accData, wsData] = await Promise.all([listRecurring(), listAccounts(), listWorkspaces()]);
+      const [recData, accData, wsData] = await Promise.all([listRecurring(sharedOwner, sharedWorkspace), listAccounts(sharedOwner, sharedWorkspace), listWorkspaces()]);
       setItems(recData as unknown as RecurringTransaction[]);
       setAccounts(accData as unknown as Account[]);
       setWorkspaces(wsData as unknown as Workspace[]);
@@ -281,7 +283,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
 
   const markSeen = async (id: string) => {
     setItems(prev => prev.map(r => r.id === id ? { ...r, seen: true } : r));
-    updateRecurring(id, { seen: true }).catch(() => {});
+    updateRecurring(id, { seen: true }, sharedOwner, sharedWorkspace).catch(() => {});
   };
 
   const openEdit = (r: RecurringTransaction) => {
@@ -340,9 +342,9 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
 
     try {
       if (editingId) {
-        await updateRecurring(editingId, payload);
+        await updateRecurring(editingId, payload, sharedOwner, sharedWorkspace);
       } else {
-        await createRecurring(payload);
+        await createRecurring(payload, sharedOwner, sharedWorkspace);
       }
       setShowForm(false);
       setEditingId(null);
@@ -361,7 +363,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
     }
     setConfirmDelete(null);
     try {
-      await deleteRecurring(id);
+      await deleteRecurring(id, sharedOwner, sharedWorkspace);
       setItems(prev => prev.filter(r => r.id !== id));
     } catch {
       // silent
@@ -372,7 +374,7 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
     const newActive = !r.active;
     setItems(prev => prev.map(x => x.id === r.id ? { ...x, active: newActive } : x));
     try {
-      await updateRecurring(r.id, { active: newActive });
+      await updateRecurring(r.id, { active: newActive }, sharedOwner, sharedWorkspace);
     } catch {
       setItems(prev => prev.map(x => x.id === r.id ? { ...x, active: r.active } : x));
     }

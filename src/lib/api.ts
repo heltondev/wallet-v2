@@ -48,17 +48,17 @@ export const listAccounts = (owner?: string, workspace?: string) =>
   apiFetch<Record<string, unknown>[]>(`/accounts?_=1${sharedParams(owner, workspace)}`);
 
 // Categories
-export const listCategories = () =>
-  apiFetch<Record<string, unknown>[]>('/categories');
+export const listCategories = (owner?: string, workspace?: string) =>
+  apiFetch<Record<string, unknown>[]>(`/categories?_=1${sharedParams(owner, workspace)}`);
 
-export const createCategory = (data: Record<string, unknown>) =>
-  apiFetch<Record<string, unknown>>('/categories', { method: 'POST', body: JSON.stringify(data) });
+export const createCategory = (data: Record<string, unknown>, owner?: string, workspace?: string) =>
+  apiFetch<Record<string, unknown>>(`/categories?_=1${sharedParams(owner, workspace)}`, { method: 'POST', body: JSON.stringify(data) });
 
-export const updateCategory = (slug: string, data: Record<string, unknown>) =>
-  apiFetch<Record<string, unknown>>(`/categories/${slug}`, { method: 'PUT', body: JSON.stringify(data) });
+export const updateCategory = (slug: string, data: Record<string, unknown>, owner?: string, workspace?: string) =>
+  apiFetch<Record<string, unknown>>(`/categories/${slug}?_=1${sharedParams(owner, workspace)}`, { method: 'PUT', body: JSON.stringify(data) });
 
-export const deleteCategory = (slug: string) =>
-  apiFetch<void>(`/categories/${slug}`, { method: 'DELETE' });
+export const deleteCategory = (slug: string, owner?: string, workspace?: string) =>
+  apiFetch<void>(`/categories/${slug}?_=1${sharedParams(owner, workspace)}`, { method: 'DELETE' });
 
 // Budgets
 export const listBudgets = (month?: string) =>
@@ -132,11 +132,11 @@ export const listRecurring = (owner?: string, workspace?: string) =>
 export const createRecurring = (data: Record<string, unknown>, owner?: string, workspace?: string) =>
   apiFetch<Record<string, unknown>>(`/recurring?_=1${sharedParams(owner, workspace)}`, { method: 'POST', body: JSON.stringify(data) });
 
-export const updateRecurring = (id: string, data: Record<string, unknown>) =>
-  apiFetch<Record<string, unknown>>(`/recurring/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const updateRecurring = (id: string, data: Record<string, unknown>, owner?: string, workspace?: string) =>
+  apiFetch<Record<string, unknown>>(`/recurring/${id}?_=1${sharedParams(owner, workspace)}`, { method: 'PUT', body: JSON.stringify(data) });
 
-export const deleteRecurring = (id: string) =>
-  apiFetch<void>(`/recurring/${id}`, { method: 'DELETE' });
+export const deleteRecurring = (id: string, owner?: string, workspace?: string) =>
+  apiFetch<void>(`/recurring/${id}?_=1${sharedParams(owner, workspace)}`, { method: 'DELETE' });
 
 export const generateRecurring = () =>
   apiFetch<{ generated: Record<string, unknown>[] }>('/recurring/generate', { method: 'POST' });

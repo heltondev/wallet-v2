@@ -8,6 +8,8 @@ import './ManageCategories.scss';
 
 interface ManageCategoriesProps {
   onBack?: () => void;
+  sharedOwner?: string;
+  sharedWorkspace?: string;
 }
 
 interface CategoryEntry extends CategoryMeta {
@@ -33,7 +35,7 @@ function slugify(str: string): string {
   return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-export function ManageCategories({ onBack }: ManageCategoriesProps) {
+export function ManageCategories({ onBack, sharedOwner, sharedWorkspace }: ManageCategoriesProps) {
   const [categories, setCategories] = useState<CategoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -48,7 +50,7 @@ export function ManageCategories({ onBack }: ManageCategoriesProps) {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const apiCats = await listCategories() as unknown as (CategoryMeta & { slug: string; hidden?: boolean })[];
+      const apiCats = await listCategories(sharedOwner, sharedWorkspace) as unknown as (CategoryMeta & { slug: string; hidden?: boolean })[];
       const overrides: Record<string, CategoryMeta & { hidden?: boolean }> = {};
       for (const c of apiCats) {
         overrides[c.slug] = c;
@@ -123,9 +125,9 @@ export function ManageCategories({ onBack }: ManageCategoriesProps) {
       const data = { slug, label: label.trim(), labelEn: labelEn.trim() || label.trim(), color: selectedColor, icon: selectedIcon };
 
       if (editingSlug) {
-        await updateCategory(slug, data);
+        await updateCategory(slug, data, sharedOwner, sharedWorkspace);
       } else {
-        await createCategory(data);
+        await createCategory(data, sharedOwner, sharedWorkspace);
       }
       await loadCategories();
       resetForm();
@@ -145,9 +147,9 @@ export function ManageCategories({ onBack }: ManageCategoriesProps) {
     try {
       const cat = categories.find(c => c.slug === slug);
       if (cat?.isDefault) {
-        await updateCategory(slug, { slug, label: cat.label, labelEn: cat.labelEn, color: cat.color, icon: cat.icon, hidden: true });
+        await updateCategory(slug, { slug, label: cat.label, labelEn: cat.labelEn, color: cat.color, icon: cat.icon, hidden: true }, sharedOwner, sharedWorkspace);
       } else {
-        await deleteCategory(slug);
+        await deleteCategory(slug, sharedOwner, sharedWorkspace);
       }
       setCategories(prev => prev.filter(c => c.slug !== slug));
     } catch {
