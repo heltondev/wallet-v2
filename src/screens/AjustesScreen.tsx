@@ -176,12 +176,12 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
           <Row label="Escanear recibo" icon="search" last onClick={() => onNavigate?.('ai-receipt')} />
         </Section>
 
-        <Section title="ADMIN">
-          <Row label="Custos de infraestrutura" icon="trending" onClick={() => onNavigate?.('admin-costs')} />
-          {userEmail === 'holiver.usa@gmail.com' && (
+        {userEmail === 'holiver.usa@gmail.com' && (
+          <Section title="ADMIN">
+            <Row label="Custos de infraestrutura" icon="trending" onClick={() => onNavigate?.('admin-costs')} />
             <Row label="Prompts de AI" icon="alert" last onClick={() => onNavigate?.('prompts')} />
-          )}
-        </Section>
+          </Section>
+        )}
 
         <Section title="SUPORTE">
           <Row label="Sobre" icon="alert" onClick={() => setShowAbout(!showAbout)} />
