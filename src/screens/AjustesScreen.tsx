@@ -13,12 +13,13 @@ import './AjustesScreen.scss';
 interface AjustesScreenProps {
   fabKind?: FabKind;
   tx?: Transaction[];
+  isOwner?: boolean;
   onNavigate?: (screen: string) => void;
   onSignOut?: () => void;
   onSettingsChange?: (settings: { theme?: 'dark' | 'light'; currency?: CurrencyCode }) => void;
 }
 
-export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigate, onSignOut, onSettingsChange }: AjustesScreenProps) {
+export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], isOwner = true, onNavigate, onSignOut, onSettingsChange }: AjustesScreenProps) {
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -147,34 +148,40 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], onNavigat
           </div>
         </div>
 
-        <Section title="CONTA">
-          <Row label="Carteiras e contas" detail={String(accountCount)} icon="wallet" onClick={() => onNavigate?.('accounts')} />
-          <Row label="Categorias" detail={String(categoryCount)} icon="grid" onClick={() => onNavigate?.('categories')} />
-          <Row label="Recorrentes" icon="repeat" onClick={() => onNavigate?.('recurring')} />
-          <Row label="Espaços" icon="grid" last onClick={() => onNavigate?.('workspaces')} />
-        </Section>
+        {isOwner && (
+          <Section title="CONTA">
+            <Row label="Carteiras e contas" detail={String(accountCount)} icon="wallet" onClick={() => onNavigate?.('accounts')} />
+            <Row label="Categorias" detail={String(categoryCount)} icon="grid" onClick={() => onNavigate?.('categories')} />
+            <Row label="Recorrentes" icon="repeat" onClick={() => onNavigate?.('recurring')} />
+            <Row label="Espaços" icon="grid" last onClick={() => onNavigate?.('workspaces')} />
+          </Section>
+        )}
 
         <Section title="APARÊNCIA">
           <Row label="Tema" detail={theme === 'dark' ? 'Escuro' : 'Claro'} icon="moon" onClick={toggleTheme} />
           <Row label="Moeda principal" detail={currency} last onClick={toggleCurrency} />
         </Section>
 
-        <Section title="DADOS">
-          <Row label="Exportar dados" detail={`${tx.length} transações`} icon="download" onClick={() => setExportOpen(!exportOpen)} />
-          {exportOpen && (
-            <div className="settings-screen__export-row">
-              <button onClick={exportCSV} className="settings-screen__export-btn">CSV</button>
-              <button onClick={exportJSON} className="settings-screen__export-btn">JSON</button>
-            </div>
-          )}
-          <Row label="Backup na nuvem" detail="Ativo" icon="cloud" last />
-        </Section>
+        {isOwner && (
+          <>
+            <Section title="DADOS">
+              <Row label="Exportar dados" detail={`${tx.length} transações`} icon="download" onClick={() => setExportOpen(!exportOpen)} />
+              {exportOpen && (
+                <div className="settings-screen__export-row">
+                  <button onClick={exportCSV} className="settings-screen__export-btn">CSV</button>
+                  <button onClick={exportJSON} className="settings-screen__export-btn">JSON</button>
+                </div>
+              )}
+              <Row label="Backup na nuvem" detail="Ativo" icon="cloud" last />
+            </Section>
 
-        <Section title="INTELIGÊNCIA ARTIFICIAL">
-          <Row label="Assistente financeiro" detail="Chat" icon="alert" onClick={() => onNavigate?.('ai-chat')} />
-          <Row label="Insights do mês" icon="trending" onClick={() => onNavigate?.('ai-insights')} />
-          <Row label="Escanear recibo" icon="search" last onClick={() => onNavigate?.('ai-receipt')} />
-        </Section>
+            <Section title="INTELIGÊNCIA ARTIFICIAL">
+              <Row label="Assistente financeiro" detail="Chat" icon="alert" onClick={() => onNavigate?.('ai-chat')} />
+              <Row label="Insights do mês" icon="trending" onClick={() => onNavigate?.('ai-insights')} />
+              <Row label="Escanear recibo" icon="search" last onClick={() => onNavigate?.('ai-receipt')} />
+            </Section>
+          </>
+        )}
 
         {userEmail === 'holiver.usa@gmail.com' && (
           <Section title="ADMIN">

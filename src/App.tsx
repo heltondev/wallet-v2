@@ -430,6 +430,7 @@ export function App() {
 					<AjustesScreen
 						fabKind={fab}
 						tx={tx}
+						isOwner={workspaces.some(w => w.ownership !== 'shared')}
 						onNavigate={(s) => setSubScreen(s)}
 						onSignOut={handleSignOut}
 						onSettingsChange={(s) => {
