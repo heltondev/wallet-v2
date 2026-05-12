@@ -63,11 +63,13 @@
 	overflow: auto;
 	padding: 0 $s-4-raw;
 	margin-top: 3.5rem;
-	@include viewport-height(75px);
+	height: 86%;
 
 	@media (max-width: $bp-mobile) {
 		padding: $s-4-raw;
 		margin-top: 0;
+		height: auto;
+		@include viewport-height(75px);
 	}
 }
 
