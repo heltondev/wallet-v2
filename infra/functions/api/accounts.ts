@@ -34,7 +34,9 @@ async function createAccount(event: APIGatewayProxyEvent, userId: string): Promi
 
 async function listAccounts(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
   const items = await queryItems(`USER#${userId}`, 'ACCOUNT#');
-  return ok(event, items);
+  const wsFilter = event.queryStringParameters?.workspace;
+  const filtered = wsFilter ? items.filter(i => i.workspaceId === wsFilter) : items;
+  return ok(event, filtered);
 }
 
 async function updateAccount(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {

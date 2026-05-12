@@ -49,7 +49,9 @@ async function listTransactions(event: APIGatewayProxyEvent, userId: string): Pr
   const month = event.queryStringParameters?.month;
   const prefix = month ? `TX#${month}` : 'TX#';
   const items = await queryItems(`USER#${userId}`, prefix);
-  return ok(event, items);
+  const wsFilter = event.queryStringParameters?.workspace;
+  const filtered = wsFilter ? items.filter(i => i.workspaceId === wsFilter) : items;
+  return ok(event, filtered);
 }
 
 async function getTransaction(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {

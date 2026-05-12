@@ -44,7 +44,9 @@ async function listPayments(event: APIGatewayProxyEvent, userId: string): Promis
   const month = event.queryStringParameters?.month;
   const prefix = month ? `PAYMENT#${month}` : 'PAYMENT#';
   const items = await queryItems(`USER#${userId}`, prefix);
-  return ok(event, items);
+  const wsFilter = event.queryStringParameters?.workspace;
+  const filtered = wsFilter ? items.filter(i => i.workspaceId === wsFilter) : items;
+  return ok(event, filtered);
 }
 
 async function removePayment(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {

@@ -49,7 +49,9 @@ async function createRecurring(event: APIGatewayProxyEvent, userId: string): Pro
 
 async function listRecurring(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
   const items = await queryItems(`USER#${userId}`, 'RECURRING#');
-  return ok(event, items);
+  const wsFilter = event.queryStringParameters?.workspace;
+  const filtered = wsFilter ? items.filter(i => i.workspaceId === wsFilter) : items;
+  return ok(event, filtered);
 }
 
 async function updateRecurring(event: APIGatewayProxyEvent, userId: string): Promise<APIGatewayProxyResult> {
