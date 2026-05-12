@@ -117,9 +117,6 @@ export function App() {
     ? tx.filter(t => t.workspaceId === activeWorkspace)
     : tx;
 
-  const filteredPayments = activeWorkspace
-    ? payments.filter(p => p.workspaceId === activeWorkspace)
-    : payments;
 
   const activeBudget = activeWorkspace
     ? workspaces.find(w => w.id === activeWorkspace)?.monthlyBudget ?? 0
@@ -238,9 +235,9 @@ export function App() {
 
         {tab === 'home' && !subScreen && (
           <LiveHome
-            tx={filteredTx}
+            tx={tx}
             recurring={recurringItems}
-            payments={filteredPayments}
+            payments={payments}
             currency={activeCurrency}
             monthlyBudget={activeBudget}
             workspaces={workspaces}
@@ -255,9 +252,9 @@ export function App() {
         )}
         {tab === 'list' && !subScreen && (
           <LiveTxList
-            tx={filteredTx}
+            tx={tx}
             recurring={recurringItems}
-            payments={filteredPayments}
+            payments={payments}
             displayCurrency={activeCurrency}
             workspaces={workspaces}
             activeWorkspace={activeWorkspace}
