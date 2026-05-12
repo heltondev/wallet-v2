@@ -431,6 +431,8 @@ export function App() {
 						fabKind={fab}
 						tx={tx}
 						isOwner={workspaces.some(w => w.ownership !== 'shared')}
+						sharedOwner={sharedOwner}
+						sharedWorkspace={sharedWsId}
 						onNavigate={(s) => setSubScreen(s)}
 						onSignOut={handleSignOut}
 						onSettingsChange={(s) => {

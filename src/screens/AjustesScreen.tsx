@@ -14,12 +14,14 @@ interface AjustesScreenProps {
   fabKind?: FabKind;
   tx?: Transaction[];
   isOwner?: boolean;
+  sharedOwner?: string;
+  sharedWorkspace?: string;
   onNavigate?: (screen: string) => void;
   onSignOut?: () => void;
   onSettingsChange?: (settings: { theme?: 'dark' | 'light'; currency?: CurrencyCode }) => void;
 }
 
-export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], isOwner = true, onNavigate, onSignOut, onSettingsChange }: AjustesScreenProps) {
+export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], isOwner = true, sharedOwner, sharedWorkspace, onNavigate, onSignOut, onSettingsChange }: AjustesScreenProps) {
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -43,8 +45,8 @@ export function AjustesScreen({ fabKind: _fabKind = 'circle', tx = [], isOwner =
       if (s.currency) setCurrency(s.currency as CurrencyCode);
     }).catch(() => {});
 
-    listAccounts().then(a => setAccountCount(a.length)).catch(() => {});
-    listCategories().then(c => setCategoryCount(Object.keys(CATS).length + c.length)).catch(() => setCategoryCount(Object.keys(CATS).length));
+    listAccounts(sharedOwner, sharedWorkspace).then(a => setAccountCount(a.length)).catch(() => {});
+    listCategories(sharedOwner, sharedWorkspace).then(c => setCategoryCount(Object.keys(CATS).length + c.length)).catch(() => setCategoryCount(Object.keys(CATS).length));
   }, []);
 
   const download = (content: string, filename: string, mime: string) => {
