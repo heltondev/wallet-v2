@@ -2,7 +2,7 @@
 @use '../styles/mixins' as *;
 
 .payment-sheet {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: $z-sheet;
   display: flex;

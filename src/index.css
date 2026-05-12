@@ -122,6 +122,14 @@ body {
     display: none !important;
   }
 
+  .bottom-tab-bar {
+    position: fixed;
+  }
+
+  .payment-sheet {
+    position: fixed;
+  }
+
 }
 
 .toast {
