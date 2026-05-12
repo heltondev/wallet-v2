@@ -3,7 +3,7 @@ import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { Chip } from '../components/Chip';
 import { CategoryIcon } from '../components/CategoryIcon';
-import { fmtAmount } from '../utils/formatters';
+import { fmtAmount, freqLabel } from '../utils/formatters';
 import { getRecurringStatuses } from '../utils/recurring';
 import type { RecurringStatus } from '../utils/recurring';
 import { WorkspaceSelector } from '../components/WorkspaceSelector';
@@ -129,7 +129,7 @@ export function LiveTxList({ tx, recurring, payments, displayCurrency, workspace
                 <div className="live-tx-list__bill-info">
                   <span className="live-tx-list__bill-desc">{item.recurring.desc}</span>
                   <span className="live-tx-list__bill-meta">
-                    {item.recurring.dayOfMonth ? `Dia ${item.recurring.dayOfMonth}` : item.recurring.frequency}
+                    {item.recurring.dayOfMonth ? `Dia ${item.recurring.dayOfMonth}` : freqLabel(item.recurring.frequency)}
                     {item.status === 'overdue' && ' · Atrasado'}
                     {item.status === 'paid' && item.matchingPayment && ` · Pago ${item.matchingPayment.paidDate.slice(8, 10)}/${item.matchingPayment.paidDate.slice(5, 7)}`}
                     {item.status === 'paid' && !item.matchingPayment && item.matchingTx && ` · Pago ${item.matchingTx.date.slice(8, 10)}/${item.matchingTx.date.slice(5, 7)}`}
@@ -155,8 +155,8 @@ export function LiveTxList({ tx, recurring, payments, displayCurrency, workspace
                     <span className="live-tx-list__bill-detail-value">{item.recurring.account}</span>
                   </div>
                   <div className="live-tx-list__bill-detail">
-                    <span className="live-tx-list__bill-detail-label">Frequencia</span>
-                    <span className="live-tx-list__bill-detail-value">{item.recurring.frequency}</span>
+                    <span className="live-tx-list__bill-detail-label">Frequência</span>
+                    <span className="live-tx-list__bill-detail-value">{freqLabel(item.recurring.frequency)}</span>
                   </div>
                   <div className="live-tx-list__bill-detail">
                     <span className="live-tx-list__bill-detail-label">Valor original</span>

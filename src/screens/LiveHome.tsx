@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Icons } from '../components/icons/Icons';
 import { IOSStatusBar } from '../components/IOSStatusBar';
 import { CategoryIcon } from '../components/CategoryIcon';
-import { fmtAmount, convertAmount } from '../utils/formatters';
+import { fmtAmount, convertAmount, freqLabel } from '../utils/formatters';
 import { monthlyAmount, getRecurringStatuses } from '../utils/recurring';
 import type { RecurringStatus } from '../utils/recurring';
 import { currentMonthKey, monthLabel } from '../utils/dates';
@@ -174,7 +174,7 @@ export function LiveHome({ tx, recurring, payments, currency, monthlyBudget, wor
                     <div className="live-home__bill-info">
                       <span className="live-home__bill-desc">{item.recurring.desc}</span>
                       <span className="live-home__bill-meta">
-                        {item.recurring.dayOfMonth ? `Dia ${item.recurring.dayOfMonth}` : item.recurring.frequency}
+                        {item.recurring.dayOfMonth ? `Dia ${item.recurring.dayOfMonth}` : freqLabel(item.recurring.frequency)}
                         {item.status === 'overdue' && ' · Atrasado'}
                       </span>
                     </div>

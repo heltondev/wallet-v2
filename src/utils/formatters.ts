@@ -1,6 +1,6 @@
 import { FX } from '../data/constants';
 import { getFxRate } from './fxRates';
-import type { CurrencyCode } from '../types';
+import type { CurrencyCode, RecurringFrequency } from '../types';
 
 export const fmtBRL = (v: number, { sign = false, decimals = 2 }: { sign?: boolean; decimals?: number } = {}): string => {
   const abs = Math.abs(v);
@@ -44,3 +44,13 @@ export const convertAmount = (amount: number, fromCurrency: CurrencyCode, toCurr
   const inBRL = amount * toBRL[fromCurrency];
   return inBRL / toBRL[toCurrency];
 };
+
+const FREQ_LABELS: Record<RecurringFrequency, string> = {
+  monthly: 'Mensal',
+  weekly: 'Semanal',
+  biweekly: 'Quinzenal',
+  yearly: 'Anual',
+  custom: 'Personalizado',
+};
+
+export const freqLabel = (f: RecurringFrequency): string => FREQ_LABELS[f] ?? f;
