@@ -46,7 +46,22 @@ export function getRecurringStatuses(
   });
 
   return recurring
-    .filter(r => r.active && r.frequency === 'monthly')
+    .filter(r => {
+      if (!r.active) return false;
+      // Only show monthly recurring (for now)
+      if (r.frequency !== 'monthly') return false;
+      // Don't show if startDate is in the future (hasn't started yet)
+      if (r.startDate) {
+        const startMonth = r.startDate.slice(0, 7);
+        if (startMonth > currentMonthKey) return false;
+      }
+      // Don't show if endDate is in the past (already ended)
+      if (r.endDate) {
+        const endMonth = r.endDate.slice(0, 7);
+        if (endMonth < currentMonthKey) return false;
+      }
+      return true;
+    })
     .map(r => {
       const converted = convertAmount(
         monthlyAmount(r.amount, r.frequency, r.customDays),

@@ -668,8 +668,9 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
               const now = new Date();
               const start = new Date(form.startDate + 'T00:00:00');
               const end = new Date(form.endDate + 'T00:00:00');
-              const totalMonths = Math.max(1, Math.round((end.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000)));
-              const elapsed = Math.max(0, Math.min(totalMonths, Math.round((now.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000))));
+              if (end <= start) return null;
+              const totalMonths = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000)));
+              const elapsed = Math.max(0, Math.min(totalMonths, Math.floor((now.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000))));
               const remaining = totalMonths - elapsed;
               const totalAmount = monthly * totalMonths;
               const paidAmount = monthly * elapsed;
@@ -799,14 +800,16 @@ export function ManageRecurring({ onBack }: ManageRecurringProps) {
                     const now = new Date();
                     const end = new Date(r.endDate + 'T00:00:00');
                     const start = new Date(r.startDate + 'T00:00:00');
-                    const totalMonths = Math.round((end.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000));
-                    const remainingMonths = Math.max(0, Math.round((end.getTime() - now.getTime()) / (30.44 * 24 * 60 * 60 * 1000)));
-                    const totalAmount = Math.abs(r.amount) * totalMonths;
+                    if (end <= start) return null;
+                    const totalMonths = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000)));
+                    const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000)));
+                    const paidMonths = Math.min(elapsed, totalMonths);
+                    const remainingMonths = totalMonths - paidMonths;
                     const remainingAmount = Math.abs(r.amount) * remainingMonths;
                     const sym = r.currency === 'BRL' ? 'R$ ' : r.currency === 'USD' ? '$ ' : '€ ';
                     return (
                       <span className="manage-recurring__item-total">
-                        {remainingMonths}/{totalMonths}x · {sym}{remainingAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} restante de {sym}{totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {paidMonths}/{totalMonths}x pago · {sym}{remainingAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} restante
                       </span>
                     );
                   })()}
