@@ -4,7 +4,7 @@ import { CATS } from '../data/categories';
 import { FX } from '../data/constants';
 import { NumericKeypad } from '../components/NumericKeypad';
 import { aiExtractReceipt, aiLearnCategory, getUploadUrl, uploadFileToS3, updateTransaction } from '../lib/api';
-import type { Account, Workspace, CurrencyCode, ExtractedTransaction, AiExtractResult } from '../types';
+import type { Account, Workspace, Transaction, CurrencyCode, ExtractedTransaction, AiExtractResult } from '../types';
 import './AddSheet.scss';
 
 const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = { BRL: 'R$', USD: '$', EUR: '€' };
@@ -25,9 +25,10 @@ interface AddSheetSaveData {
 interface AddSheetProps {
   open: boolean; onClose: () => void; onSave: (data: AddSheetSaveData) => Promise<string | undefined>; accounts: Account[];
   activeWorkspace?: string | null; workspaces?: Workspace[];
+  editingTx?: Transaction | null;
 }
 
-export function AddSheet({ open, onClose, onSave, accounts, activeWorkspace = null, workspaces = [] }: AddSheetProps) {
+export function AddSheet({ open, onClose, onSave, accounts, activeWorkspace = null, workspaces = [], editingTx = null }: AddSheetProps) {
   const [kind, setKind] = useState<'out' | 'in'>('out');
   const [amount, setAmount] = useState('0,00');
   const [cat, setCat] = useState('mercado');
@@ -75,7 +76,23 @@ export function AddSheet({ open, onClose, onSave, accounts, activeWorkspace = nu
     setReviewMode(false); setExtractResult(null); setCheckedTx([]); setTxCategories([]); setSavingReview(false);
   };
 
-  useEffect(() => { if (open) reset(); }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    if (editingTx) {
+      const abs = Math.abs(editingTx.amount);
+      setKind(editingTx.amount >= 0 ? 'in' : 'out');
+      setAmount(abs.toFixed(2).replace('.', ','));
+      setDesc(editingTx.desc ?? '');
+      setCat(editingTx.cat ?? 'outros');
+      setCurrency((editingTx.currency as CurrencyCode) ?? 'BRL');
+      setSelectedDate(editingTx.date ?? new Date().toISOString().slice(0, 10));
+      setWorkspaceId(editingTx.workspaceId ?? activeWorkspace ?? '');
+      const matchAcc = accounts.find(a => a.name === editingTx.account);
+      if (matchAcc) setAccountId(matchAcc.id);
+    } else {
+      reset();
+    }
+  }, [open]);
   useEffect(() => { if (selectedAccount) setCurrency(selectedAccount.currency); }, [accountId]);
 
   const press = (k: string) => {

@@ -55,6 +55,7 @@ export function App() {
 
   const [tab, setTab] = useState<TabId>('home');
   const [sheet, setSheet] = useState(false);
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [tx, setTx] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [recurringItems, setRecurringItems] = useState<RecurringTransaction[]>([]);
@@ -252,7 +253,7 @@ export function App() {
             activeWorkspace={activeWorkspace}
             onWorkspaceChange={setActiveWorkspace}
             onDelete={handleDeleteTx}
-            onEdit={() => {}}
+            onEdit={(txItem) => { setEditingTx(txItem); setSheet(true); }}
           />
         )}
         {tab === 'forecast' && (
@@ -352,7 +353,7 @@ export function App() {
           </>
         )}
 
-        <AddSheet open={sheet} onClose={() => setSheet(false)} onSave={onSave} accounts={accounts} activeWorkspace={activeWorkspace} workspaces={workspaces} />
+        <AddSheet open={sheet} onClose={() => { setSheet(false); setEditingTx(null); }} onSave={onSave} accounts={accounts} activeWorkspace={activeWorkspace} workspaces={workspaces} editingTx={editingTx} />
 
         {toast && (
           <div className="toast">
