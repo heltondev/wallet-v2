@@ -117,7 +117,43 @@ export function LiveHome({ tx, recurring, payments, currency, monthlyBudget, wor
           </div>
         </div>
 
-        {/* Bills section */}
+        {/* Quick stats */}
+        <div className="live-home__quick-stats">
+          <div className="live-home__stat-card" onClick={onNavigateContas}>
+            <span className="live-home__stat-label">Receita mensal</span>
+            <span className="live-home__stat-value live-home__stat-value--pos">
+              {fmtAmount(recStats.income, currency, { decimals: 0 })}
+            </span>
+            <span className="live-home__stat-sub">{activeRecurring.filter(r => r.amount > 0).length} entradas</span>
+          </div>
+          <div className="live-home__stat-card" onClick={onNavigateContas}>
+            <span className="live-home__stat-label">Despesa mensal</span>
+            <span className="live-home__stat-value live-home__stat-value--neg">
+              {fmtAmount(recStats.expenses, currency, { decimals: 0 })}
+            </span>
+            <span className="live-home__stat-sub">{activeRecurring.filter(r => r.amount < 0).length} saidas</span>
+          </div>
+        </div>
+
+        {/* Verify payments button */}
+        {onVerifyPayments && (
+          <button className="live-home__verify-btn" onClick={onVerifyPayments}>
+            <Icons.alert size={18} color="var(--pos)" />
+            <span>Verificar pagamento</span>
+          </button>
+        )}
+
+        {/* Quick links */}
+        <div className="live-home__quick-links">
+          <button className="live-home__quick-link" onClick={onNavigateContas}>
+            Ver todas as contas →
+          </button>
+          <button className="live-home__quick-link" onClick={onNavigateRecurring}>
+            Gerenciar recorrentes →
+          </button>
+        </div>
+
+        {/* Bills section — last on page */}
         {billStatuses.length > 0 && (
           <div className="live-home__bills-section">
             <div className="live-home__bills-header">
@@ -185,42 +221,6 @@ export function LiveHome({ tx, recurring, payments, currency, monthlyBudget, wor
             )}
           </div>
         )}
-
-        {/* Verify payments button */}
-        {onVerifyPayments && (
-          <button className="live-home__verify-btn" onClick={onVerifyPayments}>
-            <Icons.alert size={18} color="var(--pos)" />
-            <span>Verificar pagamento</span>
-          </button>
-        )}
-
-        {/* Quick stats */}
-        <div className="live-home__quick-stats">
-          <div className="live-home__stat-card" onClick={onNavigateContas}>
-            <span className="live-home__stat-label">Receita mensal</span>
-            <span className="live-home__stat-value live-home__stat-value--pos">
-              {fmtAmount(recStats.income, currency, { decimals: 0 })}
-            </span>
-            <span className="live-home__stat-sub">{activeRecurring.filter(r => r.amount > 0).length} entradas</span>
-          </div>
-          <div className="live-home__stat-card" onClick={onNavigateContas}>
-            <span className="live-home__stat-label">Despesa mensal</span>
-            <span className="live-home__stat-value live-home__stat-value--neg">
-              {fmtAmount(recStats.expenses, currency, { decimals: 0 })}
-            </span>
-            <span className="live-home__stat-sub">{activeRecurring.filter(r => r.amount < 0).length} saidas</span>
-          </div>
-        </div>
-
-        {/* Quick links */}
-        <div className="live-home__quick-links">
-          <button className="live-home__quick-link" onClick={onNavigateContas}>
-            Ver todas as contas →
-          </button>
-          <button className="live-home__quick-link" onClick={onNavigateRecurring}>
-            Gerenciar recorrentes →
-          </button>
-        </div>
       </div>
     </div>
   );
