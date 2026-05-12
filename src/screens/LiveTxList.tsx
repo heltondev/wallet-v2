@@ -28,13 +28,24 @@ interface LiveTxListProps {
 
 export function LiveTxList({ tx, displayCurrency, workspaces = [], activeWorkspace = null, onWorkspaceChange, onDelete, onEdit }: LiveTxListProps) {
   const [filter, setFilter] = useState<'all' | 'out' | 'in'>('all');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [expandedTxId, setExpandedTxId] = useState<number | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const filtered = useMemo(()=>{
-    if (filter==='out') return tx.filter(item=>item.amount<0);
-    if (filter==='in') return tx.filter(item=>item.amount>0);
-    return tx;
-  },[tx,filter]);
+    let result = tx;
+    if (filter==='out') result = result.filter(item=>item.amount<0);
+    if (filter==='in') result = result.filter(item=>item.amount>0);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(item =>
+        item.desc?.toLowerCase().includes(q) ||
+        item.cat?.toLowerCase().includes(q) ||
+        item.account?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  },[tx,filter,searchQuery]);
   const grouped = useMemo(()=>{
     const g: Record<string, GroupedDay> = {};
     filtered.forEach(item=>{
@@ -55,10 +66,22 @@ export function LiveTxList({ tx, displayCurrency, workspaces = [], activeWorkspa
         )}
         <div className="live-tx-list__header">
           <h1 className="live-tx-list__title">Transações</h1>
-          <button className="live-tx-list__search-btn">
-            <Icons.search size={17} color="var(--text-2)"/>
+          <button className="live-tx-list__search-btn" onClick={() => { setSearchOpen(!searchOpen); if (searchOpen) setSearchQuery(''); }}>
+            <Icons.search size={17} color={searchOpen ? 'var(--pos)' : 'var(--text-2)'}/>
           </button>
         </div>
+        {searchOpen && (
+          <div className="live-tx-list__search">
+            <input
+              type="text"
+              placeholder="Buscar transação..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              autoFocus
+              className="live-tx-list__search-input"
+            />
+          </div>
+        )}
         <div className="live-tx-list__chips no-scrollbar">
           <Chip active={filter==='all'} onClick={()=>setFilter('all')}>Todas</Chip>
           <Chip active={filter==='out'} onClick={()=>setFilter('out')}>Saídas</Chip>

@@ -51,6 +51,23 @@
 		cursor: pointer;
 	}
 
+	&__search {
+		padding: 0 16px 8px;
+	}
+
+	&__search-input {
+		width: 100%;
+		box-sizing: border-box;
+		padding: 10px 12px;
+		background: var(--bg-2);
+		border: 1px solid var(--border-1);
+		border-radius: var(--r-input);
+		color: var(--text-1);
+		font-family: var(--font-sans);
+		font-size: 14px;
+		outline: none;
+	}
+
 	&__chips {
 		display: flex;
 		gap: 6px;
