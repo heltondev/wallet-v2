@@ -54,6 +54,7 @@ export default function App() {
       setAuthed(false);
     } finally {
       setAuthLoading(false);
+      await new Promise<void>(r => setTimeout(r, 2000));
       await BootSplash.hide({ fade: true });
     }
   };
