@@ -17,7 +17,7 @@ import { useTheme } from '../hooks/useTheme';
 import { Icons } from '../components/icons/Icons';
 import { CATS } from '../data/categories';
 import * as api from '../services/apiService';
-import type { RecurringTransaction, RecurringFrequency, CurrencyCode, Account, ExtractedRecurring, AiExtractRecurringResult } from '../types';
+import type { RecurringTransaction, RecurringFrequency, CurrencyCode, Account, Workspace, ExtractedRecurring, AiExtractRecurringResult } from '../types';
 import {
   FONT_SANS,
   FONT_MONO,
@@ -96,6 +96,7 @@ export function ManageRecurringScreen() {
 
   const [items, setItems] = useState<RecurringTransaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -103,6 +104,8 @@ export function ManageRecurringScreen() {
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterWorkspace, setFilterWorkspace] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<'all' | 'expense' | 'income'>('all');
 
   // AI state
   const [aiExpanded, setAiExpanded] = useState(false);
@@ -120,9 +123,10 @@ export function ManageRecurringScreen() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [rec, acc] = await Promise.all([api.listRecurring(), api.listAccounts()]);
+      const [rec, acc, ws] = await Promise.all([api.listRecurring(), api.listAccounts(), api.listWorkspaces()]);
       setItems(rec as unknown as RecurringTransaction[]);
       setAccounts(acc as unknown as Account[]);
+      setWorkspaces(ws as unknown as Workspace[]);
     } catch {} finally { setLoading(false); }
   };
 
@@ -312,10 +316,20 @@ export function ManageRecurringScreen() {
   const freqLabel = (f: RecurringFrequency) => FREQUENCIES.find(x => x.value === f)?.label ?? f;
 
   const filteredItems = items.filter(r => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return r.desc.toLowerCase().includes(q) || r.cat.toLowerCase().includes(q);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      if (!r.desc.toLowerCase().includes(q) && !r.cat.toLowerCase().includes(q)) return false;
+    }
+    if (filterWorkspace && r.workspaceId !== filterWorkspace) return false;
+    if (filterType === 'expense' && r.amount >= 0) return false;
+    if (filterType === 'income' && r.amount < 0) return false;
+    return true;
   });
+
+  const totalIncome = filteredItems.filter(r => r.amount > 0 && r.active).reduce((s, r) => s + r.amount, 0);
+  const totalExpense = filteredItems.filter(r => r.amount < 0 && r.active).reduce((s, r) => s + Math.abs(r.amount), 0);
+  const activeCount = filteredItems.filter(r => r.active).length;
+  const pausedCount = filteredItems.filter(r => !r.active).length;
 
   const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.bg0 },
@@ -390,6 +404,18 @@ export function ManageRecurringScreen() {
     saveBtnDisabled: { opacity: 0.5 },
     saveBtnText: { fontFamily: FONT_SANS, fontSize: FS_SMALL, fontWeight: FW_SEMIBOLD, color: colors.bg0 },
     searchInput: { fontFamily: FONT_SANS, fontSize: FS_BODY, color: colors.text1, backgroundColor: colors.bg2, borderRadius: R_INPUT, paddingHorizontal: S3, paddingVertical: S2 + 2, borderWidth: 1, borderColor: colors.border1, marginBottom: S3 },
+    filterRow: { flexDirection: 'row', gap: S2, marginBottom: S3, flexWrap: 'wrap' },
+    filterChip: { paddingHorizontal: S3, paddingVertical: S2, borderRadius: R_PILL, borderWidth: 1, borderColor: colors.border1, backgroundColor: 'transparent' },
+    filterChipActive: { backgroundColor: colors.text1, borderColor: colors.text1 },
+    filterChipText: { fontFamily: FONT_SANS, fontSize: FS_CAPTION, color: colors.text2 },
+    filterChipTextActive: { color: colors.bg0 },
+    summaryBar: { flexDirection: 'row', backgroundColor: colors.bg1, borderRadius: R_CARD_SM, borderWidth: 1, borderColor: colors.border1, paddingVertical: S3, marginBottom: S4, alignItems: 'center' },
+    summaryItem: { flex: 1, alignItems: 'center' },
+    summaryLabel: { fontFamily: FONT_SANS, fontSize: 10, color: colors.text3, marginBottom: 2 },
+    summaryValue: { fontFamily: FONT_MONO, fontSize: FS_SMALL, fontWeight: FW_SEMIBOLD, color: colors.text1, fontVariant: [...TABULAR_NUMS] as any },
+    summaryValuePos: { color: colors.pos },
+    summaryValueMuted: { color: colors.text4 },
+    summaryDivider: { width: 1, height: 28, backgroundColor: colors.border1 },
     loadingText: { fontFamily: FONT_SANS, fontSize: FS_BODY, color: colors.text3, textAlign: 'center', paddingVertical: S6 },
     empty: { alignItems: 'center', paddingVertical: S6 + S6 },
     emptyText: { fontFamily: FONT_SANS, fontSize: FS_BODY, color: colors.text3, marginTop: S3 },
@@ -655,6 +681,91 @@ export function ManageRecurringScreen() {
                 {items.length > 3 && (
                   <TextInput style={styles.searchInput} placeholder="Buscar recorrente..." placeholderTextColor={colors.text4} value={searchQuery} onChangeText={setSearchQuery} />
                 )}
+
+                {/* Type filter */}
+                <View style={styles.filterRow}>
+                  <TouchableOpacity
+                    style={[styles.filterChip, filterType === 'all' && styles.filterChipActive]}
+                    onPress={() => setFilterType('all')}
+                  >
+                    <Text style={[styles.filterChipText, filterType === 'all' && styles.filterChipTextActive]}>
+                      Todas ({items.length})
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterChip, filterType === 'expense' && styles.filterChipActive]}
+                    onPress={() => setFilterType('expense')}
+                  >
+                    <Text style={[styles.filterChipText, filterType === 'expense' && styles.filterChipTextActive]}>
+                      Despesas ({items.filter(r => r.amount < 0).length})
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterChip, filterType === 'income' && styles.filterChipActive]}
+                    onPress={() => setFilterType('income')}
+                  >
+                    <Text style={[styles.filterChipText, filterType === 'income' && styles.filterChipTextActive]}>
+                      Receitas ({items.filter(r => r.amount >= 0).length})
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Workspace filter */}
+                {workspaces.length > 1 && (
+                  <View style={styles.filterRow}>
+                    <TouchableOpacity
+                      style={[styles.filterChip, !filterWorkspace && styles.filterChipActive]}
+                      onPress={() => setFilterWorkspace(null)}
+                    >
+                      <Text style={[styles.filterChipText, !filterWorkspace && styles.filterChipTextActive]}>
+                        Todos espaços
+                      </Text>
+                    </TouchableOpacity>
+                    {workspaces.map(ws => (
+                      <TouchableOpacity
+                        key={ws.id}
+                        style={[styles.filterChip, filterWorkspace === ws.id && styles.filterChipActive]}
+                        onPress={() => setFilterWorkspace(ws.id)}
+                      >
+                        <Text style={[styles.filterChipText, filterWorkspace === ws.id && styles.filterChipTextActive]}>
+                          {ws.icon} {ws.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                {/* Summary bar */}
+                <View style={styles.summaryBar}>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Receita</Text>
+                    <Text style={[styles.summaryValue, styles.summaryValuePos]}>
+                      {totalIncome > 0 ? '+' : ''}R$ {totalIncome.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryDivider} />
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Despesa</Text>
+                    <Text style={styles.summaryValue}>
+                      R$ {totalExpense.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryDivider} />
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Ativas</Text>
+                    <Text style={styles.summaryValue}>{activeCount}</Text>
+                  </View>
+                  {pausedCount > 0 && (
+                    <>
+                      <View style={styles.summaryDivider} />
+                      <View style={styles.summaryItem}>
+                        <Text style={styles.summaryLabel}>Pausadas</Text>
+                        <Text style={[styles.summaryValue, styles.summaryValueMuted]}>{pausedCount}</Text>
+                      </View>
+                    </>
+                  )}
+                </View>
+
                 {filteredItems.map(r => (
                   <View key={r.id} style={[styles.item, !r.active && styles.itemInactive]}>
                     <View style={styles.itemRow1}>
