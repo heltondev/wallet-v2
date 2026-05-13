@@ -14,7 +14,7 @@ export function LoginScreen({ onAuthenticated: _onAuthenticated }: LoginScreenPr
           Wallet
         </h1>
         <p className="login__subtitle">
-          Controle financeiro pessoal
+          Contas recorrentes. Controle total.
         </p>
 
         <div className="login__actions">
