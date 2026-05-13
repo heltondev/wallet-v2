@@ -72,23 +72,62 @@ interface ChatMessage {
   content: string | ContentPart[];
 }
 
+function parseSpreadsheetToText(base64: string, name?: string): string {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const XLSX = require('xlsx');
+  const buf = Buffer.from(base64, 'base64');
+  const wb = XLSX.read(buf, { type: 'buffer' });
+  const lines: string[] = [];
+  if (name) lines.push(`--- ${name} ---`);
+  for (const sheetName of wb.SheetNames) {
+    lines.push(`[${sheetName}]`);
+    lines.push(XLSX.utils.sheet_to_csv(wb.Sheets[sheetName]));
+  }
+  return lines.join('\n');
+}
+
 function buildFileContent(files: { base64: string; mimeType: string; name?: string }[]): ContentPart[] {
-  return files.map((file, i) => {
-    const dataUrl = `data:${file.mimeType};base64,${file.base64}`;
-    if (file.mimeType === 'application/pdf') {
-      return {
+  const parts: ContentPart[] = [];
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const mime = file.mimeType;
+
+    // CSV/text → inject as text content
+    if (mime === 'text/csv' || mime === 'text/plain' || file.name?.endsWith('.csv') || file.name?.endsWith('.tsv')) {
+      const text = Buffer.from(file.base64, 'base64').toString('utf-8');
+      parts.push({ type: 'text', text: `--- ${file.name ?? `file-${i + 1}.csv`} ---\n${text}` });
+      continue;
+    }
+
+    // XLSX/XLS → parse to CSV text
+    if (mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        mime === 'application/vnd.ms-excel' ||
+        file.name?.endsWith('.xlsx') || file.name?.endsWith('.xls')) {
+      const text = parseSpreadsheetToText(file.base64, file.name);
+      parts.push({ type: 'text', text });
+      continue;
+    }
+
+    // PDF → file attachment
+    const dataUrl = `data:${mime};base64,${file.base64}`;
+    if (mime === 'application/pdf') {
+      parts.push({
         type: 'file',
         file: {
           filename: file.name ?? `document-${i + 1}.pdf`,
           file_data: dataUrl,
         },
-      };
+      });
+      continue;
     }
-    return {
+
+    // Images → image_url
+    parts.push({
       type: 'image_url',
       image_url: { url: dataUrl, detail: 'high' },
-    };
-  });
+    });
+  }
+  return parts;
 }
 
 interface OpenAiResponse {
