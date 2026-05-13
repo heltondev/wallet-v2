@@ -84,8 +84,26 @@ export function ManageRecurring({ onBack, sharedOwner, sharedWorkspace }: Manage
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterWorkspace, setFilterWorkspace] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<'all' | 'expense' | 'income'>('all');
 
   const catSlugs = Object.keys(CATS);
+
+  const filteredItems = items.filter(r => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      if (!r.desc.toLowerCase().includes(q) && !r.cat.toLowerCase().includes(q)) return false;
+    }
+    if (filterWorkspace && r.workspaceId !== filterWorkspace) return false;
+    if (filterType === 'expense' && r.amount >= 0) return false;
+    if (filterType === 'income' && r.amount < 0) return false;
+    return true;
+  });
+
+  const totalIncome = filteredItems.filter(r => r.amount > 0 && r.active).reduce((s, r) => s + r.amount, 0);
+  const totalExpense = filteredItems.filter(r => r.amount < 0 && r.active).reduce((s, r) => s + Math.abs(r.amount), 0);
+  const activeCount = filteredItems.filter(r => r.active).length;
+  const pausedCount = filteredItems.filter(r => !r.active).length;
 
   // AI state
   const [aiExpanded, setAiExpanded] = useState(false);
@@ -792,6 +810,7 @@ export function ManageRecurring({ onBack, sharedOwner, sharedWorkspace }: Manage
           </div>
         ) : !showForm && (
           <>
+          {/* Search */}
           {items.length > 3 && (
             <div className="manage-recurring__search">
               <input
@@ -803,12 +822,83 @@ export function ManageRecurring({ onBack, sharedOwner, sharedWorkspace }: Manage
               />
             </div>
           )}
+
+          {/* Filters */}
+          <div className="manage-recurring__filters">
+            <div className="manage-recurring__filter-row">
+              <button
+                onClick={() => setFilterType('all')}
+                className={`manage-recurring__filter-chip ${filterType === 'all' ? 'manage-recurring__filter-chip--active' : ''}`}
+              >
+                Todas ({items.length})
+              </button>
+              <button
+                onClick={() => setFilterType('expense')}
+                className={`manage-recurring__filter-chip ${filterType === 'expense' ? 'manage-recurring__filter-chip--active' : ''}`}
+              >
+                Despesas ({items.filter(r => r.amount < 0).length})
+              </button>
+              <button
+                onClick={() => setFilterType('income')}
+                className={`manage-recurring__filter-chip ${filterType === 'income' ? 'manage-recurring__filter-chip--active' : ''}`}
+              >
+                Receitas ({items.filter(r => r.amount >= 0).length})
+              </button>
+            </div>
+            {workspaces.length > 1 && (
+              <div className="manage-recurring__filter-row">
+                <button
+                  onClick={() => setFilterWorkspace(null)}
+                  className={`manage-recurring__filter-chip manage-recurring__filter-chip--ws ${!filterWorkspace ? 'manage-recurring__filter-chip--active' : ''}`}
+                >
+                  Todos espaços
+                </button>
+                {workspaces.map(ws => (
+                  <button
+                    key={ws.id}
+                    onClick={() => setFilterWorkspace(ws.id)}
+                    className={`manage-recurring__filter-chip manage-recurring__filter-chip--ws ${filterWorkspace === ws.id ? 'manage-recurring__filter-chip--active' : ''}`}
+                  >
+                    {ws.icon} {ws.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Summary bar */}
+          <div className="manage-recurring__summary">
+            <div className="manage-recurring__summary-item">
+              <span className="manage-recurring__summary-label">Receita</span>
+              <span className="manage-recurring__summary-value manage-recurring__summary-value--pos">
+                {totalIncome > 0 ? '+' : ''}{filteredItems[0]?.currency === 'USD' ? '$ ' : 'R$ '}{totalIncome.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </span>
+            </div>
+            <div className="manage-recurring__summary-divider" />
+            <div className="manage-recurring__summary-item">
+              <span className="manage-recurring__summary-label">Despesa</span>
+              <span className="manage-recurring__summary-value manage-recurring__summary-value--neg">
+                {filteredItems[0]?.currency === 'USD' ? '$ ' : 'R$ '}{totalExpense.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </span>
+            </div>
+            <div className="manage-recurring__summary-divider" />
+            <div className="manage-recurring__summary-item">
+              <span className="manage-recurring__summary-label">Ativas</span>
+              <span className="manage-recurring__summary-value">{activeCount}</span>
+            </div>
+            {pausedCount > 0 && (
+              <>
+                <div className="manage-recurring__summary-divider" />
+                <div className="manage-recurring__summary-item">
+                  <span className="manage-recurring__summary-label">Pausadas</span>
+                  <span className="manage-recurring__summary-value manage-recurring__summary-value--muted">{pausedCount}</span>
+                </div>
+              </>
+            )}
+          </div>
+
           <div className="manage-recurring__list">
-            {items.filter(r => {
-              if (!searchQuery.trim()) return true;
-              const q = searchQuery.toLowerCase();
-              return r.desc.toLowerCase().includes(q) || r.cat.toLowerCase().includes(q);
-            }).map(r => (
+            {filteredItems.map(r => (
               <div
                 key={r.id}
                 className={`manage-recurring__item ${!r.active ? 'manage-recurring__item--inactive' : ''}`}
