@@ -176,6 +176,9 @@ interface UserContext {
   accounts: Record<string, unknown>[];
   categories: Record<string, unknown>[];
   recentTransactions: Record<string, unknown>[];
+  recurring: Record<string, unknown>[];
+  payments: Record<string, unknown>[];
+  workspaces: Record<string, unknown>[];
   settings: Record<string, unknown>;
 }
 
@@ -211,18 +214,53 @@ function buildPromptWithContext(
   const budget = (ctx.settings.monthlyBudget as string) ?? 'Not set';
   const settingsText = `Currency: ${currency}, Budget: ${budget}`;
 
+  // Recurring bills with status
+  const paidRecurringIds = new Set(ctx.payments.map(p => p.recurringId as string));
+  const recurringList = ctx.recurring
+    .map((r) => {
+      const isPaid = paidRecurringIds.has(r.id as string);
+      const status = isPaid ? 'PAGO' : 'PENDENTE';
+      const ws = ctx.workspaces.find(w => w.id === r.workspaceId);
+      const wsName = ws ? ` [${ws.name}]` : '';
+      return `${r.desc}: ${r.amount} ${r.currency} (${r.frequency}, dia ${r.dayOfMonth ?? '?'}) - ${status}${wsName}`;
+    })
+    .join('\n') || 'No recurring bills';
+
+  // Workspaces
+  const workspaceList = ctx.workspaces
+    .map((w) => `${w.icon ?? ''} ${w.name} (${w.currency}, budget: ${w.monthlyBudget})`.trim())
+    .join(', ') || 'No workspaces';
+
+  // Payment summary
+  const paymentSummary = ctx.payments.length > 0
+    ? ctx.payments.map(p => {
+        const rec = ctx.recurring.find(r => r.id === p.recurringId);
+        return `${rec?.desc ?? p.recurringId}: ${p.amount} ${p.currency} pago em ${p.paidDate}`;
+      }).join('\n')
+    : 'No payments this period';
+
   let result = basePrompt
     .replace(/{accounts}/g, accountList)
     .replace(/{categories}/g, categoryList)
     .replace(/{recentTransactions}/g, recentTxSummary)
     .replace(/{categoryLearning}/g, learningText)
     .replace(/{settings}/g, settingsText)
-    .replace(/{monthlyBudget}/g, budget);
+    .replace(/{monthlyBudget}/g, budget)
+    .replace(/{recurring}/g, recurringList)
+    .replace(/{workspaces}/g, workspaceList)
+    .replace(/{payments}/g, paymentSummary);
 
   if (extra) {
     for (const [key, value] of Object.entries(extra)) {
       result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
     }
+  }
+
+  // Append context if not already in prompt template
+  if (!basePrompt.includes('{recurring}')) {
+    result += `\n\n--- RECURRING BILLS ---\n${recurringList}`;
+    result += `\n\n--- WORKSPACES ---\n${workspaceList}`;
+    result += `\n\n--- PAYMENTS (current/previous month) ---\n${paymentSummary}`;
   }
 
   return result;
@@ -301,31 +339,38 @@ async function loadUserContext(userId: string): Promise<{
   accounts: Record<string, unknown>[];
   categories: Record<string, unknown>[];
   recentTransactions: Record<string, unknown>[];
+  recurring: Record<string, unknown>[];
+  payments: Record<string, unknown>[];
+  workspaces: Record<string, unknown>[];
   settings: Record<string, unknown>;
 }> {
-  const [accounts, categories, settings] = await Promise.all([
-    queryItems(`USER#${userId}`, 'ACCOUNT#'),
-    queryItems(`USER#${userId}`, 'CAT#'),
-    getItem(`USER#${userId}`, 'SETTINGS'),
-  ]);
-
-  // Get recent transactions — query current month and previous month, take last 20
   const now = new Date();
   const curMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
 
-  const [curTx, prevTx] = await Promise.all([
+  const [accounts, categories, settings, recurring, curPayments, prevPayments, curTx, prevTx, workspaces] = await Promise.all([
+    queryItems(`USER#${userId}`, 'ACCOUNT#'),
+    queryItems(`USER#${userId}`, 'CAT#'),
+    getItem(`USER#${userId}`, 'SETTINGS'),
+    queryItems(`USER#${userId}`, 'RECURRING#'),
+    queryItems(`USER#${userId}`, `PAYMENT#${curMonth}`),
+    queryItems(`USER#${userId}`, `PAYMENT#${prevMonth}`),
     queryItems(`USER#${userId}`, `TX#${curMonth}`, undefined, { scanForward: false }),
     queryItems(`USER#${userId}`, `TX#${prevMonth}`, undefined, { scanForward: false }),
+    queryItems(`USER#${userId}`, 'WORKSPACE#'),
   ]);
 
   const recentTransactions = [...curTx, ...prevTx].slice(0, 20);
+  const payments = [...curPayments, ...prevPayments];
 
   return {
     accounts,
     categories,
     recentTransactions,
+    recurring: recurring.filter(r => r.active),
+    payments,
+    workspaces,
     settings: settings ?? { currency: 'BRL' },
   };
 }
