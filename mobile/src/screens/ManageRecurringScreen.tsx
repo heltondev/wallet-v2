@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { pick, types } from 'react-native-document-picker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useTheme } from '../hooks/useTheme';
+import { useWalletStore } from '../store/useWalletStore';
 import { Icons } from '../components/icons/Icons';
 import { CATS } from '../data/categories';
 import * as api from '../services/apiService';
@@ -94,6 +95,13 @@ export function ManageRecurringScreen() {
   const { colors } = useTheme();
   const nav = useNavigation();
 
+  // Shared workspace context
+  const storeWorkspaces = useWalletStore(s => s.workspaces);
+  const activeWorkspace = useWalletStore(s => s.activeWorkspace);
+  const activeWs = storeWorkspaces.find(w => w.id === activeWorkspace);
+  const sharedOwner = activeWs?.ownership === 'shared' ? activeWs.ownerId : undefined;
+  const sharedWorkspace = activeWs?.ownership === 'shared' ? activeWs.id : undefined;
+
   const [items, setItems] = useState<RecurringTransaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -123,7 +131,7 @@ export function ManageRecurringScreen() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [rec, acc, ws] = await Promise.all([api.listRecurring(), api.listAccounts(), api.listWorkspaces()]);
+      const [rec, acc, ws] = await Promise.all([api.listRecurring(sharedOwner, sharedWorkspace), api.listAccounts(sharedOwner, sharedWorkspace), api.listWorkspaces()]);
       setItems(rec as unknown as RecurringTransaction[]);
       setAccounts(acc as unknown as Account[]);
       setWorkspaces(ws as unknown as Workspace[]);
@@ -161,8 +169,8 @@ export function ManageRecurringScreen() {
       fxRate: 1, notes: form.notes.trim() || null, active: form.active,
     };
     try {
-      if (editingId) await api.updateRecurring(editingId, payload);
-      else await api.createRecurring(payload);
+      if (editingId) await api.updateRecurring(editingId, payload, sharedOwner, sharedWorkspace);
+      else await api.createRecurring(payload, sharedOwner, sharedWorkspace);
       setShowForm(false); setEditingId(null); await fetchData();
     } catch {} finally { setSaving(false); }
   };
@@ -170,13 +178,13 @@ export function ManageRecurringScreen() {
   const handleDelete = async (id: string) => {
     if (confirmDelete !== id) { setConfirmDelete(id); return; }
     setConfirmDelete(null);
-    try { await api.deleteRecurring(id); setItems(prev => prev.filter(r => r.id !== id)); } catch {}
+    try { await api.deleteRecurring(id, sharedOwner, sharedWorkspace); setItems(prev => prev.filter(r => r.id !== id)); } catch {}
   };
 
   const handleToggleActive = async (r: RecurringTransaction) => {
     const newActive = !r.active;
     setItems(prev => prev.map(x => x.id === r.id ? { ...x, active: newActive } : x));
-    try { await api.updateRecurring(r.id, { active: newActive }); } catch {
+    try { await api.updateRecurring(r.id, { active: newActive }, sharedOwner, sharedWorkspace); } catch {
       setItems(prev => prev.map(x => x.id === r.id ? { ...x, active: r.active } : x));
     }
   };
@@ -298,7 +306,7 @@ export function ManageRecurringScreen() {
           fxRate: 1,
           notes: r.notes,
           active: true,
-        });
+        }, sharedOwner, sharedWorkspace);
       }
       setAiReviewMode(false);
       setAiFiles([]);

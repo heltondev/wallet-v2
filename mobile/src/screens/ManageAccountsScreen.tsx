@@ -10,6 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
+import { useWalletStore } from '../store/useWalletStore';
 import { Icons } from '../components/icons/Icons';
 import * as api from '../services/apiService';
 import type { Account, CurrencyCode } from '../types';
@@ -33,6 +34,13 @@ export function ManageAccountsScreen() {
   const { colors } = useTheme();
   const nav = useNavigation();
 
+  // Shared workspace context
+  const storeWorkspaces = useWalletStore(s => s.workspaces);
+  const activeWorkspace = useWalletStore(s => s.activeWorkspace);
+  const activeWs = storeWorkspaces.find(w => w.id === activeWorkspace);
+  const sharedOwner = activeWs?.ownership === 'shared' ? activeWs.ownerId : undefined;
+  const sharedWorkspace = activeWs?.ownership === 'shared' ? activeWs.id : undefined;
+
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -44,7 +52,7 @@ export function ManageAccountsScreen() {
 
   const fetchAccounts = () => {
     setLoading(true);
-    api.listAccounts()
+    api.listAccounts(sharedOwner, sharedWorkspace)
       .then(data => setAccounts(data as unknown as Account[]))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -56,7 +64,7 @@ export function ManageAccountsScreen() {
     if (!name.trim()) return;
     setSaving(true);
     try {
-      await api.createAccount({ name: name.trim(), institution: institution.trim(), currency });
+      await api.createAccount({ name: name.trim(), institution: institution.trim(), currency }, sharedOwner, sharedWorkspace);
       setName('');
       setInstitution('');
       setCurrency('BRL');

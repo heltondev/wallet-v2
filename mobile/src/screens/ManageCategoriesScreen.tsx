@@ -10,6 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
+import { useWalletStore } from '../store/useWalletStore';
 import { Icons } from '../components/icons/Icons';
 import { CATS } from '../data/categories';
 import * as api from '../services/apiService';
@@ -49,6 +50,12 @@ export function ManageCategoriesScreen() {
   const { colors } = useTheme();
   const nav = useNavigation();
 
+  const storeWorkspaces = useWalletStore(s => s.workspaces);
+  const activeWorkspace = useWalletStore(s => s.activeWorkspace);
+  const activeWs = storeWorkspaces.find(w => w.id === activeWorkspace);
+  const sharedOwner = activeWs?.ownership === 'shared' ? activeWs.ownerId : undefined;
+  const sharedWorkspace = activeWs?.ownership === 'shared' ? activeWs.id : undefined;
+
   const [categories, setCategories] = useState<CategoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -63,7 +70,7 @@ export function ManageCategoriesScreen() {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const apiCats = await api.listCategories() as unknown as (CategoryMeta & { slug: string; hidden?: boolean })[];
+      const apiCats = await api.listCategories(sharedOwner, sharedWorkspace) as unknown as (CategoryMeta & { slug: string; hidden?: boolean })[];
       const overrides: Record<string, CategoryMeta & { hidden?: boolean }> = {};
       for (const c of apiCats) overrides[c.slug] = c;
       const all: CategoryEntry[] = [];
@@ -99,8 +106,8 @@ export function ManageCategoriesScreen() {
     try {
       const slug = editingSlug ?? slugify(label);
       const data = { slug, label: label.trim(), labelEn: labelEn.trim() || label.trim(), color: selectedColor, icon: selectedIcon };
-      if (editingSlug) await api.updateCategory(slug, data);
-      else await api.createCategory(data);
+      if (editingSlug) await api.updateCategory(slug, data, sharedOwner, sharedWorkspace);
+      else await api.createCategory(data, sharedOwner, sharedWorkspace);
       await loadCategories();
       resetForm();
     } catch {} finally { setSaving(false); }
@@ -111,8 +118,8 @@ export function ManageCategoriesScreen() {
     setConfirmDelete(null);
     try {
       const cat = categories.find(c => c.slug === slug);
-      if (cat?.isDefault) await api.updateCategory(slug, { slug, label: cat.label, labelEn: cat.labelEn, color: cat.color, icon: cat.icon, hidden: true });
-      else await api.deleteCategory(slug);
+      if (cat?.isDefault) await api.updateCategory(slug, { slug, label: cat.label, labelEn: cat.labelEn, color: cat.color, icon: cat.icon, hidden: true }, sharedOwner, sharedWorkspace);
+      else await api.deleteCategory(slug, sharedOwner, sharedWorkspace);
       setCategories(prev => prev.filter(c => c.slug !== slug));
     } catch {}
   };
