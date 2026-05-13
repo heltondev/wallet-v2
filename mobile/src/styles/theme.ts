@@ -1,0 +1,41 @@
+export const darkColors = {
+  bg0: '#0A0A0A',
+  bg1: '#141414',
+  bg2: '#1F1F1F',
+  bg3: '#2A2A2A',
+  bg4: '#353535',
+  text1: '#FAFAFA',
+  text2: '#A1A1AA',
+  text3: '#71717A',
+  text4: '#52525B',
+  border1: '#2A2A2A',
+  border2: '#3F3F46',
+  pos: '#10B981',
+  posBg: 'rgba(16, 185, 129, 0.14)',
+  neg: '#EF4444',
+  negBg: 'rgba(239, 68, 68, 0.14)',
+  warn: '#F59E0B',
+  warnBg: 'rgba(245, 158, 11, 0.15)',
+};
+
+export const lightColors = {
+  bg0: '#FFFFFF',
+  bg1: '#FAFAFA',
+  bg2: '#F4F4F5',
+  bg3: '#E4E4E7',
+  bg4: '#D4D4D8',
+  text1: '#0A0A0A',
+  text2: '#52525B',
+  text3: '#71717A',
+  text4: '#A1A1AA',
+  border1: '#E4E4E7',
+  border2: '#D4D4D8',
+  pos: '#059669',
+  posBg: 'rgba(5, 150, 105, 0.12)',
+  neg: '#DC2626',
+  negBg: 'rgba(220, 38, 38, 0.1)',
+  warn: '#D97706',
+  warnBg: 'rgba(217, 119, 6, 0.12)',
+};
+
+export type ThemeColors = typeof darkColors;

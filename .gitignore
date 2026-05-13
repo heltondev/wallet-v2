@@ -3,3 +3,6 @@ node_modules/
 dist/
 .DS_Store
 infra/cdk.out/
+mobile/node_modules/
+mobile/ios/Pods/
+mobile/ios/build/

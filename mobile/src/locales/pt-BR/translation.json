@@ -1,0 +1,70 @@
+{
+  "tabs": {
+    "home": "Home",
+    "contas": "Contas",
+    "previsao": "Previsao",
+    "categorias": "Categorias",
+    "ajustes": "Ajustes"
+  },
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "back": "Voltar",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "search": "Buscar"
+  },
+  "home": {
+    "pending": "Pendente",
+    "paid": "Pago",
+    "budget": "Orçamento",
+    "monthlyIncome": "Receita mensal",
+    "monthlyExpense": "Despesa mensal",
+    "entries": "entradas",
+    "exits": "saídas",
+    "verifyPayment": "Verificar pagamento",
+    "viewAllBills": "Ver todas as contas",
+    "manageRecurring": "Gerenciar recorrentes",
+    "billsOfMonth": "Contas do mes",
+    "pending_count": "pendente",
+    "pending_count_plural": "pendentes",
+    "pay": "Pagar",
+    "receive": "Receber",
+    "billsPaid": "contas pagas"
+  },
+  "login": {
+    "brand": "Wallet",
+    "subtitle": "Controle financeiro pessoal",
+    "google": "Entrar com Google",
+    "poweredByAi": "Powered by AI"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "account": "CONTA",
+    "wallets": "Carteiras e contas",
+    "categories": "Categorias",
+    "recurring": "Recorrentes",
+    "workspaces": "Espaços",
+    "appearance": "APARÊNCIA",
+    "theme": "Tema",
+    "dark": "Escuro",
+    "light": "Claro",
+    "mainCurrency": "Moeda principal",
+    "data": "DADOS",
+    "export": "Exportar dados",
+    "backup": "Backup na nuvem",
+    "active": "Ativo",
+    "ai": "INTELIGÊNCIA ARTIFICIAL",
+    "aiChat": "Assistente financeiro",
+    "aiInsights": "Insights do mês",
+    "aiReceipt": "Escanear recibo",
+    "admin": "ADMIN",
+    "adminCosts": "Custos de infraestrutura",
+    "adminPrompts": "Prompts de AI",
+    "support": "SUPORTE",
+    "about": "Sobre",
+    "signOut": "Sair"
+  }
+}
