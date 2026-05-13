@@ -15,8 +15,6 @@ import { toastConfig } from './src/components/Toast';
 import { darkColors, lightColors } from './src/styles/theme';
 import './src/i18n';
 
-configureCognito();
-
 const rnBiometrics = new ReactNativeBiometrics();
 
 export default function App() {
@@ -30,6 +28,11 @@ export default function App() {
   const colors = isDark ? darkColors : lightColors;
 
   useEffect(() => {
+    try {
+      configureCognito();
+    } catch (e) {
+      console.warn('Cognito config error:', e);
+    }
     checkAuth();
     const listener = Hub.listen('auth', ({ payload }) => {
       if (payload.event === 'signedIn') {
