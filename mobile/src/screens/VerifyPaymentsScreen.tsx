@@ -7,9 +7,12 @@ import {
   TextInput,
   ActivityIndicator,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { pick, types } from 'react-native-document-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 import { useTheme } from '../hooks/useTheme';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { Icons } from '../components/icons/Icons';
@@ -31,22 +34,119 @@ import {
 } from '../styles/typography';
 import { S1, S2, S3, S4, S5, S6, R_CARD, R_CARD_SM, R_INPUT, R_PILL } from '../styles/spacing';
 
+interface UploadedFile {
+  name: string;
+  base64: string;
+  mimeType: string;
+}
+
+async function readFileAsBase64(uri: string): Promise<string> {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function readFileAsText(uri: string): Promise<string> {
+  const response = await fetch(uri);
+  return response.text();
+}
+
+function isTextFile(name: string, mimeType: string): boolean {
+  return mimeType === 'text/csv' || name.endsWith('.csv') || name.endsWith('.tsv');
+}
+
+function isSpreadsheet(name: string, mimeType: string): boolean {
+  return (
+    mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+    name.endsWith('.xlsx') ||
+    name.endsWith('.xls')
+  );
+}
+
 export function VerifyPaymentsScreen() {
   const { colors } = useTheme();
   const nav = useNavigation();
   const currency = useSettingsStore(s => s.currency);
 
+  const [files, setFiles] = useState<UploadedFile[]>([]);
   const [aiText, setAiText] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AiVerifyPaymentsResult | null>(null);
   const [checked, setChecked] = useState<boolean[]>([]);
   const [saving, setSaving] = useState(false);
 
+  const handlePickFiles = async () => {
+    try {
+      const results = await pick({
+        allowMultiSelection: true,
+        type: [types.pdf, types.csv, types.xlsx, types.images],
+      });
+
+      for (const doc of results) {
+        if (!doc.uri || !doc.name) continue;
+        const name = doc.name;
+        const mimeType = doc.type ?? 'application/octet-stream';
+
+        if (isTextFile(name, mimeType)) {
+          const text = await readFileAsText(doc.uri);
+          setAiText(prev => prev ? `${prev}\n\n--- ${name} ---\n${text}` : `--- ${name} ---\n${text}`);
+        } else if (isSpreadsheet(name, mimeType)) {
+          const base64 = await readFileAsBase64(doc.uri);
+          setFiles(prev => [...prev, { name, base64, mimeType }]);
+        } else {
+          const base64 = await readFileAsBase64(doc.uri);
+          setFiles(prev => [...prev, { name, base64, mimeType }]);
+        }
+      }
+    } catch (err: unknown) {
+      if ((err as { code?: string })?.code !== 'DOCUMENT_PICKER_CANCELED') {
+        Alert.alert('Erro', 'Falha ao selecionar arquivo');
+      }
+    }
+  };
+
+  const handlePickImages = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      selectionLimit: 5,
+      includeBase64: true,
+    });
+
+    if (result.assets) {
+      for (const asset of result.assets) {
+        if (!asset.base64 || !asset.fileName) continue;
+        setFiles(prev => [
+          ...prev,
+          {
+            name: asset.fileName!,
+            base64: asset.base64!,
+            mimeType: asset.type ?? 'image/jpeg',
+          },
+        ]);
+      }
+    }
+  };
+
+  const removeFile = (idx: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const canAnalyze = files.length > 0 || aiText.trim().length > 0;
+
   const handleAnalyze = async () => {
-    if (!aiText.trim()) return;
+    if (!canAnalyze) return;
     setLoading(true);
     try {
-      const res = await api.aiVerifyPayments([], aiText);
+      const payload = files.map(f => ({ base64: f.base64, mimeType: f.mimeType }));
+      const res = await api.aiVerifyPayments(payload, aiText);
       setResult(res);
       setChecked(res.matches.map(() => true));
     } catch {
@@ -60,7 +160,6 @@ export function VerifyPaymentsScreen() {
     if (!result) return;
     setSaving(true);
     const selected = result.matches.filter((_, i) => checked[i]);
-    // Process selected matches - create payments
     Promise.all(
       selected.map(m => {
         const now = new Date();
@@ -88,6 +187,15 @@ export function VerifyPaymentsScreen() {
     backBtn: { marginRight: S3 },
     title: { fontFamily: FONT_SANS, fontSize: FS_H1, fontWeight: FW_BOLD, color: colors.text1 },
     intro: { fontFamily: FONT_SANS, fontSize: FS_SMALL, color: colors.text3, marginBottom: S4, lineHeight: 20 },
+    uploadArea: { borderWidth: 1, borderColor: colors.border1, borderStyle: 'dashed', borderRadius: R_INPUT, padding: S4, alignItems: 'center', marginBottom: S3 },
+    uploadRow: { flexDirection: 'row', gap: S3 },
+    uploadBtn: { flexDirection: 'row', alignItems: 'center', gap: S2, backgroundColor: colors.bg2, borderRadius: R_INPUT, paddingVertical: S3, paddingHorizontal: S4, borderWidth: 1, borderColor: colors.border1 },
+    uploadBtnText: { fontFamily: FONT_SANS, fontSize: FS_SMALL, color: colors.text2 },
+    uploadHint: { fontFamily: FONT_SANS, fontSize: FS_CAPTION, color: colors.text4, marginTop: S2 },
+    fileList: { marginBottom: S3 },
+    fileItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg2, borderRadius: R_INPUT, paddingVertical: S2, paddingHorizontal: S3, marginBottom: S2 },
+    fileName: { flex: 1, fontFamily: FONT_SANS, fontSize: FS_CAPTION, color: colors.text2 },
+    fileRemoveBtn: { padding: S1 },
     textarea: { fontFamily: FONT_SANS, fontSize: FS_BODY, color: colors.text1, backgroundColor: colors.bg2, borderRadius: R_INPUT, borderWidth: 1, borderColor: colors.border1, padding: S3, minHeight: 100, textAlignVertical: 'top', marginBottom: S4 },
     analyzeBtn: { backgroundColor: colors.pos, borderRadius: R_INPUT, paddingVertical: S4, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: S2 },
     analyzeBtnDisabled: { opacity: 0.5 },
@@ -141,8 +249,36 @@ export function VerifyPaymentsScreen() {
         {!result ? (
           <>
             <Text style={styles.intro}>
-              Cole texto de extrato bancario ou comprovante. A AI vai identificar quais contas foram pagas.
+              Cole texto de extrato bancario ou comprovante, ou envie arquivos. A AI vai identificar quais contas foram pagas.
             </Text>
+
+            <View style={styles.uploadArea}>
+              <View style={styles.uploadRow}>
+                <TouchableOpacity style={styles.uploadBtn} onPress={handlePickFiles}>
+                  <Icons.fileText size={16} color={colors.text2} />
+                  <Text style={styles.uploadBtnText}>Selecionar arquivos</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.uploadBtn} onPress={handlePickImages}>
+                  <Icons.upload size={16} color={colors.text2} />
+                  <Text style={styles.uploadBtnText}>Fotos</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.uploadHint}>PDF, JPG, PNG, CSV, XLSX</Text>
+            </View>
+
+            {files.length > 0 && (
+              <View style={styles.fileList}>
+                {files.map((f, idx) => (
+                  <View key={idx} style={styles.fileItem}>
+                    <Icons.fileText size={14} color={colors.text3} />
+                    <Text style={styles.fileName} numberOfLines={1}> {f.name}</Text>
+                    <TouchableOpacity style={styles.fileRemoveBtn} onPress={() => removeFile(idx)}>
+                      <Icons.x size={14} color={colors.text4} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
 
             <TextInput
               style={styles.textarea}
@@ -154,9 +290,9 @@ export function VerifyPaymentsScreen() {
             />
 
             <TouchableOpacity
-              style={[styles.analyzeBtn, (!aiText.trim() || loading) && styles.analyzeBtnDisabled]}
+              style={[styles.analyzeBtn, (!canAnalyze || loading) && styles.analyzeBtnDisabled]}
               onPress={handleAnalyze}
-              disabled={!aiText.trim() || loading}
+              disabled={!canAnalyze || loading}
               activeOpacity={0.7}
             >
               {loading ? (
@@ -230,6 +366,7 @@ export function VerifyPaymentsScreen() {
                 onPress={() => {
                   setResult(null);
                   setAiText('');
+                  setFiles([]);
                 }}
               >
                 <Text style={styles.cancelBtnText}>Voltar</Text>

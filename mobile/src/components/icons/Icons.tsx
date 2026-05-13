@@ -293,4 +293,17 @@ export const Icons: Record<string, React.FC<IconComponentProps>> = {
       <Path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </Icon>
   ),
+  camera: (p) => (
+    <Icon {...p}>
+      <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+      <Circle cx={12} cy={13} r={4} />
+    </Icon>
+  ),
+  upload: (p) => (
+    <Icon {...p}>
+      <Path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <Polyline points="17 8 12 3 7 8" />
+      <Line x1={12} y1={3} x2={12} y2={15} />
+    </Icon>
+  ),
 };
