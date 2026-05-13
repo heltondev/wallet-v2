@@ -19,26 +19,30 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		DD656CE3A905411784F8033A /* Geist-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3F583A886D544D6BB928B07A /* Geist-SemiBold.ttf */; };
 		FE8EC7FADCBE4DBF95FD7106 /* GeistMono-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7DCBB5F4BE7C4C249D760C23 /* GeistMono-Medium.ttf */; };
+		2DAAFFBA78094A608B3D8082 /* BootSplash.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D496B0AF1F4E4095AAB4084D /* BootSplash.storyboard */; };
+		9C65CE223C30495E81021DB3 /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A62612E978274BA0B324D48A /* Colors.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		037D78182E0C4850BF84FEFD /* Geist-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Geist-Regular.ttf"; path = "../assets/fonts/Geist-Regular.ttf"; sourceTree = "<group>"; };
-		04643768E7C04530BA19CE8F /* GeistMono-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "GeistMono-Regular.ttf"; path = "../assets/fonts/GeistMono-Regular.ttf"; sourceTree = "<group>"; };
+		037D78182E0C4850BF84FEFD /* Geist-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Geist-Regular.ttf"; path = "../assets/fonts/Geist-Regular.ttf"; sourceTree = "<group>"; };
+		04643768E7C04530BA19CE8F /* GeistMono-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "GeistMono-Regular.ttf"; path = "../assets/fonts/GeistMono-Regular.ttf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* Wallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Wallet/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Wallet/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = Wallet/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		1590EF053743482D90FECB7D /* Geist-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Geist-Bold.ttf"; path = "../assets/fonts/Geist-Bold.ttf"; sourceTree = "<group>"; };
-		2EA355EBF2364F4DADB2071F /* Geist-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Geist-Medium.ttf"; path = "../assets/fonts/Geist-Medium.ttf"; sourceTree = "<group>"; };
+		1590EF053743482D90FECB7D /* Geist-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Geist-Bold.ttf"; path = "../assets/fonts/Geist-Bold.ttf"; sourceTree = "<group>"; };
+		2EA355EBF2364F4DADB2071F /* Geist-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Geist-Medium.ttf"; path = "../assets/fonts/Geist-Medium.ttf"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-Wallet.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Wallet.debug.xcconfig"; path = "Target Support Files/Pods-Wallet/Pods-Wallet.debug.xcconfig"; sourceTree = "<group>"; };
-		3F583A886D544D6BB928B07A /* Geist-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Geist-SemiBold.ttf"; path = "../assets/fonts/Geist-SemiBold.ttf"; sourceTree = "<group>"; };
+		3F583A886D544D6BB928B07A /* Geist-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Geist-SemiBold.ttf"; path = "../assets/fonts/Geist-SemiBold.ttf"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-Wallet.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Wallet.release.xcconfig"; path = "Target Support Files/Pods-Wallet/Pods-Wallet.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-Wallet.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Wallet.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Wallet/AppDelegate.swift; sourceTree = "<group>"; };
-		7DCBB5F4BE7C4C249D760C23 /* GeistMono-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "GeistMono-Medium.ttf"; path = "../assets/fonts/GeistMono-Medium.ttf"; sourceTree = "<group>"; };
-		80FAD7D7C00F49CD92A7BA38 /* GeistMono-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "GeistMono-SemiBold.ttf"; path = "../assets/fonts/GeistMono-SemiBold.ttf"; sourceTree = "<group>"; };
+		7DCBB5F4BE7C4C249D760C23 /* GeistMono-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "GeistMono-Medium.ttf"; path = "../assets/fonts/GeistMono-Medium.ttf"; sourceTree = "<group>"; };
+		80FAD7D7C00F49CD92A7BA38 /* GeistMono-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "GeistMono-SemiBold.ttf"; path = "../assets/fonts/GeistMono-SemiBold.ttf"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Wallet/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		D496B0AF1F4E4095AAB4084D /* BootSplash.storyboard */ = {isa = PBXFileReference; name = "BootSplash.storyboard"; path = "Wallet/BootSplash.storyboard"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		A62612E978274BA0B324D48A /* Colors.xcassets */ = {isa = PBXFileReference; name = "Colors.xcassets"; path = "Wallet/Colors.xcassets"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = folder.assetcatalog; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +65,8 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				D496B0AF1F4E4095AAB4084D /* BootSplash.storyboard */,
+				A62612E978274BA0B324D48A /* Colors.xcassets */,
 			);
 			name = Wallet;
 			sourceTree = "<group>";
@@ -125,7 +131,6 @@
 				3F583A886D544D6BB928B07A /* Geist-SemiBold.ttf */,
 			);
 			name = Resources;
-			path = "";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -198,6 +203,8 @@
 				FE8EC7FADCBE4DBF95FD7106 /* GeistMono-Medium.ttf in Resources */,
 				4BFA6FB7EF6145929F6A21EA /* GeistMono-Regular.ttf in Resources */,
 				DD656CE3A905411784F8033A /* Geist-SemiBold.ttf in Resources */,
+				2DAAFFBA78094A608B3D8082 /* BootSplash.storyboard in Resources */,
+				9C65CE223C30495E81021DB3 /* Colors.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,6 +304,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6NAJ524RGT;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Wallet/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -311,6 +319,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = net.oliverapp.wallet;
 				PRODUCT_NAME = Wallet;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -327,6 +336,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6NAJ524RGT;
 				INFOPLIST_FILE = Wallet/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -340,6 +350,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = net.oliverapp.wallet;
 				PRODUCT_NAME = Wallet;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 5.0;
