@@ -30,13 +30,29 @@ export const useWalletStore = create<WalletState>()((set, get) => ({
     set({ loading: true });
 
     try {
-      const targetWs = wsId !== undefined ? wsId : get().activeWorkspace;
+      // Always fetch workspaces + settings first
+      const [workspacesData, settingsData] = await Promise.all([
+        api.listWorkspaces(),
+        api.getSettings(),
+      ]);
 
+      const allWorkspaces = workspacesData as unknown as Workspace[];
+      set({ workspaces: allWorkspaces });
+
+      // Auto-select first workspace if user has no owned workspaces
+      let targetWs = wsId !== undefined ? wsId : get().activeWorkspace;
+      const hasOwned = allWorkspaces.some(w => w.ownership !== 'shared');
+      if (!hasOwned && targetWs === null && allWorkspaces.length > 0) {
+        targetWs = allWorkspaces[0].id;
+        set({ activeWorkspace: targetWs });
+      }
+
+      // Determine shared access params
       let owner: string | undefined;
       let workspace: string | undefined;
 
       if (targetWs) {
-        const ws = get().workspaces.find((w) => w.id === targetWs);
+        const ws = allWorkspaces.find((w) => w.id === targetWs);
         if (ws?.ownership === 'shared' && ws.ownerId) {
           owner = ws.ownerId;
           workspace = ws.id;
@@ -46,14 +62,12 @@ export const useWalletStore = create<WalletState>()((set, get) => ({
       const now = new Date();
       const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-      const [txData, accountsData, recurringData, paymentsData, workspacesData, settingsData] =
+      const [txData, accountsData, recurringData, paymentsData] =
         await Promise.all([
           api.listTransactions(month, owner, workspace),
           api.listAccounts(owner, workspace),
           api.listRecurring(owner, workspace),
           api.listPayments(month, owner, workspace),
-          api.listWorkspaces(),
-          api.getSettings(),
         ]);
 
       set({
@@ -61,7 +75,6 @@ export const useWalletStore = create<WalletState>()((set, get) => ({
         accounts: accountsData as unknown as Account[],
         recurringItems: recurringData as unknown as RecurringTransaction[],
         payments: paymentsData as unknown as Payment[],
-        workspaces: workspacesData as unknown as Workspace[],
         loading: false,
       });
 
