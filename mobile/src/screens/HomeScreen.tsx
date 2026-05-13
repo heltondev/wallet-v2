@@ -56,23 +56,26 @@ export function HomeScreen() {
     [workspaces, activeWorkspace],
   );
 
+  const activeCurrency = activeWs?.currency ?? currency;
   const monthlyBudget = activeWs?.monthlyBudget ?? 0;
+  const ownedWorkspaces = useMemo(() => workspaces.filter(w => w.ownership !== 'shared'), [workspaces]);
+  const sharedWorkspaces = useMemo(() => workspaces.filter(w => w.ownership === 'shared'), [workspaces]);
 
   const recStats = useMemo(() => {
     let income = 0;
     let expenses = 0;
     for (const r of activeRecurring) {
       const monthly = monthlyAmount(r.amount, r.frequency, r.customDays);
-      const converted = convertAmount(monthly, r.currency, currency, fxRates);
+      const converted = convertAmount(monthly, r.currency, activeCurrency, fxRates);
       if (converted > 0) income += converted;
       else expenses += Math.abs(converted);
     }
     return { income, expenses };
-  }, [activeRecurring, currency, fxRates]);
+  }, [activeRecurring, activeCurrency, fxRates]);
 
   const billStatuses = useMemo(
-    () => getRecurringStatuses(activeRecurring, tx, currency, fxRates, payments),
-    [activeRecurring, tx, currency, fxRates, payments],
+    () => getRecurringStatuses(activeRecurring, tx, activeCurrency, fxRates, payments),
+    [activeRecurring, tx, activeCurrency, fxRates, payments],
   );
 
   const pendingBills = useMemo(() => billStatuses.filter(s => s.status !== 'paid'), [billStatuses]);
@@ -94,6 +97,7 @@ export function HomeScreen() {
     wsChipActive: { borderColor: colors.pos, backgroundColor: colors.posBg },
     wsChipText: { fontFamily: FONT_SANS, fontSize: FS_CAPTION, color: colors.text2 },
     wsChipTextActive: { color: colors.pos },
+    wsSeparator: { width: 1, height: 20, backgroundColor: colors.border1, alignSelf: 'center', marginHorizontal: S1 },
     // Summary card
     summaryCard: { backgroundColor: colors.bg1, borderRadius: R_CARD, borderWidth: 1, borderColor: colors.border1, padding: S4, marginTop: S3 },
     summaryMonth: { fontFamily: FONT_SANS, fontSize: FS_CAPTION, fontWeight: FW_MEDIUM, color: colors.text3, textTransform: 'uppercase', letterSpacing: 1, marginBottom: S3 },
@@ -175,7 +179,7 @@ export function HomeScreen() {
         </Text>
       </View>
       <Text style={styles.billAmount}>
-        {fmtAmount(Math.abs(item.monthlyConverted), currency, { decimals: 0 })}
+        {fmtAmount(Math.abs(item.monthlyConverted), activeCurrency, { decimals: 0 })}
       </Text>
       {showPayBtn && item.status !== 'paid' ? (
         <TouchableOpacity
@@ -208,13 +212,35 @@ export function HomeScreen() {
         {/* Workspace selector */}
         {workspaces.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.wsRow}>
-            <TouchableOpacity
-              style={[styles.wsChip, !activeWorkspace && styles.wsChipActive]}
-              onPress={() => useWalletStore.getState().setActiveWorkspace(null)}
-            >
-              <Text style={[styles.wsChipText, !activeWorkspace && styles.wsChipTextActive]}>Todos</Text>
-            </TouchableOpacity>
-            {workspaces.map(ws => (
+            {ownedWorkspaces.length > 0 && (
+              <TouchableOpacity
+                style={[styles.wsChip, !activeWorkspace && styles.wsChipActive]}
+                onPress={() => {
+                  useWalletStore.getState().setActiveWorkspace(null);
+                  loadData(null);
+                }}
+              >
+                <Text style={[styles.wsChipText, !activeWorkspace && styles.wsChipTextActive]}>Todos</Text>
+              </TouchableOpacity>
+            )}
+            {ownedWorkspaces.map(ws => (
+              <TouchableOpacity
+                key={ws.id}
+                style={[styles.wsChip, activeWorkspace === ws.id && styles.wsChipActive]}
+                onPress={() => {
+                  useWalletStore.getState().setActiveWorkspace(ws.id);
+                  loadData(ws.id);
+                }}
+              >
+                <Text style={[styles.wsChipText, activeWorkspace === ws.id && styles.wsChipTextActive]}>
+                  {ws.icon} {ws.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            {sharedWorkspaces.length > 0 && ownedWorkspaces.length > 0 && (
+              <View style={styles.wsSeparator} />
+            )}
+            {sharedWorkspaces.map(ws => (
               <TouchableOpacity
                 key={ws.id}
                 style={[styles.wsChip, activeWorkspace === ws.id && styles.wsChipActive]}
@@ -238,14 +264,14 @@ export function HomeScreen() {
             <View style={styles.summaryBlock}>
               <Text style={styles.summaryLabel}>Pendente</Text>
               <Text style={[styles.summaryValue, styles.summaryValuePending]}>
-                {fmtAmount(pendingTotal, currency, { decimals: 0 })}
+                {fmtAmount(pendingTotal, activeCurrency, { decimals: 0 })}
               </Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryBlock}>
               <Text style={styles.summaryLabel}>Pago</Text>
               <Text style={[styles.summaryValue, styles.summaryValuePaid]}>
-                {fmtAmount(paidTotal, currency, { decimals: 0 })}
+                {fmtAmount(paidTotal, activeCurrency, { decimals: 0 })}
               </Text>
             </View>
             {monthlyBudget > 0 && (
@@ -254,7 +280,7 @@ export function HomeScreen() {
                 <View style={styles.summaryBlock}>
                   <Text style={styles.summaryLabel}>Orcamento</Text>
                   <Text style={[styles.summaryValue, styles.summaryValueDefault]}>
-                    {fmtAmount(monthlyBudget, currency, { decimals: 0 })}
+                    {fmtAmount(monthlyBudget, activeCurrency, { decimals: 0 })}
                   </Text>
                 </View>
               </>
@@ -279,7 +305,7 @@ export function HomeScreen() {
           >
             <Text style={styles.statLabel}>Receita mensal</Text>
             <Text style={[styles.statValue, styles.statValuePos]}>
-              {fmtAmount(recStats.income, currency, { decimals: 0 })}
+              {fmtAmount(recStats.income, activeCurrency, { decimals: 0 })}
             </Text>
             <Text style={styles.statSub}>
               {activeRecurring.filter(r => r.amount > 0).length} entradas
@@ -292,7 +318,7 @@ export function HomeScreen() {
           >
             <Text style={styles.statLabel}>Despesa mensal</Text>
             <Text style={[styles.statValue, styles.statValueNeg]}>
-              {fmtAmount(recStats.expenses, currency, { decimals: 0 })}
+              {fmtAmount(recStats.expenses, activeCurrency, { decimals: 0 })}
             </Text>
             <Text style={styles.statSub}>
               {activeRecurring.filter(r => r.amount < 0).length} saidas

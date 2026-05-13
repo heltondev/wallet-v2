@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
 import { useWalletStore } from '../store/useWalletStore';
@@ -24,15 +24,18 @@ import {
   FW_REGULAR,
   TABULAR_NUMS,
 } from '../styles/typography';
-import { S1, S2, S3, S4, S5, S6, R_CARD, R_CARD_SM, R_INPUT } from '../styles/spacing';
+import { S1, S2, S3, S4, S5, S6, R_CARD, R_CARD_SM, R_INPUT, R_PILL } from '../styles/spacing';
 
 export function PrevisaoScreen() {
   const { colors } = useTheme();
   const currency = useSettingsStore(s => s.currency);
-  const { tx, recurringItems, workspaces, activeWorkspace, fxRates } = useWalletStore();
+  const { tx, recurringItems, workspaces, activeWorkspace, fxRates, loadData } = useWalletStore();
 
   const activeWs = useMemo(() => workspaces.find(w => w.id === activeWorkspace), [workspaces, activeWorkspace]);
+  const activeCurrency = activeWs?.currency ?? currency;
   const monthlyBudget = activeWs?.monthlyBudget ?? 0;
+  const ownedWorkspaces = useMemo(() => workspaces.filter(w => w.ownership !== 'shared'), [workspaces]);
+  const sharedWorkspaces = useMemo(() => workspaces.filter(w => w.ownership === 'shared'), [workspaces]);
 
   const activeRecurring = useMemo(
     () => recurringItems.filter(r => r.active && (!activeWorkspace || r.workspaceId === activeWorkspace)),
@@ -44,19 +47,19 @@ export function PrevisaoScreen() {
     let expenses = 0;
     for (const r of activeRecurring) {
       const monthly = monthlyAmount(r.amount, r.frequency, r.customDays);
-      const converted = convertAmount(monthly, r.currency, currency, fxRates);
+      const converted = convertAmount(monthly, r.currency, activeCurrency, fxRates);
       if (converted > 0) income += converted;
       else expenses += Math.abs(converted);
     }
     return { income, expenses, net: income - expenses };
-  }, [activeRecurring, currency, fxRates]);
+  }, [activeRecurring, activeCurrency, fxRates]);
 
   const txStats = useMemo(() => {
     let ins = 0;
     let outs = 0;
     const byCat: Record<string, number> = {};
     for (const item of tx) {
-      const converted = convertAmount(item.amount, item.currency, currency, fxRates);
+      const converted = convertAmount(item.amount, item.currency, activeCurrency, fxRates);
       if (converted > 0) ins += converted;
       else {
         const abs = Math.abs(converted);
@@ -67,7 +70,7 @@ export function PrevisaoScreen() {
     }
     const categories = Object.entries(byCat).sort((a, b) => b[1] - a[1]).slice(0, 8);
     return { ins, outs, balance: ins - outs, categories };
-  }, [tx, currency, fxRates]);
+  }, [tx, activeCurrency, fxRates]);
 
   const hasData = tx.length > 0 || activeRecurring.length > 0;
 
@@ -106,6 +109,12 @@ export function PrevisaoScreen() {
     catRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg1, borderRadius: R_CARD_SM, borderWidth: 1, borderColor: colors.border1, padding: S3, marginBottom: S2 },
     catName: { flex: 1, fontFamily: FONT_SANS, fontSize: FS_SMALL, color: colors.text1, marginLeft: S3 },
     catAmount: { fontFamily: FONT_MONO, fontSize: FS_SMALL, fontWeight: FW_SEMIBOLD, color: colors.text1, fontVariant: [...TABULAR_NUMS] },
+    wsRow: { flexDirection: 'row', gap: S2, paddingVertical: S3, paddingHorizontal: S1 },
+    wsChip: { paddingHorizontal: S3, paddingVertical: S1 + 2, borderRadius: R_PILL, borderWidth: 1, borderColor: colors.border1, backgroundColor: colors.bg2 },
+    wsChipActive: { borderColor: colors.pos, backgroundColor: colors.posBg },
+    wsChipText: { fontFamily: FONT_SANS, fontSize: FS_CAPTION, color: colors.text2 },
+    wsChipTextActive: { color: colors.pos },
+    wsSeparator: { width: 1, height: 20, backgroundColor: colors.border1, alignSelf: 'center', marginHorizontal: S1 },
   });
 
   const renderCatIcon = (cat: string, size: number) => {
@@ -128,6 +137,53 @@ export function PrevisaoScreen() {
           <Text style={styles.headerTitle}>{nextMonthLabel()}</Text>
         </View>
 
+        {workspaces.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.wsRow}>
+            {ownedWorkspaces.length > 0 && (
+              <TouchableOpacity
+                style={[styles.wsChip, !activeWorkspace && styles.wsChipActive]}
+                onPress={() => {
+                  useWalletStore.getState().setActiveWorkspace(null);
+                  loadData(null);
+                }}
+              >
+                <Text style={[styles.wsChipText, !activeWorkspace && styles.wsChipTextActive]}>Todos</Text>
+              </TouchableOpacity>
+            )}
+            {ownedWorkspaces.map(ws => (
+              <TouchableOpacity
+                key={ws.id}
+                style={[styles.wsChip, activeWorkspace === ws.id && styles.wsChipActive]}
+                onPress={() => {
+                  useWalletStore.getState().setActiveWorkspace(ws.id);
+                  loadData(ws.id);
+                }}
+              >
+                <Text style={[styles.wsChipText, activeWorkspace === ws.id && styles.wsChipTextActive]}>
+                  {ws.icon} {ws.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            {sharedWorkspaces.length > 0 && ownedWorkspaces.length > 0 && (
+              <View style={styles.wsSeparator} />
+            )}
+            {sharedWorkspaces.map(ws => (
+              <TouchableOpacity
+                key={ws.id}
+                style={[styles.wsChip, activeWorkspace === ws.id && styles.wsChipActive]}
+                onPress={() => {
+                  useWalletStore.getState().setActiveWorkspace(ws.id);
+                  loadData(ws.id);
+                }}
+              >
+                <Text style={[styles.wsChipText, activeWorkspace === ws.id && styles.wsChipTextActive]}>
+                  {ws.icon} {ws.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+
         {!hasData ? (
           <View style={styles.emptyCard}>
             <Text style={styles.emptyTitle}>Sem dados para previsao</Text>
@@ -140,7 +196,7 @@ export function PrevisaoScreen() {
             <View style={styles.balanceCard}>
               <Text style={styles.balanceLabel}>Projecao {nextMonthLabel()}</Text>
               <Text style={[styles.balanceValue, recurringStats.net >= 0 ? styles.balanceValuePos : styles.balanceValueNeg]}>
-                {fmtAmount(recurringStats.net, currency, { decimals: 0 })}
+                {fmtAmount(recurringStats.net, activeCurrency, { decimals: 0 })}
               </Text>
               <Text style={styles.balanceSub}>
                 baseado em {activeRecurring.length} recorrentes ativas
@@ -152,13 +208,13 @@ export function PrevisaoScreen() {
                 <View style={styles.summaryItem}>
                   <Text style={styles.summaryLabel}>Receita prevista</Text>
                   <Text style={[styles.summaryValue, styles.summaryValuePos]}>
-                    {fmtAmount(recurringStats.income, currency, { decimals: 0 })}
+                    {fmtAmount(recurringStats.income, activeCurrency, { decimals: 0 })}
                   </Text>
                 </View>
                 <View style={styles.summaryItem}>
                   <Text style={styles.summaryLabel}>Despesa prevista</Text>
                   <Text style={[styles.summaryValue, styles.summaryValueNeg]}>
-                    {fmtAmount(recurringStats.expenses, currency, { decimals: 0 })}
+                    {fmtAmount(recurringStats.expenses, activeCurrency, { decimals: 0 })}
                   </Text>
                 </View>
                 {monthlyBudget > 0 && (
@@ -166,13 +222,13 @@ export function PrevisaoScreen() {
                     <View style={styles.summaryItem}>
                       <Text style={styles.summaryLabel}>Orcamento</Text>
                       <Text style={styles.summaryValue}>
-                        {fmtAmount(monthlyBudget, currency, { decimals: 0 })}
+                        {fmtAmount(monthlyBudget, activeCurrency, { decimals: 0 })}
                       </Text>
                     </View>
                     <View style={styles.summaryItem}>
                       <Text style={styles.summaryLabel}>Sobra projetada</Text>
                       <Text style={[styles.summaryValue, (monthlyBudget - recurringStats.expenses) >= 0 ? styles.summaryValuePos : styles.summaryValueNeg]}>
-                        {fmtAmount(monthlyBudget - recurringStats.expenses, currency, { decimals: 0 })}
+                        {fmtAmount(monthlyBudget - recurringStats.expenses, activeCurrency, { decimals: 0 })}
                       </Text>
                     </View>
                   </>
@@ -188,14 +244,14 @@ export function PrevisaoScreen() {
                 </View>
                 {activeRecurring.map(r => {
                   const monthly = monthlyAmount(r.amount, r.frequency, r.customDays);
-                  const converted = convertAmount(monthly, r.currency, currency, fxRates);
+                  const converted = convertAmount(monthly, r.currency, activeCurrency, fxRates);
                   return (
                     <View key={r.id} style={styles.recurringRow}>
                       {renderCatIcon(r.cat, 28)}
                       <Text style={styles.recurringDesc}>{r.desc}</Text>
                       <Text style={[styles.recurringAmount, converted > 0 ? styles.recurringAmountPos : styles.recurringAmountNeg]}>
                         {converted > 0 ? '+' : '\u2212'}
-                        {fmtAmount(Math.abs(converted), currency, { decimals: 0 }).replace('\u2212', '')}
+                        {fmtAmount(Math.abs(converted), activeCurrency, { decimals: 0 }).replace('\u2212', '')}
                       </Text>
                     </View>
                   );
@@ -214,7 +270,7 @@ export function PrevisaoScreen() {
                     {renderCatIcon(cat, 28)}
                     <Text style={styles.catName}>{CATS[cat]?.label ?? cat}</Text>
                     <Text style={styles.catAmount}>
-                      {'\u2212'}{fmtAmount(amount, currency, { decimals: 0 }).replace('\u2212', '')}
+                      {'\u2212'}{fmtAmount(amount, activeCurrency, { decimals: 0 }).replace('\u2212', '')}
                     </Text>
                   </View>
                 ))}

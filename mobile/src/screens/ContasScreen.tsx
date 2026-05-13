@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -42,7 +42,12 @@ export function ContasScreen() {
   const { colors } = useTheme();
   const nav = useNavigation<Nav>();
   const currency = useSettingsStore(s => s.currency);
-  const { tx, recurringItems, payments, activeWorkspace, fxRates } = useWalletStore();
+  const { tx, recurringItems, payments, workspaces, activeWorkspace, fxRates, loadData } = useWalletStore();
+
+  const activeWs = useMemo(() => workspaces.find(w => w.id === activeWorkspace), [workspaces, activeWorkspace]);
+  const activeCurrency = activeWs?.currency ?? currency;
+  const ownedWorkspaces = useMemo(() => workspaces.filter(w => w.ownership !== 'shared'), [workspaces]);
+  const sharedWorkspaces = useMemo(() => workspaces.filter(w => w.ownership === 'shared'), [workspaces]);
 
   const [filter, setFilter] = useState<FilterMode>('all');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -55,8 +60,8 @@ export function ContasScreen() {
   );
 
   const billStatuses = useMemo(
-    () => getRecurringStatuses(activeRecurring, tx, currency, fxRates, payments),
-    [activeRecurring, tx, currency, fxRates, payments],
+    () => getRecurringStatuses(activeRecurring, tx, activeCurrency, fxRates, payments),
+    [activeRecurring, tx, activeCurrency, fxRates, payments],
   );
 
   const filtered = useMemo(() => {
@@ -121,6 +126,12 @@ export function ContasScreen() {
     actionBtnText: { fontFamily: FONT_SANS, fontSize: FS_CAPTION, color: colors.text2 },
     actionBtnTextPay: { color: colors.bg0 },
     actionBtnTextUndo: { color: colors.neg },
+    wsRow: { flexDirection: 'row', gap: S2, paddingVertical: S3, paddingHorizontal: S1 },
+    wsChip: { paddingHorizontal: S3, paddingVertical: S1 + 2, borderRadius: R_PILL, borderWidth: 1, borderColor: colors.border1, backgroundColor: colors.bg2 },
+    wsChipActive: { borderColor: colors.pos, backgroundColor: colors.posBg },
+    wsChipText: { fontFamily: FONT_SANS, fontSize: FS_CAPTION, color: colors.text2 },
+    wsChipTextActive: { color: colors.pos },
+    wsSeparator: { width: 1, height: 20, backgroundColor: colors.border1, alignSelf: 'center', marginHorizontal: S1 },
     empty: { alignItems: 'center', paddingVertical: S6 + S6 },
     emptyText: { fontFamily: FONT_SANS, fontSize: FS_BODY, color: colors.text3, marginTop: S3 },
   });
@@ -159,6 +170,53 @@ export function ContasScreen() {
             <Icons.search size={17} color={searchOpen ? colors.pos : colors.text2} />
           </TouchableOpacity>
         </View>
+
+        {workspaces.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.wsRow}>
+            {ownedWorkspaces.length > 0 && (
+              <TouchableOpacity
+                style={[styles.wsChip, !activeWorkspace && styles.wsChipActive]}
+                onPress={() => {
+                  useWalletStore.getState().setActiveWorkspace(null);
+                  loadData(null);
+                }}
+              >
+                <Text style={[styles.wsChipText, !activeWorkspace && styles.wsChipTextActive]}>Todos</Text>
+              </TouchableOpacity>
+            )}
+            {ownedWorkspaces.map(ws => (
+              <TouchableOpacity
+                key={ws.id}
+                style={[styles.wsChip, activeWorkspace === ws.id && styles.wsChipActive]}
+                onPress={() => {
+                  useWalletStore.getState().setActiveWorkspace(ws.id);
+                  loadData(ws.id);
+                }}
+              >
+                <Text style={[styles.wsChipText, activeWorkspace === ws.id && styles.wsChipTextActive]}>
+                  {ws.icon} {ws.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            {sharedWorkspaces.length > 0 && ownedWorkspaces.length > 0 && (
+              <View style={styles.wsSeparator} />
+            )}
+            {sharedWorkspaces.map(ws => (
+              <TouchableOpacity
+                key={ws.id}
+                style={[styles.wsChip, activeWorkspace === ws.id && styles.wsChipActive]}
+                onPress={() => {
+                  useWalletStore.getState().setActiveWorkspace(ws.id);
+                  loadData(ws.id);
+                }}
+              >
+                <Text style={[styles.wsChipText, activeWorkspace === ws.id && styles.wsChipTextActive]}>
+                  {ws.icon} {ws.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
         {searchOpen && (
           <TextInput
@@ -211,7 +269,7 @@ export function ContasScreen() {
                 </Text>
               </View>
               <Text style={styles.billAmount}>
-                {fmtAmount(Math.abs(item.monthlyConverted), currency, { decimals: 0 })}
+                {fmtAmount(Math.abs(item.monthlyConverted), activeCurrency, { decimals: 0 })}
               </Text>
               {item.status !== 'paid' && (
                 <TouchableOpacity
