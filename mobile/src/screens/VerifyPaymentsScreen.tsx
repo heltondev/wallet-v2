@@ -156,25 +156,31 @@ export function VerifyPaymentsScreen() {
     }
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!result) return;
     setSaving(true);
-    const selected = result.matches.filter((_, i) => checked[i]);
-    Promise.all(
-      selected.map(m => {
-        const now = new Date();
-        const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        return api.createPayment({
+    try {
+      const accounts = await api.listAccounts() as { name: string }[];
+      const accountName = accounts[0]?.name ?? '';
+      const selected = result.matches.filter((_, i) => checked[i]);
+      const now = new Date();
+      const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      for (const m of selected) {
+        await api.createPayment({
           recurringId: m.recurringId,
           month,
           amount: -Math.abs(m.amount),
           currency: m.currency,
           paidDate: m.paidDate,
+          account: accountName,
+          notes: `AI: ${m.matchReason}`,
         });
-      }),
-    )
-      .then(() => nav.goBack())
-      .catch(() => setSaving(false));
+      }
+      nav.goBack();
+    } catch (err: unknown) {
+      setSaving(false);
+      Alert.alert('Erro', err instanceof Error ? err.message : 'Falha ao salvar pagamentos');
+    }
   };
 
   const checkedCount = checked.filter(Boolean).length;
